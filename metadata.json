@@ -1,0 +1,7 @@
+{
+  "name": "AI Interview Coach",
+  "description": "A practice interview tool powered by Gemini to help you prepare for your next job interview with AI-generated questions and feedback.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
