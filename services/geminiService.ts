@@ -4,12 +4,13 @@ import { Question, AnalysisResult } from "../types";
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 if (!apiKey) {
-  console.error("VITE_GEMINI_API_KEY is missing. Please set it in the .env.local file.");
+  console.error("CRITICAL ERROR: VITE_GEMINI_API_KEY is missing in .env.local");
 }
 
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null as any;
 
-// Helper to encode Blob to Base64
+// --- Helpers ---
+
 export const blobToBase64 = (blob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -21,6 +22,42 @@ export const blobToBase64 = (blob: Blob): Promise<string> => {
     reader.readAsDataURL(blob);
   });
 };
+
+// Create a WAV header for the raw PCM data from Gemini
+// Spec: 24kHz, 1 channel, 16-bit PCM (Linear16)
+const createWavHeader = (dataLength: number): ArrayBuffer => {
+  const buffer = new ArrayBuffer(44);
+  const view = new DataView(buffer);
+
+  const writeString = (offset: number, string: string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+
+  // RIFF chunk descriptor
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + dataLength, true); // File size - 8
+  writeString(8, 'WAVE');
+
+  // fmt sub-chunk
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
+  view.setUint16(20, 1, true);  // AudioFormat (1 for PCM)
+  view.setUint16(22, 1, true);  // NumChannels (1)
+  view.setUint32(24, 24000, true); // SampleRate (24kHz for Gemini TTS)
+  view.setUint32(28, 24000 * 2, true); // ByteRate (SampleRate * BlockAlign)
+  view.setUint16(32, 2, true);  // BlockAlign (NumChannels * BitsPerSample/8)
+  view.setUint16(34, 16, true); // BitsPerSample (16)
+
+  // data sub-chunk
+  writeString(36, 'data');
+  view.setUint32(40, dataLength, true);
+
+  return buffer;
+};
+
+// --- API Functions ---
 
 export const generateQuestions = async (role: string): Promise<Question[]> => {
   if (!apiKey) return mockQuestions(role);
@@ -107,25 +144,49 @@ export const analyzeAnswer = async (question: string, audioBlob: Blob): Promise<
     return JSON.parse(text) as AnalysisResult;
   } catch (error) {
     console.error("Error analyzing answer:", error);
-    // Fallback for demo if API fails or limits hit
     return mockAnalysis();
   }
 };
 
-// Provide a speech generation helper that now proxies to the serverless /api/tts route.
-// Returns base64 MP3 audio (or null if unavailable). This replaces prior Gemini TTS approach.
 export const generateSpeech = async (text: string): Promise<string | null> => {
   if (!text.trim()) return null;
+
   try {
-    const resp = await fetch('/api/tts', {
+    console.log("Fetching speech from server for:", text.substring(0, 15) + "...");
+    
+    // Call your own serverless function
+    const response = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
     });
-    if (!resp.ok) return null;
-    const data = await resp.json().catch(() => ({}));
-    return (data as any).audioBase64 || null;
-  } catch {
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.audioBase64) {
+      throw new Error("No audio data returned from server");
+    }
+
+    // Convert the WAV Base64 back to a Blob for playback
+    // (The server already added the WAV header!)
+    const binaryString = atob(data.audioBase64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const blob = new Blob([bytes], { type: 'audio/wav' });
+    const url = URL.createObjectURL(blob);
+    
+    return url;
+
+  } catch (error) {
+    console.error("TTS Fetch Error:", error);
     return null;
   }
 };

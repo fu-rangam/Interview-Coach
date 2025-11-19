@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { synthesizeQuestion } from '../services/voiceService';
+import { generateSpeech } from '../services/geminiService'; // Updated import
 
 interface QuestionCardProps {
   question: string;
@@ -14,6 +14,17 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, role, currentInde
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [audioError, setAudioError] = useState<string>('');
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Reset audio when question changes
+  useEffect(() => {
+    setAudioUrl('');
+    setIsPlaying(false);
+    setAudioError('');
+    if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+    }
+  }, [question]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -37,24 +48,33 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, role, currentInde
         }
         return;
       }
+      
       setIsLoadingAudio(true);
-      const url = await synthesizeQuestion(question);
+      // Call Gemini TTS
+      const url = await generateSpeech(question);
+      
+      if (!url) {
+         throw new Error("Failed to generate audio");
+      }
+
       setAudioUrl(url);
       setIsLoadingAudio(false);
-      if (audioRef.current && url) {
+      
+      if (audioRef.current) {
         audioRef.current.src = url;
         try {
           await audioRef.current.play();
+          setIsPlaying(true);
         } catch (err: any) {
-          setAudioError(err?.message || 'Playback was blocked');
+          console.error("Playback error:", err);
+          setAudioError('Playback failed. Check permissions.');
           setIsPlaying(false);
-          return;
         }
-        setIsPlaying(true);
       }
-    } catch {
+    } catch (e) {
       setIsLoadingAudio(false);
-      setAudioError('Narration failed. Check API logs and env.');
+      setAudioError('Narration failed. API key valid?');
+      console.error(e);
     }
   };
 
@@ -74,14 +94,14 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, role, currentInde
           type="button"
           onClick={handlePlayVoice}
           aria-label={isPlaying ? 'Pause narration' : 'Play narration'}
-          className="px-4 py-2 text-sm font-medium rounded-md border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium rounded-md border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50 min-w-[120px] flex justify-center"
           disabled={isLoadingAudio}
         >
           {isLoadingAudio ? 'Loading...' : isPlaying ? 'Pause Voice' : audioUrl ? 'Play Again' : 'Play Voice'}
         </button>
         <audio ref={audioRef} hidden />
         {audioError && (
-          <span className="text-sm text-red-600" role="status">{audioError}</span>
+          <span className="text-sm text-red-600 animate-pulse" role="status">{audioError}</span>
         )}
       </div>
     </div>
