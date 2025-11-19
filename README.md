@@ -57,10 +57,15 @@ Built with **React** and powered by **Google's Gemini 2.5 Flash**, this applicat
     ```
 
 4.  **Run the Development Server**
-    ```bash
-    npm run dev
-    ```
-    Open your browser to `http://localhost:3000` (or the port shown in your terminal).
+        - Frontend only (no serverless functions):
+            ```bash
+            npm run dev
+            ```
+        - Frontend + API routes (recommended for TTS testing):
+            ```bash
+            vercel dev
+            ```
+        Open your browser to the shown localhost URL.
 
 ## 📖 Usage Guide
 
@@ -70,17 +75,47 @@ Built with **React** and powered by **Google's Gemini 2.5 Flash**, this applicat
 4.  **Iterate:** Choose to "Retry" the question to apply the feedback immediately, or move to the next one.
 5.  **View Summary:** After completing the session, review your "Readiness Score" and a holistic breakdown of your performance.
 
-### 🔊 Natural Voice Narration (Non-Browser TTS)
+### 🔊 Natural Voice Narration (Google Cloud TTS)
 
-The app can narrate questions using a high-quality neural voice via a serverless function (not the built‑in browser `speechSynthesis`).
+The app narrates questions using Google Cloud Text-to-Speech (not the browser `speechSynthesis`).
 
-1. Set `ELEVENLABS_API_KEY` (and optionally `ELEVENLABS_VOICE_ID`) in your Vercel project Environment Variables. For local dev also add them to `.env.local`.
-2. Deploy (or run locally) – the serverless function at `/api/tts` will proxy secure TTS requests.
-3. Click "Play Voice" on a question to fetch and stream the synthesized audio.
+1. Enable the Text-to-Speech API in your Google Cloud project.
+2. Create an API key (standard key) with access to Text-to-Speech.
+3. Set environment variables in Vercel:
+    - `GOOGLE_TTS_API_KEY` (required)
+    - `GOOGLE_TTS_VOICE_NAME` (optional, e.g. `en-US-Wavenet-D`)
+    - `GOOGLE_TTS_LANGUAGE_CODE` (optional, defaults `en-US`)
+    - `GOOGLE_TTS_SPEAKING_RATE` (optional, `0.25`–`4.0`, defaults `1.0`)
+    - `GOOGLE_TTS_PITCH` (optional, `-20.0`–`20.0`, defaults `0.0`)
+4. (Local) Add the same variables to `.env.local` and restart dev.
+5. Click "Play Voice" to fetch audio.
 
-If no TTS env vars are set, the narration button will show a loading state then do nothing.
+If no key is set, the button will show an error message.
 
-You can swap providers later (e.g. OpenAI, Azure, Google Cloud TTS) by editing `api/tts.ts` and adjusting headers/payload.
+To switch providers later, adjust `api/tts.ts` with the new REST endpoint/payload.
+
+### 🔎 Find Available Voices (PowerShell)
+
+List Google TTS voices and filter by language:
+
+```powershell
+$env:GOOGLE_TTS_API_KEY = "<YOUR_KEY>"
+$voices = Invoke-RestMethod -Method Get -Uri "https://texttospeech.googleapis.com/v1/voices?key=$env:GOOGLE_TTS_API_KEY"
+$voices.voices | Where-Object { $_.languageCodes -contains 'en-US' } | Select-Object name,languageCodes,naturalSampleRateHertz | Format-Table -AutoSize
+```
+
+Use a `name` (e.g., `en-US-Wavenet-D`) in `GOOGLE_TTS_VOICE_NAME`.
+
+### 🧪 Test the API Route
+
+```powershell
+Invoke-RestMethod -Method Post `
+    -Uri "http://localhost:3000/api/tts" `
+    -ContentType "application/json" `
+    -Body (@{ text = "Hello from Google TTS"; voiceName = "en-US-Wavenet-D"; speakingRate = 1.05; pitch = -2 } | ConvertTo-Json)
+```
+
+If you see `{ audioBase64: "..." }`, the route works. For local API routing, prefer `vercel dev`.
 
 ## 📂 Project Structure
 

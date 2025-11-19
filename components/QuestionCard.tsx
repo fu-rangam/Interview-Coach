@@ -12,6 +12,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, role, currentInde
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [isLoadingAudio, setIsLoadingAudio] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [audioError, setAudioError] = useState<string>('');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -24,13 +25,14 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, role, currentInde
 
   const handlePlayVoice = async () => {
     try {
+      setAudioError('');
       // Toggle if already loaded
       if (audioRef.current && audioUrl) {
         if (isPlaying) {
           audioRef.current.pause();
           setIsPlaying(false);
         } else {
-          audioRef.current.play();
+          await audioRef.current.play();
           setIsPlaying(true);
         }
         return;
@@ -41,11 +43,18 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, role, currentInde
       setIsLoadingAudio(false);
       if (audioRef.current && url) {
         audioRef.current.src = url;
-        audioRef.current.play();
+        try {
+          await audioRef.current.play();
+        } catch (err: any) {
+          setAudioError(err?.message || 'Playback was blocked');
+          setIsPlaying(false);
+          return;
+        }
         setIsPlaying(true);
       }
     } catch {
       setIsLoadingAudio(false);
+      setAudioError('Narration failed. Check API logs and env.');
     }
   };
 
@@ -71,6 +80,9 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, role, currentInde
           {isLoadingAudio ? 'Loading...' : isPlaying ? 'Pause Voice' : audioUrl ? 'Play Again' : 'Play Voice'}
         </button>
         <audio ref={audioRef} hidden />
+        {audioError && (
+          <span className="text-sm text-red-600" role="status">{audioError}</span>
+        )}
       </div>
     </div>
   );

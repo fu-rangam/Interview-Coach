@@ -1,9 +1,14 @@
-// Serverless function for natural voice synthesis using ElevenLabs API
+// Serverless function for natural voice synthesis using Google Cloud Text-to-Speech
+// Shifted from ElevenLabs to Google TTS per user request.
 // Expects POST { text: string }
-// Environment variables required (configure in Vercel dashboard):
-//  - ELEVENLABS_API_KEY
-//  - ELEVENLABS_VOICE_ID (optional; falls back to a default public voice)
+// Environment variables (configure in Vercel dashboard):
+//  - GOOGLE_TTS_API_KEY  (a standard Google API key with Text-to-Speech enabled OR service account proxy)
+// Optional overrides:
+//  - GOOGLE_TTS_VOICE_NAME (e.g. 'en-US-Wavenet-D')
+//  - GOOGLE_TTS_LANGUAGE_CODE (default 'en-US')
 // Returns: { audioBase64: string }
+
+export const config = { runtime: 'nodejs18.x' };
 
 export default async function handler(req: any, res: any) {
   try {
@@ -13,14 +18,12 @@ export default async function handler(req: any, res: any) {
       res.end(JSON.stringify({ error: 'Method Not Allowed' }));
       return;
     }
-
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    const voiceId = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM'; // Default voice id
+    const apiKey = process.env.GOOGLE_TTS_API_KEY;
 
     if (!apiKey) {
       res.statusCode = 400;
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: 'ELEVENLABS_API_KEY not configured' }));
+      res.end(JSON.stringify({ error: 'GOOGLE_TTS_API_KEY not configured' }));
       return;
     }
 
@@ -39,7 +42,14 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    const text: string = (body?.text || '').trim();
+    const rawText = body?.text;
+    if (typeof rawText !== 'string') {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'text must be a string' }));
+      return;
+    }
+    const text: string = rawText.trim();
     if (!text) {
       res.statusCode = 400;
       res.setHeader('Content-Type', 'application/json');
@@ -47,32 +57,59 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const ttsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    // Optional overrides from request body
+    const reqVoiceName = typeof body?.voiceName === 'string' ? body.voiceName : undefined;
+    const reqLanguageCode = typeof body?.languageCode === 'string' ? body.languageCode : undefined;
+    const reqSpeakingRate = body?.speakingRate !== undefined ? Number(body.speakingRate) : undefined;
+    const reqPitch = body?.pitch !== undefined ? Number(body.pitch) : undefined;
+
+    // Environment defaults
+    const envVoiceName = process.env.GOOGLE_TTS_VOICE_NAME;
+    const envLanguageCode = process.env.GOOGLE_TTS_LANGUAGE_CODE;
+    const envSpeakingRate = process.env.GOOGLE_TTS_SPEAKING_RATE ? Number(process.env.GOOGLE_TTS_SPEAKING_RATE) : undefined;
+    const envPitch = process.env.GOOGLE_TTS_PITCH ? Number(process.env.GOOGLE_TTS_PITCH) : undefined;
+
+    const voiceName = reqVoiceName || envVoiceName || 'en-US-Wavenet-D';
+    const languageCode = reqLanguageCode || envLanguageCode || 'en-US';
+
+    const speakingRateRaw = reqSpeakingRate ?? envSpeakingRate ?? 1.0;
+    const pitchRaw = reqPitch ?? envPitch ?? 0.0;
+
+    // Clamp per Google TTS limits: speakingRate [0.25, 4.0], pitch [-20.0, 20.0]
+    const speakingRate = Math.min(4.0, Math.max(0.25, Number.isFinite(speakingRateRaw) ? speakingRateRaw : 1.0));
+    const pitch = Math.min(20.0, Math.max(-20.0, Number.isFinite(pitchRaw) ? pitchRaw : 0.0));
+
+    const googleEndpoint = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
+    const payload = {
+      input: { text },
+      voice: { languageCode, name: voiceName },
+      audioConfig: { audioEncoding: 'MP3', speakingRate, pitch }
+    };
+
+    const ttsResponse = await fetch(googleEndpoint, {
       method: 'POST',
       headers: {
-        'xi-api-key': apiKey,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        text,
-        model_id: 'eleven_monolingual_v1',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75
-        }
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!ttsResponse.ok) {
       const errorText = await ttsResponse.text();
       res.statusCode = ttsResponse.status;
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: 'TTS request failed', details: errorText }));
+      res.end(JSON.stringify({ error: 'Google TTS request failed', details: errorText }));
       return;
     }
 
-    const buffer = await ttsResponse.arrayBuffer();
-    const audioBase64 = Buffer.from(buffer).toString('base64');
+    const json = await ttsResponse.json().catch(() => ({}));
+    const audioBase64 = json.audioContent;
+    if (!audioBase64) {
+      res.statusCode = 502;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'No audioContent in response' }));
+      return;
+    }
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');

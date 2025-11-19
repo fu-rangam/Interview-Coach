@@ -149,7 +149,7 @@ const App: React.FC = () => {
     if (totalQs === 0) return 0;
 
     let scoreSum = 0;
-    Object.values(session.answers).forEach(ans => {
+    (Object.values(session.answers) as Array<{ audioBlob: Blob; analysis: AnalysisResult | null }>).forEach(ans => {
       if (ans.analysis?.rating === 'Strong') scoreSum += 100;
       else if (ans.analysis?.rating === 'Good') scoreSum += 75;
       else scoreSum += 50;
@@ -390,9 +390,10 @@ const App: React.FC = () => {
 
   if (screen === AppScreen.SUMMARY) {
     const score = calculateOverallScore();
-    const strongCount = Object.values(session.answers).filter(a => a.analysis?.rating === 'Strong').length;
-    const goodCount = Object.values(session.answers).filter(a => a.analysis?.rating === 'Good').length;
-    const practiceCount = Object.values(session.answers).filter(a => a.analysis?.rating === 'Needs Practice').length;
+    const answerEntries = Object.values(session.answers) as Array<{ audioBlob: Blob; analysis: AnalysisResult | null }>;
+    const strongCount = answerEntries.filter(a => a.analysis?.rating === 'Strong').length;
+    const goodCount = answerEntries.filter(a => a.analysis?.rating === 'Good').length;
+    const practiceCount = answerEntries.filter(a => a.analysis?.rating === 'Needs Practice').length;
 
     return (
       <div className="flex flex-col h-full w-full bg-slate-50 overflow-hidden">

@@ -112,6 +112,24 @@ export const analyzeAnswer = async (question: string, audioBlob: Blob): Promise<
   }
 };
 
+// Provide a speech generation helper that now proxies to the serverless /api/tts route.
+// Returns base64 MP3 audio (or null if unavailable). This replaces prior Gemini TTS approach.
+export const generateSpeech = async (text: string): Promise<string | null> => {
+  if (!text.trim()) return null;
+  try {
+    const resp = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json().catch(() => ({}));
+    return (data as any).audioBase64 || null;
+  } catch {
+    return null;
+  }
+};
+
 // Fallback data
 const mockQuestions = (role: string): Question[] => [
   { id: '1', text: `Tell me about a time you faced a challenge in ${role}.` },
