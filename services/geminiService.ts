@@ -1,13 +1,13 @@
-import { GoogleGenAI, Type, SchemaType } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { Question, AnalysisResult } from "../types";
 
-const apiKey = process.env.API_KEY;
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 if (!apiKey) {
-  console.error("API_KEY is missing. Please set it in the environment variables.");
+  console.error("VITE_GEMINI_API_KEY is missing. Please set it in the .env.local file.");
 }
 
-const ai = new GoogleGenAI({ apiKey: apiKey || 'dummy-key' });
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null as any;
 
 // Helper to encode Blob to Base64
 export const blobToBase64 = (blob: Blob): Promise<string> => {
