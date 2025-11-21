@@ -72,7 +72,7 @@ const Interview: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full w-full bg-slate-50">
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center relative">
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center relative">
 
                 {!processingState.isActive && (
                     <div className="absolute top-6 left-6 z-10">
@@ -89,7 +89,7 @@ const Interview: React.FC = () => {
                         <p className="text-sm text-slate-400 mt-2">This may take a few seconds...</p>
                     </div>
                 ) : (
-                    <div className="w-full flex flex-col items-center max-w-3xl">
+                    <div className="w-full flex flex-col items-center max-w-3xl my-auto">
                         <QuestionCard
                             question={currentQ?.text || "Loading..."}
                             role={session.role}
