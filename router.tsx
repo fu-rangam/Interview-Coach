@@ -6,6 +6,7 @@ import Review from './pages/Review';
 import Summary from './pages/Summary';
 import JobDescriptionInput from './pages/JobDescriptionInput';
 import Dashboard from './pages/Dashboard';
+import DebugPrompt from './pages/DebugPrompt';
 
 export const router = createBrowserRouter([
     { path: '/', element: <Home /> },
@@ -15,4 +16,5 @@ export const router = createBrowserRouter([
     { path: '/interview', element: <Interview /> },
     { path: '/review', element: <Review /> },
     { path: '/summary', element: <Summary /> },
+    { path: '/debug', element: <DebugPrompt /> },
 ]);
