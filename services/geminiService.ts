@@ -23,50 +23,19 @@ export const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
-// Create a WAV header for the raw PCM data from Gemini
-// Spec: 24kHz, 1 channel, 16-bit PCM (Linear16)
-const createWavHeader = (dataLength: number): ArrayBuffer => {
-  const buffer = new ArrayBuffer(44);
-  const view = new DataView(buffer);
-
-  const writeString = (offset: number, string: string) => {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
-    }
-  };
-
-  // RIFF chunk descriptor
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + dataLength, true); // File size - 8
-  writeString(8, 'WAVE');
-
-  // fmt sub-chunk
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
-  view.setUint16(20, 1, true);  // AudioFormat (1 for PCM)
-  view.setUint16(22, 1, true);  // NumChannels (1)
-  view.setUint32(24, 24000, true); // SampleRate (24kHz for Gemini TTS)
-  view.setUint32(28, 24000 * 2, true); // ByteRate (SampleRate * BlockAlign)
-  view.setUint16(32, 2, true);  // BlockAlign (NumChannels * BitsPerSample/8)
-  view.setUint16(34, 16, true); // BitsPerSample (16)
-
-  // data sub-chunk
-  writeString(36, 'data');
-  view.setUint32(40, dataLength, true);
-
-  return buffer;
-};
-
 // --- API Functions ---
 
-export const generateQuestions = async (role: string): Promise<Question[]> => {
+export const generateQuestions = async (role: string, jobDescription?: string): Promise<Question[]> => {
   if (!apiKey) return mockQuestions(role);
+
+  const prompt = jobDescription
+    ? `Generate 5 interview questions for a ${role} position based on this job description:\n\n${jobDescription}\n\nQuestions should test skills mentioned in the JD. Return strictly JSON.`
+    : `Generate 5 common interview questions for a ${role} position. The questions should be diverse (behavioral, technical, situational). Return strictly JSON.`;
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `Generate 5 common interview questions for a ${role} position. 
-      The questions should be diverse (behavioral, technical, situational).`,
+      contents: prompt,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -92,45 +61,64 @@ export const generateQuestions = async (role: string): Promise<Question[]> => {
   }
 };
 
-export const analyzeAnswer = async (question: string, audioBlob: Blob): Promise<AnalysisResult> => {
+export const analyzeAnswer = async (question: string, input: Blob | string): Promise<AnalysisResult> => {
   if (!apiKey) return mockAnalysis();
 
   try {
-    const base64Audio = await blobToBase64(audioBlob);
+    let contentParts: any[] = [];
+
+    if (typeof input === 'string') {
+      // Text Input Analysis
+      contentParts = [
+        {
+          text: `You are an expert interviewer. Analyze the user's text answer to the interview question: "${question}".
+          
+          User's Answer: "${input}"
+
+          1. Since this is a text answer, the transcript is the answer itself.
+          2. Provide 3 specific, constructive feedback points on content, clarity, or structure.
+          3. Identify 3-5 key professional terms used (or that should have been used).
+          4. Give a rating: "Strong", "Good", or "Needs Practice".
+          `
+        }
+      ];
+    } else {
+      // Audio Input Analysis
+      const base64Audio = await blobToBase64(input);
+      contentParts = [
+        {
+          text: `You are an expert interviewer. Analyze the user's audio answer to the interview question: "${question}".
+          1. Transcribe the audio accurately.
+          2. Provide 3 specific, constructive feedback points on content, clarity, or structure.
+          3. Identify 3-5 key professional terms used (or that should have been used).
+          4. Give a rating: "Strong", "Good", or "Needs Practice".
+          `
+        },
+        {
+          inlineData: {
+            mimeType: input.type || 'audio/webm',
+            data: base64Audio
+          }
+        }
+      ];
+    }
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: {
-        parts: [
-          {
-            text: `You are an expert interviewer. Analyze the user's audio answer to the interview question: "${question}".
-            1. Transcribe the audio accurately.
-            2. Provide 3 specific, constructive feedback points on content, clarity, or structure.
-            3. Identify 3-5 key professional terms used (or that should have been used).
-            4. Give a rating: "Strong", "Good", or "Needs Practice".
-            `
-          },
-          {
-            inlineData: {
-              mimeType: audioBlob.type || 'audio/webm',
-              data: base64Audio
-            }
-          }
-        ]
-      },
+      contents: { parts: contentParts },
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
             transcript: { type: Type.STRING },
-            feedback: { 
-              type: Type.ARRAY, 
-              items: { type: Type.STRING } 
+            feedback: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
             },
-            keyTerms: { 
-              type: Type.ARRAY, 
-              items: { type: Type.STRING } 
+            keyTerms: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
             },
             rating: { type: Type.STRING }
           },
@@ -153,7 +141,7 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
 
   try {
     console.log("Fetching speech from server for:", text.substring(0, 15) + "...");
-    
+
     // Call your own serverless function
     const response = await fetch('/api/tts', {
       method: 'POST',
@@ -166,13 +154,12 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
     }
 
     const data = await response.json();
-    
+
     if (!data.audioBase64) {
       throw new Error("No audio data returned from server");
     }
 
-    // Convert the WAV Base64 back to a Blob for playback
-    // (The server already added the WAV header!)
+    // Convert the Base64 back to a Blob for playback
     const binaryString = atob(data.audioBase64);
     const len = binaryString.length;
     const bytes = new Uint8Array(len);
@@ -180,9 +167,13 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
-    const blob = new Blob([bytes], { type: 'audio/wav' });
+    const mimeType = data.mimeType || 'audio/mpeg';
+    console.log(`[Client] Received TTS Audio. MimeType: ${mimeType}, Length: ${len} bytes`);
+
+    const blob = new Blob([bytes], { type: mimeType });
     const url = URL.createObjectURL(blob);
-    
+    console.log(`[Client] Created Blob URL: ${url}`);
+
     return url;
 
   } catch (error) {

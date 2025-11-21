@@ -24,7 +24,7 @@ vi.mock('@google/genai', () => ({
 }));
 
 // Now import after mocking
-const { generateQuestions, analyzeAnswer, blobToBase64 } = await import('./geminiService');
+const { generateQuestions, analyzeAnswer, blobToBase64, generateSpeech } = await import('./geminiService');
 
 describe('geminiService', () => {
   describe('blobToBase64', () => {
@@ -351,6 +351,159 @@ describe('geminiService', () => {
           }),
         })
       );
+    });
+  });
+
+  describe('generateSpeech', () => {
+    let fetchMock: any;
+
+    beforeEach(() => {
+      // Mock global fetch
+      fetchMock = vi.fn();
+      global.fetch = fetchMock;
+      
+      // Mock URL.createObjectURL
+      global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should return null for empty text', async () => {
+      const result = await generateSpeech('');
+      expect(result).toBeNull();
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('should return null for whitespace-only text', async () => {
+      const result = await generateSpeech('   ');
+      expect(result).toBeNull();
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('should fetch audio from /api/tts endpoint', async () => {
+      const mockAudioBase64 = Buffer.from('RIFF....WAVE').toString('base64');
+      
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: async () => ({ audioBase64: mockAudioBase64 }),
+      });
+
+      const result = await generateSpeech('Hello world');
+
+      expect(fetchMock).toHaveBeenCalledWith('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: 'Hello world' }),
+      });
+      expect(result).toBe('blob:mock-url');
+    });
+
+    it('should create blob URL from base64 audio', async () => {
+      const mockAudioBase64 = Buffer.from('test-audio').toString('base64');
+      
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: async () => ({ audioBase64: mockAudioBase64 }),
+      });
+
+      const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL');
+
+      await generateSpeech('Test question');
+
+      expect(createObjectURLSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'audio/wav',
+        })
+      );
+    });
+
+    it('should return null on fetch failure', async () => {
+      fetchMock.mockResolvedValue({
+        ok: false,
+        statusText: 'Internal Server Error',
+      });
+
+      const result = await generateSpeech('Test');
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when audioBase64 is missing', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: async () => ({}),
+      });
+
+      const result = await generateSpeech('Test');
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle network errors gracefully', async () => {
+      fetchMock.mockRejectedValue(new Error('Network error'));
+
+      const result = await generateSpeech('Test');
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle JSON parse errors', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: async () => {
+          throw new Error('Invalid JSON');
+        },
+      });
+
+      const result = await generateSpeech('Test');
+
+      expect(result).toBeNull();
+    });
+
+    it('should properly decode base64 to binary', async () => {
+      const testData = 'test audio data';
+      const mockAudioBase64 = Buffer.from(testData).toString('base64');
+      
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: async () => ({ audioBase64: mockAudioBase64 }),
+      });
+
+      let capturedBlob: Blob | null = null;
+      global.URL.createObjectURL = vi.fn((blob: Blob) => {
+        capturedBlob = blob;
+        return 'blob:mock-url';
+      });
+
+      await generateSpeech('Test');
+
+      expect(capturedBlob).not.toBeNull();
+      expect(capturedBlob?.type).toBe('audio/wav');
+      
+      // Verify blob contains the decoded data
+      const arrayBuffer = await capturedBlob!.arrayBuffer();
+      const decoded = new TextDecoder().decode(arrayBuffer);
+      expect(decoded).toBe(testData);
+    });
+
+    it('should log request for debugging', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: async () => ({ audioBase64: 'dGVzdA==' }),
+      });
+
+      await generateSpeech('This is a long question that should be truncated');
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Fetching speech from server for:'),
+        expect.stringContaining('This is a long')
+      );
+
+      consoleSpy.mockRestore();
     });
   });
 });

@@ -6,6 +6,12 @@ import * as geminiService from './services/geminiService';
 // Mock the gemini service
 vi.mock('./services/geminiService');
 
+// Mock HTMLAudioElement
+beforeEach(() => {
+  global.HTMLAudioElement.prototype.play = vi.fn().mockResolvedValue(undefined);
+  global.HTMLAudioElement.prototype.pause = vi.fn();
+});
+
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -174,6 +180,104 @@ describe('App', () => {
         expect(global.alert).toHaveBeenCalledWith(
           expect.stringContaining('Failed to generate questions')
         );
+      });
+    });
+  });
+
+  describe('Audio Narration Integration', () => {
+    beforeEach(() => {
+      vi.mocked(geminiService.generateQuestions).mockResolvedValue([
+        { id: '1', text: 'What is your biggest strength?' },
+        { id: '2', text: 'Tell me about yourself' },
+      ]);
+      vi.mocked(geminiService.generateSpeech).mockResolvedValue('blob:mock-audio-url');
+    });
+
+    it('should show Play Voice button on question screen', async () => {
+      render(<App />);
+      
+      fireEvent.click(screen.getByText(/Start Practicing/i));
+      
+      await waitFor(() => {
+        fireEvent.click(screen.getByText('Data Analytics'));
+      });
+      
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /play narration/i })).toBeDefined();
+      });
+    });
+
+    it('should call generateSpeech when Play Voice is clicked', async () => {
+      render(<App />);
+      
+      fireEvent.click(screen.getByText(/Start Practicing/i));
+      
+      await waitFor(() => {
+        fireEvent.click(screen.getByText('Data Analytics'));
+      });
+      
+      await waitFor(() => {
+        const playButton = screen.getByRole('button', { name: /play narration/i });
+        fireEvent.click(playButton);
+      });
+      
+      await waitFor(() => {
+        expect(geminiService.generateSpeech).toHaveBeenCalledWith('What is your biggest strength?');
+      });
+    });
+
+    it('should reset audio state when navigating to next question', async () => {
+      vi.mocked(geminiService.analyzeAnswer).mockResolvedValue({
+        transcript: 'I am good at problem solving',
+        feedback: ['Good answer'],
+        keyTerms: ['Problem Solving'],
+        rating: 'Strong',
+      });
+
+      render(<App />);
+      
+      fireEvent.click(screen.getByText(/Start Practicing/i));
+      
+      await waitFor(() => {
+        fireEvent.click(screen.getByText('Data Analytics'));
+      });
+      
+      await waitFor(() => {
+        expect(screen.getByText('What is your biggest strength?')).toBeDefined();
+      });
+      
+      // Play audio on first question
+      const playButton = screen.getByRole('button', { name: /play narration/i });
+      fireEvent.click(playButton);
+      
+      await waitFor(() => {
+        expect(geminiService.generateSpeech).toHaveBeenCalledWith('What is your biggest strength?');
+        expect(screen.getByText('Playing...')).toBeDefined();
+      });
+      
+      // Verify audio controls work correctly in integration context
+      expect(HTMLAudioElement.prototype.play).toHaveBeenCalled();
+    });
+
+    it('should handle audio generation failure gracefully', async () => {
+      vi.mocked(geminiService.generateSpeech).mockResolvedValue(null);
+
+      render(<App />);
+      
+      fireEvent.click(screen.getByText(/Start Practicing/i));
+      
+      await waitFor(() => {
+        fireEvent.click(screen.getByText('Data Analytics'));
+      });
+      
+      await waitFor(() => {
+        const playButton = screen.getByRole('button', { name: /play narration/i });
+        fireEvent.click(playButton);
+      });
+      
+      // Should show error message
+      await waitFor(() => {
+        expect(screen.getByText(/Narration failed/i)).toBeDefined();
       });
     });
   });

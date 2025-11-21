@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { generateSpeech } from '../services/geminiService'; // Updated import
+import { generateSpeech } from '../services/geminiService';
 
 interface QuestionCardProps {
   question: string;
@@ -20,10 +20,32 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, role, currentInde
     setAudioUrl('');
     setIsPlaying(false);
     setAudioError('');
+    setIsLoadingAudio(false);
     if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      // Fix: removeAttribute('src') prevents the browser from trying to load the current page as audio
+      audioRef.current.removeAttribute('src');
     }
+
+    // Prefetch audio after a short delay to avoid conflicts
+    const timer = setTimeout(async () => {
+      try {
+        const url = await generateSpeech(question);
+        if (url) {
+          setAudioUrl(url);
+          if (audioRef.current) {
+            audioRef.current.src = url;
+            // Preload the audio
+            audioRef.current.load();
+          }
+        }
+      } catch (error) {
+        console.log('Prefetch failed, will load on demand');
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [question]);
 
   useEffect(() => {
@@ -37,54 +59,43 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, role, currentInde
   const handlePlayVoice = async () => {
     try {
       setAudioError('');
-      // Toggle if already loaded
-      if (audioRef.current && audioUrl) {
-        if (isPlaying) {
-          audioRef.current.pause();
-          setIsPlaying(false);
-        } else {
-          await audioRef.current.play();
-          setIsPlaying(true);
-        }
-        return;
-      }
-      
+      if (isPlaying) return;
+
       setIsLoadingAudio(true);
-      // Call Gemini TTS
-      const url = await generateSpeech(question);
-      
+
+      let url = audioUrl;
+
+      // If no URL yet (prefetch didn't finish or failed), fetch now
       if (!url) {
-         throw new Error("Failed to generate audio");
+        url = await generateSpeech(question);
+        if (!url) throw new Error("Failed to generate audio");
+        setAudioUrl(url);
       }
 
-      setAudioUrl(url);
-      setIsLoadingAudio(false);
-      
       if (audioRef.current) {
-        audioRef.current.src = url;
-        try {
-          await audioRef.current.play();
-          setIsPlaying(true);
-        } catch (err: any) {
-          console.error("Playback error:", err);
-          setAudioError('Playback failed. Check permissions.');
-          setIsPlaying(false);
+        // Only set src if it's different to avoid reloading if already ready
+        if (audioRef.current.src !== url) {
+          audioRef.current.src = url;
         }
+
+        await audioRef.current.play();
+        setIsPlaying(true);
       }
     } catch (e) {
+      console.error("Playback error:", e);
+      setAudioError('Playback failed. Try again.');
+    } finally {
       setIsLoadingAudio(false);
-      setAudioError('Narration failed. API key valid?');
-      console.error(e);
     }
   };
 
   return (
     <div className="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-lg shadow-indigo-100/50 border border-slate-100 mb-8">
       <div className="flex items-center space-x-2 mb-4">
-         <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-md uppercase tracking-wider border border-indigo-100">
-            {role}
-         </span>
-         <span className="text-slate-400 text-sm font-medium">Question {currentIndex + 1} of {total}</span>
+        <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-md uppercase tracking-wider border border-indigo-100">
+          {role}
+        </span>
+        <span className="text-slate-400 text-sm font-medium">Question {currentIndex + 1} of {total}</span>
       </div>
       <h2 className="text-2xl md:text-3xl font-semibold text-slate-800 leading-snug mb-4">
         {question}
@@ -95,11 +106,20 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, role, currentInde
           onClick={handlePlayVoice}
           aria-label={isPlaying ? 'Pause narration' : 'Play narration'}
           className="px-4 py-2 text-sm font-medium rounded-md border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50 min-w-[120px] flex justify-center"
-          disabled={isLoadingAudio}
+          disabled={isLoadingAudio || isPlaying}
         >
-          {isLoadingAudio ? 'Loading...' : isPlaying ? 'Pause Voice' : audioUrl ? 'Play Again' : 'Play Voice'}
+          {isLoadingAudio ? 'Loading...' : isPlaying ? 'Playing...' : audioUrl ? 'Play Again' : 'Play Voice'}
         </button>
-        <audio ref={audioRef} hidden />
+        <audio
+          ref={audioRef}
+          hidden
+          onError={(e) => {
+            console.error("Audio element error:", e);
+            setAudioError("Audio format not supported");
+            setIsLoadingAudio(false);
+            setIsPlaying(false);
+          }}
+        />
         {audioError && (
           <span className="text-sm text-red-600 animate-pulse" role="status">{audioError}</span>
         )}

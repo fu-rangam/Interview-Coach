@@ -15,15 +15,17 @@ export interface AnalysisResult {
   transcript: string;
   feedback: string[];
   keyTerms: string[];
-  rating: string; // e.g., "Strong", "Good", "Needs Improvement"
+  rating: string; // e.g., "Strong", "Good", "Needs Practice"
 }
 
 export interface InterviewSession {
   role: string;
+  jobDescription?: string; // Optional job description context
   questions: Question[];
   currentQuestionIndex: number;
   answers: Record<string, {
-    audioBlob: Blob;
+    audioBlob?: Blob; // Optional if answering via text
+    text?: string;    // Optional if answering via voice
     analysis: AnalysisResult | null;
   }>;
 }

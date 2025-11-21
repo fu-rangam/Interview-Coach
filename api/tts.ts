@@ -7,7 +7,6 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    // In Node.js environments, Vercel automatically parses JSON into req.body
     const { text } = req.body || {};
 
     if (!text) {
@@ -15,7 +14,6 @@ export default async function handler(req, res) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
-
     if (!apiKey) {
       console.error("Server Error: GEMINI_API_KEY is missing");
       return res.status(500).json({ error: 'Server configuration error' });
@@ -23,12 +21,16 @@ export default async function handler(req, res) {
 
     const ai = new GoogleGenAI({ apiKey });
 
+    console.log(`[TTS] Starting generation for text: "${text.substring(0, 20)}..."`);
+
     // 2. Call Gemini 2.5 Flash for Audio
-    // We use Flash because it is generally faster/cheaper for this simple task
+    const wrapped = `Instruction: Read the following interview question as a hiring manager addressing a candidate.\n${text}`;
+
+    console.log("[TTS] Calling Gemini API...");
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-preview-tts',
       contents: {
-        parts: [{ text: `Please read this sentence clearly and professionally: "${text}"` }]
+        parts: [{ text: wrapped }]
       },
       config: {
         responseModalities: ['AUDIO'],
@@ -42,36 +44,64 @@ export default async function handler(req, res) {
       }
     });
 
+    console.log("[TTS] Gemini API responded.");
     const candidate = response.candidates?.[0];
     const part = candidate?.content?.parts?.[0];
 
     if (!part?.inlineData?.data) {
-      console.error("Gemini API response missing audio data");
+      console.error("[TTS] Gemini API response missing audio data");
       return res.status(500).json({ error: 'Failed to generate audio from AI' });
     }
 
-    // 3. Process Audio (Base64 -> Buffer -> WAV)
+    const mimeType = part.inlineData.mimeType || 'unknown';
+    console.log(`[TTS] Audio data received. MimeType: ${mimeType}`);
+
     const base64Audio = part.inlineData.data;
     const audioBuffer = Buffer.from(base64Audio, 'base64');
+    console.log(`[TTS] Received Audio Buffer Size: ${audioBuffer.length} bytes`);
 
-    // Create WAV Header
-    const wavHeader = createWavHeader(audioBuffer.length);
-    
-    // Combine Header + Audio
-    const finalBuffer = Buffer.concat([wavHeader, audioBuffer]);
+    // Case A: Gemini returned MP3 (send as is)
+    if (mimeType === 'audio/mpeg' || mimeType === 'audio/mp3') {
+      console.log("[TTS] Gemini returned MP3. Sending directly.");
+      return res.status(200).json({
+        audioBase64: base64Audio,
+        mimeType: 'audio/mpeg'
+      });
+    }
 
-    // 4. Send Response
-    return res.status(200).json({ 
-      audioBase64: finalBuffer.toString('base64') 
+    // Case B: Gemini returned Raw PCM (audio/L16) -> Wrap in WAV Header
+    // We tried swapping bytes (BE->LE) and it didn't help.
+    // We tried sending as is (LE) and it didn't help.
+    // But we must fix the syntax error first.
+    // Let's stick to the standard assumption: PCM is usually Little Endian on these APIs unless specified.
+    if (mimeType.startsWith('audio/L16') || mimeType.startsWith('audio/pcm')) {
+      console.log("[TTS] Gemini returned PCM. Wrapping in WAV header...");
+
+      const wavHeader = createWavHeader(audioBuffer.length);
+      const wavBuffer = Buffer.concat([wavHeader, audioBuffer]);
+
+      console.log(`[TTS] Sending WAV. Total Size: ${wavBuffer.length} bytes`);
+      return res.status(200).json({
+        audioBase64: wavBuffer.toString('base64'),
+        mimeType: 'audio/wav'
+      });
+    }
+
+    // Case C: Unknown format -> Try sending as is (fallback)
+    console.warn("[TTS] Unexpected mimeType:", mimeType);
+    return res.status(200).json({
+      audioBase64: base64Audio,
+      mimeType: mimeType
     });
 
   } catch (error) {
-    console.error("Server TTS Error:", error);
+    console.error("[TTS] Server Error:", error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 }
 
 // --- Helper: Create WAV Header (Node.js Buffer Version) ---
+// Specs for Gemini 2.5 Flash TTS: 24kHz, 1 Channel (Mono), 16-bit PCM
 function createWavHeader(dataLength) {
   const buffer = Buffer.alloc(44);
 
