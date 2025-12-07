@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, RefreshCw, Award, ChevronRight, MessageSquare, CheckCircle2 } from '../components/Icons';
+import { Mic, RefreshCw, Award, ChevronRight, MessageSquare, CheckCircle2, Activity } from '../components/Icons';
 import { useSession } from '../hooks/useSession';
 
 const Review: React.FC = () => {
@@ -91,6 +91,33 @@ const Review: React.FC = () => {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Delivery Feedback Card - Only show if available */}
+                        {(answer?.analysis?.deliveryStatus || answer?.analysis?.deliveryTips) && (
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                                        <Activity size={20} />
+                                    </div>
+                                    <h4 className="font-semibold text-slate-800">Speaking Delivery</h4>
+                                    {answer?.analysis?.deliveryStatus && (
+                                        <span className="ml-auto text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md uppercase tracking-wider">
+                                            {answer.analysis.deliveryStatus}
+                                        </span>
+                                    )}
+                                </div>
+                                {answer?.analysis?.deliveryTips && (
+                                    <ul className="space-y-3">
+                                        {answer.analysis.deliveryTips.map((tip, i) => (
+                                            <li key={i} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/50">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
+                                                <p className="text-slate-600 text-sm leading-relaxed">{tip}</p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        )}
 
                         {/* Feedback Card */}
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60">
