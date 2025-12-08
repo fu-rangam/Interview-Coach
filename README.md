@@ -12,6 +12,7 @@ Built with **React** and powered by **Google's Gemini 2.5 Flash**, this applicat
 * **Instant AI Analysis:**
     * **Transcription:** Converts speech to text for self-review.
     * **Content Feedback:** Analyzes answers for clarity, structure (STAR method), and relevance.
+    * **Delivery Analysis:** Evaluates vocal pace, tone, and confidence (e.g., "Too Fast", "Monotone", "Confident").
     * **Key Term Extraction:** Identifies professional keywords used in the response.
     * **Rating System:** Grades answers as "Strong," "Good," or "Needs Practice."
 * **Comprehensive Session Summary:**

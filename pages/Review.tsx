@@ -70,7 +70,7 @@ const Review: React.FC = () => {
                     <div className="flex items-center justify-between mb-8">
                         <h3 className="text-2xl font-bold text-slate-800">AI Insights</h3>
                         <span className={`px-4 py-1.5 rounded-full text-sm font-bold shadow-sm border ${getRatingColor(answer?.analysis?.rating)}`}>
-                            {answer?.analysis?.rating} Match
+                            {answer?.analysis?.rating} {answer?.analysis?.rating === 'Needs Practice' ? '' : 'Match'}
                         </span>
                     </div>
 
