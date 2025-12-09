@@ -124,13 +124,14 @@ const Dashboard: React.FC = () => {
                                     className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-indigo-300 transition-all group cursor-pointer relative overflow-hidden"
                                     // For now, clicking just shows an alert or could navigate to a detail view if we implemented one.
                                     // Since we don't have a dedicated detail route yet, we'll just keep it simple.
-                                    onClick={() => alert(`Session details for ${session.role} on ${session.date}\nScore: ${session.score}%`)}
+                                    // Navigate to detailed view
+                                    onClick={() => navigate(`/session/${session.id}`)}
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
                                         <div className="flex items-start gap-4">
                                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold ${session.score >= 80 ? 'bg-emerald-100 text-emerald-700' :
-                                                    session.score >= 60 ? 'bg-teal-100 text-teal-700' :
-                                                        'bg-orange-100 text-orange-700'
+                                                session.score >= 60 ? 'bg-teal-100 text-teal-700' :
+                                                    'bg-orange-100 text-orange-700'
                                                 }`}>
                                                 {session.score}
                                             </div>
