@@ -39,7 +39,7 @@ const ttsPlugin = (): Plugin => ({
 
           // 3. Call Handler
           // Dynamic import to avoid build issues if not used
-          const { default: ttsHandler } = await import('./api/tts');
+          const { default: ttsHandler } = await import('./src/api/tts');
           console.log("Middleware: API Key present?", !!process.env.GEMINI_API_KEY);
           await ttsHandler(req, wrappedRes);
         } catch (error) {
@@ -73,7 +73,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), ttsPlugin()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './src'),
       }
     }
   };
