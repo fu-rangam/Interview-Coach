@@ -1,4 +1,4 @@
-# AI Interview Coach
+# Interview Coach
 
 A robust, voice-activated interview preparation tool designed to help job seekers practice, refine, and master their interview skills.
 

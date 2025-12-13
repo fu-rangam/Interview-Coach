@@ -233,7 +233,7 @@ const Interview: React.FC = () => {
                         <div className="px-8 py-6 border-b border-slate-200/50 bg-slate-50/80 backdrop-blur-sm sticky top-0 z-10">
                             <div className="flex items-center gap-2 text-amber-600 mb-1">
                                 <Lightbulb size={20} className="fill-current opacity-20" />
-                                <h3 className="font-display font-bold text-slate-800 tracking-tight">Coach's Corner</h3>
+                                <h3 className="font-display font-bold text-slate-800 text-sm uppercase tracking-wider">Coach's Corner</h3>
                             </div>
                             <p className="text-sm text-slate-500">Key strategies for this specific question</p>
                         </div>

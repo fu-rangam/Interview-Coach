@@ -72,11 +72,11 @@ const RoleSelection: React.FC = () => {
                     <button
                         key={role}
                         onClick={() => selectRole(role)}
-                        className="group relative bg-white p-6 rounded-xl shadow-sm hover:shadow-lg border border-slate-100 hover:border-indigo-500/30 transition-all duration-300 text-left overflow-hidden hover:-translate-y-1 h-32 flex flex-col justify-between"
+                        className="group relative bg-indigo-50 p-6 rounded-xl shadow-sm hover:shadow-lg border border-slate-100 hover:border-indigo-500/30 transition-all duration-300 text-left overflow-hidden hover:-translate-y-1 h-32 flex flex-col justify-between"
                     >
                         {ROLE_IMAGES[role] && (
-                            <div className="absolute inset-0 opacity-40 transition-opacity">
-                                <img src={ROLE_IMAGES[role]} alt={role} className="w-full h-full object-cover" />
+                            <div className="absolute bottom-[-70%] right-[-10%] w-64 h-64 opacity-60 group-hover:opacity-100 transition-opacity">
+                                <img src={ROLE_IMAGES[role]} alt={role} className="w-full h-full object-contain" />
                             </div>
                         )}
                         <div className="relative z-10">
@@ -141,9 +141,9 @@ const RoleSelection: React.FC = () => {
                 {/* Sidebar - Sticky/Fixed Right Column */}
                 <aside className="w-80 lg:w-96 flex-none bg-white border-l border-slate-200 p-8 hidden lg:flex lg:flex-col">
                     <div className="flex-1 flex flex-col justify-center">
-                        <div className="p-1 rounded-2xl bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-xl">
-                            <div className="bg-white rounded-xl p-8 text-center h-full flex flex-col items-center">
-                                <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-6">
+                        <div className="p-1 rounded-2xl bg-linear-to-br from-indigo-100 via-purple-100 to-pink-100 shadow-xl">
+                            <div className="bg-linear-to-br from-pink-100 via-purple-100 to-indigo-100 rounded-xl p-8 text-center h-full flex flex-col items-center">
+                                <div className="w-16 h-16 bg-linear-to-br from-white to-indigo-200 rounded-full flex items-center justify-center text-indigo-600 mb-6">
                                     <Sparkles size={32} />
                                 </div>
                                 <h3 className="text-2xl font-display font-bold text-slate-900 mb-3">Custom Role</h3>

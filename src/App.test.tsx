@@ -21,7 +21,7 @@ describe('App', () => {
     it('should render home screen with start button', () => {
       render(<App />);
       
-      expect(screen.getByText(/AI Interview Coach/i)).toBeDefined();
+      expect(screen.getByText(/Interview Coach/i)).toBeDefined();
       expect(screen.getByText(/Start Practicing/i)).toBeDefined();
     });
 
@@ -154,7 +154,7 @@ describe('App', () => {
       });
       
       await waitFor(() => {
-        expect(screen.getByText(/AI Interview Coach/i)).toBeDefined();
+        expect(screen.getByText(/Interview Coach/i)).toBeDefined();
       });
     });
   });
