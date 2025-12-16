@@ -8,7 +8,7 @@ import Loader from '../components/Loader';
 import { useGuestTracker } from '../hooks/useGuestTracker';
 import { useAuth } from '../context/AuthContext';
 
-const MAX_JD_LENGTH = 2000;
+const MAX_JD_LENGTH = 3000;
 
 const JobDescriptionInput: React.FC = () => {
     const navigate = useNavigate();

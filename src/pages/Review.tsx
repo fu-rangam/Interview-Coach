@@ -110,7 +110,7 @@ const Review: React.FC = () => {
                                     <ul className="space-y-3">
                                         {answer.analysis.deliveryTips.map((tip, i) => (
                                             <li key={i} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/50">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
+                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0" />
                                                 <p className="text-slate-600 text-sm leading-relaxed">{tip}</p>
                                             </li>
                                         ))}
@@ -130,7 +130,7 @@ const Review: React.FC = () => {
                             <ul className="space-y-4">
                                 {answer?.analysis?.feedback.map((point, i) => (
                                     <li key={i} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/50">
-                                        <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                                         <p className="text-slate-600 leading-relaxed">{point}</p>
                                     </li>
                                 ))}

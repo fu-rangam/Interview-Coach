@@ -153,8 +153,8 @@ const Interview: React.FC = () => {
 
                                 {/* Voice Input Area */}
                                 {activeTab === 'voice' && (
-                                    <div className="flex flex-col items-center w-full animate-fade-in py-8">
-                                        <div className="w-full h-40 flex items-center justify-center mb-8 relative">
+                                    <div className="flex flex-col items-center w-full animate-fade-in py-4">
+                                        <div className="w-full h-40 flex items-center justify-center mb-4 relative">
                                             {isRecording ? (
                                                 <div className="w-full relative">
                                                     <div className="absolute inset-0 bg-indigo-500/5 blur-3xl rounded-full animate-pulse"></div>
@@ -186,7 +186,7 @@ const Interview: React.FC = () => {
                                                 </button>
                                             )}
                                         </div>
-                                        <p className="mt-8 text-slate-400 font-semibold tracking-wider text-xs uppercase">
+                                        <p className="mt-4 text-slate-400 font-semibold tracking-wider text-xs uppercase">
                                             {isRecording ? <span className="text-rose-500 animate-pulse">● Recording in progress</span> : "Ready to Record"}
                                         </p>
                                     </div>

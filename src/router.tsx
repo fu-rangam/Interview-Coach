@@ -8,6 +8,7 @@ import JobDescriptionInput from './pages/JobDescriptionInput';
 import Dashboard from './pages/Dashboard';
 import DebugPrompt from './pages/DebugPrompt';
 import SessionDetail from './pages/SessionDetail';
+import Ready2WorkLanding from './pages/Ready2WorkLanding';
 
 import Auth from './pages/Auth';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -30,6 +31,7 @@ export const router = createBrowserRouter([
             { path: '/dashboard', element: <Dashboard /> },
             { path: '/debug', element: <DebugPrompt /> },
             { path: '/session/:id', element: <SessionDetail /> },
+            { path: '/ready2work', element: <Ready2WorkLanding /> },
         ]
     }
 ]);
