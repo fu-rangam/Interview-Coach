@@ -143,14 +143,14 @@ export const analyzeAnswer = async (question: string, input: Blob | string): Pro
       // Text Input Analysis
       contentParts = [
         {
-          text: `You are an expert interviewer. Analyze the user's text answer to the interview question: "${question}".
+          text: `You are a supportive and encouraging interview coach. Analyze the user's text answer to the interview question: "${question}".
           
           User's Answer: "${input}"
 
           1. Since this is a text answer, the transcript is the answer itself.
-          2. Provide 3 specific, constructive feedback points on content, clarity, or structure.
+          2. Provide 3 balanced feedback points (highlighting strengths + areas for improvement). Be constructive but kind.
           3. Identify 3-5 key professional terms used (or that should have been used).
-          4. Give a rating: "Strong", "Good", or "Needs Practice".
+          4. Give a rating: "Strong", "Good", or "Developing".
           `
         }
       ];
@@ -159,14 +159,14 @@ export const analyzeAnswer = async (question: string, input: Blob | string): Pro
       const base64Audio = await blobToBase64(input);
       contentParts = [
         {
-          text: `You are an expert interviewer. Analyze the user's audio answer to the interview question: "${question}".
+          text: `You are a supportive and encouraging interview coach. Analyze the user's audio answer to the interview question: "${question}".
           1. Transcribe the audio accurately.
-          2. Provide 3 specific, constructive feedback points on content, clarity, or structure.
+          2. Provide 3 balanced feedback points (highlighting strengths + areas for improvement). Be constructive but kind.
           3. Analyze the delivery, tone, and pace.
              - Status: summarized in 1-2 words (e.g., "Confident", "Too Fast", "Monotone").
-             - Tips: 2 specific tips on how to improve delivery (e.g., "Slow down slightly," "Vary your pitch").
+             - Tips: 2 specific tips on how to improve delivery (e.g., "Slow down slightly," "Vary your pitch"). Keep these helpful, not harsh.
           4. Identify 3-5 key professional terms used (or that should have been used).
-          5. Give a rating: "Strong", "Good", or "Needs Practice".
+          5. Give a rating: "Strong", "Good", or "Developing".
           `
         },
         {
@@ -291,7 +291,7 @@ const mockAnalysis = (): AnalysisResult => ({
     "Mention specific tools or technologies you utilized."
   ],
   keyTerms: ["Leadership", "Data Analysis", "Problem Solving"],
-  rating: "Good",
+  rating: "Developing",
   deliveryStatus: "Clear & Paced",
   deliveryTips: ["Good volume, but try to vary your pitch to sound more engaging.", "Pace was steady and easy to follow."]
 });

@@ -28,7 +28,7 @@ const Review: React.FC = () => {
         switch (rating) {
             case 'Strong': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
             case 'Good': return 'bg-teal-100 text-teal-700 border-teal-200';
-            default: return 'bg-orange-100 text-orange-700 border-orange-200'; // Needs Practice
+            default: return 'bg-orange-100 text-orange-700 border-orange-200'; // Developing / Needs Practice
         }
     };
 
@@ -70,7 +70,7 @@ const Review: React.FC = () => {
                     <div className="flex items-center justify-between mb-8">
                         <h3 className="text-2xl font-bold text-slate-800">AI Insights</h3>
                         <span className={`px-4 py-1.5 rounded-full text-sm font-bold shadow-sm border ${getRatingColor(answer?.analysis?.rating)}`}>
-                            {answer?.analysis?.rating} {answer?.analysis?.rating === 'Needs Practice' ? '' : 'Match'}
+                            {answer?.analysis?.rating} {(answer?.analysis?.rating === 'Developing' || answer?.analysis?.rating === 'Needs Practice') ? '' : 'Match'}
                         </span>
                     </div>
 

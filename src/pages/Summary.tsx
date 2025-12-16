@@ -86,14 +86,14 @@ const Summary: React.FC = () => {
         switch (rating) {
             case 'Strong': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
             case 'Good': return 'bg-teal-100 text-teal-700 border-teal-200';
-            default: return 'bg-amber-100 text-amber-700 border-amber-200'; // Needs Practice
+            default: return 'bg-amber-100 text-amber-700 border-amber-200'; // Developing / Needs Practice
         }
     };
 
     const answerEntries = Object.values(session.answers) as Array<{ audioBlob?: Blob; analysis: AnalysisResult | null }>;
     const strongCount = answerEntries.filter(a => a.analysis?.rating === 'Strong').length;
     const goodCount = answerEntries.filter(a => a.analysis?.rating === 'Good').length;
-    const practiceCount = answerEntries.filter(a => a.analysis?.rating === 'Needs Practice').length;
+    const practiceCount = answerEntries.filter(a => a.analysis?.rating === 'Developing' || a.analysis?.rating === 'Needs Practice').length;
 
     return (
         <div className="flex flex-col h-screen w-full bg-slate-50 overflow-hidden font-sans">
@@ -169,7 +169,7 @@ const Summary: React.FC = () => {
                                     </div>
                                 </div>
                                 <p className="text-center text-slate-500 text-sm">
-                                    {score >= 80 ? "Excellent! You're ready." : score >= 60 ? "Good, but refine your answers." : "Keep practicing to improve."}
+                                    {score >= 80 ? "Excellent! You're ready." : score >= 60 ? "Good, but refine your answers." : "Keep practicing to develop your skills."}
                                 </p>
                             </CardContent>
                         </Card>
@@ -207,7 +207,7 @@ const Summary: React.FC = () => {
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-sm font-medium">
                                         <span className="text-slate-700 flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-amber-500"></div> Needs Practice
+                                            <div className="w-2 h-2 rounded-full bg-amber-500"></div> Developing
                                         </span>
                                         <span className="text-slate-900">{practiceCount}</span>
                                     </div>

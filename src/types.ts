@@ -30,7 +30,7 @@ export interface AnalysisResult {
   keyTerms: string[];
   deliveryStatus?: string; // e.g., "Clear & Paced", "Too Fast", "Monotone"
   deliveryTips?: string[]; // Specific delivery, tone, pace feedback
-  rating: string; // e.g., "Strong", "Good", "Needs Practice"
+  rating: string; // e.g., "Strong", "Good", "Developing"
 }
 
 export interface InterviewSession {

@@ -115,7 +115,7 @@ const SessionDetail: React.FC = () => {
                                 <div>
                                     <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Overall Score</div>
                                     <div className="text-sm font-medium text-slate-600">
-                                        {score >= 80 ? 'Excellent' : score >= 60 ? 'Good Start' : 'Needs Practice'}
+                                        {score >= 80 ? 'Excellent' : score >= 60 ? 'Good Start' : 'Developing'}
                                     </div>
                                 </div>
                             </div>
