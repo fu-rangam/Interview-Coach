@@ -28,6 +28,12 @@ const Interview: React.FC = () => {
     // Safe access to current question
     const currentQ = session.questions[session.currentQuestionIndex];
 
+    const decodeHtml = (html: string) => {
+        const txt = document.createElement('textarea');
+        txt.innerHTML = html;
+        return txt.value;
+    };
+
     // Redirect hooked guests
     React.useEffect(() => {
         if (!user && hasCompletedSession) {
@@ -118,7 +124,7 @@ const Interview: React.FC = () => {
                         <div className="flex-1 overflow-y-auto px-8 pb-8 flex flex-col items-center">
                             <div className="w-full max-w-xl mx-auto space-y-8">
                                 <QuestionCard
-                                    question={currentQ?.text || "Loading..."}
+                                    question={currentQ ? decodeHtml(currentQ.text) : "Loading..."}
                                     role={session.role}
                                     currentIndex={session.currentQuestionIndex}
                                     total={session.questions.length}
@@ -293,7 +299,7 @@ const Interview: React.FC = () => {
                                             "line-clamp-2 leading-relaxed",
                                             isActive ? "font-semibold" : "font-medium"
                                         )}>
-                                            {q.text}
+                                            {decodeHtml(q.text)}
                                         </span>
                                     </button>
                                 );
