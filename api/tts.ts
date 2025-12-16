@@ -13,11 +13,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing "text" in request body' });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
-      console.error("Server Error: GEMINI_API_KEY is missing");
-      return res.status(500).json({ error: 'Server configuration error' });
+      console.error("Server Error: GEMINI_API_KEY (and VITE_ fallback) is missing");
+      return res.status(500).json({ error: 'Server configuration error: Missing API Key' });
     }
+
+    // Masked logging for debug
+    console.log(`[TTS] Loaded API Key. Length: ${apiKey.length}, Starts: ${apiKey.substring(0, 4)}...`);
 
     const ai = new GoogleGenAI({ apiKey });
 
