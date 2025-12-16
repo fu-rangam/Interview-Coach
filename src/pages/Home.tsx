@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Briefcase } from '../components/Icons';
 import { useGuestTracker } from '../hooks/useGuestTracker';
 import { useAuth } from '../context/AuthContext';
 
@@ -30,10 +29,15 @@ const Home: React.FC = () => {
 
     return (
         <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-slate-50 relative overflow-hidden">
-            <div className="max-w-3xl text-center z-10">
-                <div className="inline-flex items-center justify-center p-5 bg-indigo-100 rounded-2xl mb-8 shadow-lg shadow-indigo-100 ring-1 ring-indigo-50">
-                    <Briefcase className="w-12 h-12 text-indigo-600" />
+            <div className="max-w-3xl text-center z-10 flex flex-col items-center">
+                <div className="mb-8 p-6">
+                    <img
+                        src="/ready2work.svg"
+                        alt="Ready2Work"
+                        className="h-24 w-auto object-contain"
+                    />
                 </div>
+
                 <h1 className="text-5xl md:text-7xl font-bold text-slate-900 mb-6 tracking-tight">
                     Interview Coach
                 </h1>
@@ -44,14 +48,14 @@ const Home: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <button
                         onClick={handleStart}
-                        className="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg shadow-indigo-200 transition-all hover:-translate-y-1"
+                        className="px-10 py-4 bg-[#376497] border-2 border-transparent hover:bg-transparent hover:text-[#0B8039] hover:border-[#0B8039] text-white font-semibold rounded-lg shadow-lg shadow-blue-900/10 transition-all hover:-translate-y-1"
                     >
                         {(!user && hasCompletedSession) ? "Create Account to Continue" : "Start Practicing"}
                     </button>
                     {user && (
                         <button
                             onClick={() => navigate('/dashboard')}
-                            className="px-10 py-4 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-lg shadow-lg shadow-indigo-200 transition-all hover:-translate-y-1"
+                            className="px-10 py-4 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-lg shadow-lg shadow-slate-200 transition-all hover:-translate-y-1"
                         >
                             View History
                         </button>
@@ -60,8 +64,8 @@ const Home: React.FC = () => {
             </div>
 
             {/* Decorative background elements */}
-            <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-indigo-200/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-pulse"></div>
-            <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-fuchsia-200/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-pulse" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-rangam-blue/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-pulse"></div>
+            <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-rangam-green/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-pulse" style={{ animationDelay: '1s' }}></div>
         </div>
     );
 };

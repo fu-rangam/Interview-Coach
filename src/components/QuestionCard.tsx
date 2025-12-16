@@ -95,11 +95,11 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, role, currentInde
   };
 
   return (
-    <Card className="w-full bg-white shadow-xl shadow-indigo-100/50 border-slate-100">
+    <Card className="w-full bg-white shadow-xl shadow-blue-100/50 border-slate-100">
       <CardContent className="p-8">
         {!hideHeader && (
           <div className="flex items-center space-x-2 mb-6">
-            <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full uppercase tracking-wider border border-indigo-100">
+            <span className="px-3 py-1 bg-blue-50 text-[#376497] text-xs font-bold rounded-full uppercase tracking-wider border border-blue-100">
               {role}
             </span>
             <span className="text-slate-400 text-sm font-medium">Question {currentIndex + 1} of {total}</span>
@@ -121,8 +121,8 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, role, currentInde
             className={cn(
               "min-w-[140px] gap-2 font-semibold transition-all duration-300",
               isPlaying
-                ? "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
-                : "text-slate-600 hover:text-indigo-600 hover:border-indigo-200"
+                ? "bg-blue-50 text-[#376497] border-blue-200 hover:bg-blue-100"
+                : "text-slate-600 hover:text-[#376497] hover:border-blue-200"
             )}
           >
             {isLoadingAudio ? (

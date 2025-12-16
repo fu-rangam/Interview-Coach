@@ -53,7 +53,7 @@ const Review: React.FC = () => {
                         <button onClick={handleRedo} className="px-6 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors">
                             <RefreshCw size={18} /> Retry
                         </button>
-                        <button onClick={handleNextQuestion} className="px-8 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 ml-auto transition-all hover:translate-x-1">
+                        <button onClick={handleNextQuestion} className="px-8 py-3 rounded-xl bg-[#376497] text-white font-medium hover:bg-[#25466c] shadow-lg shadow-blue-200 flex items-center justify-center gap-2 ml-auto transition-all hover:translate-x-1">
                             {isLastQuestion ? (
                                 <>Finish & Analyze <Award size={18} /></>
                             ) : (
@@ -78,7 +78,7 @@ const Review: React.FC = () => {
                         {/* Key Terms Card */}
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+                                <div className="p-2 bg-blue-50 rounded-lg text-[#376497]">
                                     <Award size={20} />
                                 </div>
                                 <h4 className="font-semibold text-slate-800">Key Professional Terms</h4>

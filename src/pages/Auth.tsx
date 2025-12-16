@@ -87,7 +87,7 @@ const Auth: React.FC = () => {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#376497] focus:border-transparent outline-none transition-all"
                                 placeholder="you@example.com"
                             />
                         </div>
@@ -101,7 +101,7 @@ const Auth: React.FC = () => {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#376497] focus:border-transparent outline-none transition-all"
                                 placeholder="••••••••"
                                 minLength={6}
                             />
@@ -120,7 +120,7 @@ const Auth: React.FC = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="w-full py-3 bg-[#376497] hover:bg-[#25466c] text-white font-semibold rounded-lg transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                         {mode === 'signin' ? 'Sign In' : 'Sign Up'}
                     </button>
@@ -134,7 +134,7 @@ const Auth: React.FC = () => {
                             setError(null);
                             setCaptchaToken(null);
                         }}
-                        className="text-indigo-600 font-semibold hover:text-indigo-700 transition-colors"
+                        className="text-[#376497] font-semibold hover:text-[#25466c] transition-colors"
                     >
                         {mode === 'signin' ? 'Sign Up' : 'Sign In'}
                     </button>

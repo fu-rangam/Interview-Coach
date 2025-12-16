@@ -13,7 +13,7 @@
   --color-background: hsl(210 40% 98%);
   --color-foreground: hsl(222.2 84% 4.9%);
 
-  --color-primary: hsl(249 95% 63%);
+  --color-primary: hsl(212 47% 40%);
   --color-primary-foreground: hsl(210 40% 98%);
 
   --color-secondary: hsl(210 40% 96.1%);
@@ -42,8 +42,8 @@
     --radius: 1rem;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 262.1 83.3% 57.8%;
-    --primary: 249 95% 63%;
+    --ring: 212 47% 40%;
+    --primary: 212 47% 40%;
     --primary-foreground: 210 40% 98%;
   }
 

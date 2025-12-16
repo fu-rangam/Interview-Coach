@@ -56,7 +56,7 @@ const JobDescriptionInput: React.FC = () => {
                         </button>
                     </header>
 
-                    <div className="bg-indigo-50 rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12">
+                    <div className="bg-blue-50/50 rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12">
                         <h2 className="text-3xl font-bold mb-2 text-slate-800">Custom Job Interview</h2>
                         <p className="text-slate-500 mb-8">Paste a job description to generate tailored interview questions.</p>
 
@@ -74,7 +74,7 @@ const JobDescriptionInput: React.FC = () => {
                                         placeholder="e.g. Senior Product Manager"
                                         value={role}
                                         onChange={(e) => setRole(e.target.value)}
-                                        className="bg-white w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                        className="bg-white w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#376497] focus:border-[#376497] outline-none transition-all"
                                         maxLength={100}
                                     />
                                 </div>
@@ -86,7 +86,7 @@ const JobDescriptionInput: React.FC = () => {
                                         value={jobDescription}
                                         onChange={(e) => setJobDescription(e.target.value)}
                                         maxLength={MAX_JD_LENGTH}
-                                        className="bg-white w-full h-64 p-4 border border-slate-200 rounded-xl resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                        className="bg-white w-full h-64 p-4 border border-slate-200 rounded-xl resize-none focus:ring-2 focus:ring-[#376497] focus:border-[#376497] outline-none transition-all"
                                     />
                                     <div className="flex justify-between mt-2 text-xs text-slate-400">
                                         <span>Min 50 characters</span>
@@ -99,7 +99,7 @@ const JobDescriptionInput: React.FC = () => {
                                 <button
                                     onClick={handleSubmit}
                                     disabled={!role.trim() || jobDescription.length < 50}
-                                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-indigo-200"
+                                    className="w-full py-4 bg-[#376497] hover:bg-[#25466c] text-white font-medium rounded-xl transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-blue-200"
                                 >
                                     Generate Custom Questions
                                 </button>

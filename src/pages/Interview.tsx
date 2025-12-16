@@ -116,7 +116,7 @@ const Interview: React.FC = () => {
                             <button onClick={() => navigate('/')} className="text-slate-400 hover:text-slate-600 transition-colors">
                                 <ChevronLeft size={24} />
                             </button>
-                            <span className="text-xs font-bold text-indigo-600 uppercase tracking-widest px-3 py-1 bg-indigo-50 rounded-full border border-indigo-100">
+                            <span className="text-xs font-bold text-[#376497] uppercase tracking-widest px-3 py-1 bg-blue-50 rounded-full border border-blue-100">
                                 {session.role || "Interview Session"}
                             </span>
                         </div>
@@ -138,7 +138,7 @@ const Interview: React.FC = () => {
                                         className={cn(
                                             "flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2",
                                             activeTab === 'voice'
-                                                ? "bg-white text-indigo-600 shadow-sm shadow-slate-200"
+                                                ? "bg-white text-[#376497] shadow-sm shadow-slate-200"
                                                 : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
                                         )}
                                     >
@@ -149,7 +149,7 @@ const Interview: React.FC = () => {
                                         className={cn(
                                             "flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2",
                                             activeTab === 'text'
-                                                ? "bg-white text-indigo-600 shadow-sm shadow-slate-200"
+                                                ? "bg-white text-[#376497] shadow-sm shadow-slate-200"
                                                 : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
                                         )}
                                     >
@@ -163,7 +163,7 @@ const Interview: React.FC = () => {
                                         <div className="w-full h-40 flex items-center justify-center mb-4 relative">
                                             {isRecording ? (
                                                 <div className="w-full relative">
-                                                    <div className="absolute inset-0 bg-indigo-500/5 blur-3xl rounded-full animate-pulse"></div>
+                                                    <div className="absolute inset-0 bg-[#376497]/5 blur-3xl rounded-full animate-pulse"></div>
                                                     <AudioVisualizer stream={mediaStream} isRecording={isRecording} />
                                                 </div>
                                             ) : (
@@ -177,7 +177,7 @@ const Interview: React.FC = () => {
                                             {!isRecording ? (
                                                 <button
                                                     onClick={handleStartRecording}
-                                                    className="group relative w-24 h-24 bg-linear-to-br from-indigo-500 to-indigo-600 text-white rounded-full flex items-center justify-center shadow-xl shadow-indigo-200 transition-all hover:scale-105 active:scale-95"
+                                                    className="group relative w-24 h-24 bg-linear-to-br from-[#376497] to-[#25466c] text-white rounded-full flex items-center justify-center shadow-xl shadow-blue-200 transition-all hover:scale-105 active:scale-95"
                                                 >
                                                     <div className="absolute inset-0 rounded-full border-4 border-white/20 group-hover:border-white/40 transition-colors"></div>
                                                     <Mic size={36} className="drop-shadow-sm" />
@@ -201,7 +201,7 @@ const Interview: React.FC = () => {
                                 {/* Text Input Area */}
                                 {activeTab === 'text' && (
                                     <div className="w-full animate-fade-in flex flex-col h-[300px]">
-                                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-1 relative flex-1 transition-all focus-within:ring-2 focus-within:ring-indigo-100 focus-within:border-indigo-300">
+                                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-1 relative flex-1 transition-all focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-[#376497]/50">
                                             <textarea
                                                 value={text}
                                                 onChange={(e) => handleTextChange(e.target.value)}
@@ -223,7 +223,7 @@ const Interview: React.FC = () => {
                                             <Button
                                                 onClick={handleTextSubmit}
                                                 disabled={text.trim().length < 10}
-                                                className="px-8 h-12 text-base shadow-lg shadow-indigo-100"
+                                                className="px-8 h-12 text-base shadow-lg shadow-blue-100"
                                             >
                                                 Submit <Send size={16} className="ml-2" />
                                             </Button>
@@ -263,7 +263,7 @@ const Interview: React.FC = () => {
                             <h3 className="font-display font-bold text-slate-800 text-sm uppercase tracking-wider mb-4">Interview Progress</h3>
                             <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-indigo-500 transition-all duration-500 ease-out"
+                                    className="h-full bg-[#376497] transition-all duration-500 ease-out"
                                     style={{ width: `${((session.currentQuestionIndex) / session.questions.length) * 100}%` }}
                                 ></div>
                             </div>
@@ -281,7 +281,7 @@ const Interview: React.FC = () => {
                                         className={cn(
                                             "w-full text-left p-4 rounded-xl text-sm transition-all duration-200 relative group flex gap-3 items-start",
                                             isActive
-                                                ? "bg-indigo-50/80 text-indigo-900 shadow-sm ring-1 ring-indigo-100"
+                                                ? "bg-blue-50/80 text-[#1e3a5f] shadow-sm ring-1 ring-blue-100"
                                                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
                                         )}
                                     >
@@ -290,7 +290,7 @@ const Interview: React.FC = () => {
                                             isAnswered
                                                 ? "bg-emerald-500 text-white shadow-sm shadow-emerald-200"
                                                 : isActive
-                                                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200"
+                                                    ? "bg-[#376497] text-white shadow-sm shadow-blue-200"
                                                     : "bg-slate-100 text-slate-400"
                                         )}>
                                             {isAnswered ? <Check size={12} strokeWidth={3} /> : index + 1}

@@ -16,7 +16,7 @@ const QuestionTips: React.FC<QuestionTipsProps> = ({ tips }) => {
     };
 
     const colorStyles: Record<string, { bg: string; text: string; lightBg: string; ring: string }> = {
-        indigo: { bg: 'bg-indigo-100', text: 'text-indigo-600', lightBg: 'bg-indigo-50', ring: 'ring-indigo-100' },
+        indigo: { bg: 'bg-blue-100', text: 'text-[#376497]', lightBg: 'bg-blue-50', ring: 'ring-blue-100' },
         emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600', lightBg: 'bg-emerald-50', ring: 'ring-emerald-100' },
         violet: { bg: 'bg-violet-100', text: 'text-violet-600', lightBg: 'bg-violet-50', ring: 'ring-violet-100' },
         blue: { bg: 'bg-blue-100', text: 'text-blue-600', lightBg: 'bg-blue-50', ring: 'ring-blue-100' },

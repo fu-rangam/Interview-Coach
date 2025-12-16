@@ -105,7 +105,7 @@ const Dashboard: React.FC = () => {
                         <button onClick={() => navigate('/')} className="text-slate-500 hover:text-slate-900 font-medium flex items-center gap-2 transition-colors px-4 py-2 rounded-lg hover:bg-white/50">
                             <Home size={20} /> Back Home
                         </button>
-                        <button onClick={fetchSessions} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors" title="Refresh">
+                        <button onClick={fetchSessions} className="p-2 text-slate-400 hover:text-[#376497] transition-colors" title="Refresh">
                             <RefreshCw size={18} />
                         </button>
                     </header>
@@ -116,7 +116,7 @@ const Dashboard: React.FC = () => {
                             <p className="text-slate-500 mt-2">Track your interview performance over time.</p>
                         </div>
                         <div className="text-right hidden sm:block">
-                            <div className="text-3xl font-bold text-indigo-600">{sessions.length}</div>
+                            <div className="text-3xl font-bold text-[#376497]">{sessions.length}</div>
                             <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Sessions Completed</div>
                         </div>
                     </div>
@@ -132,7 +132,7 @@ const Dashboard: React.FC = () => {
                             <p className="text-slate-500 mb-8">Complete your first interview to see your history here.</p>
                             <button
                                 onClick={() => navigate('/select-role')}
-                                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all shadow-lg shadow-indigo-200"
+                                className="px-6 py-3 bg-[#376497] hover:bg-[#25466c] text-white font-medium rounded-xl transition-all shadow-lg shadow-blue-200"
                             >
                                 Start Practice
                             </button>
@@ -142,7 +142,7 @@ const Dashboard: React.FC = () => {
                             {sessions.map((session) => (
                                 <div
                                     key={session.id}
-                                    className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-indigo-300 transition-all group cursor-pointer relative overflow-hidden"
+                                    className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-[#376497]/30 transition-all group cursor-pointer relative overflow-hidden"
                                     onClick={() => navigate(`/session/${session.id}`)} // This route needs to be implemented or removed if not ready
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
@@ -166,7 +166,7 @@ const Dashboard: React.FC = () => {
                                         <div className="flex items-center gap-2 sm:ml-auto">
                                             <button
                                                 onClick={(e) => handleExport(session.id, e)}
-                                                className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                className="p-2 text-slate-400 hover:text-[#376497] hover:bg-blue-50 rounded-lg transition-colors"
                                                 title="Export JSON"
                                             >
                                                 <Download size={18} />
@@ -178,7 +178,7 @@ const Dashboard: React.FC = () => {
                                             >
                                                 <Trash2 size={18} />
                                             </button>
-                                            <ChevronRight className="text-slate-300 group-hover:text-indigo-400 transition-colors" />
+                                            <ChevronRight className="text-slate-300 group-hover:text-[#376497]/70 transition-colors" />
                                         </div>
                                     </div>
                                 </div>

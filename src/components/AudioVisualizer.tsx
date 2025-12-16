@@ -21,7 +21,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ stream, isRecording }
     if (!contextRef.current) {
       contextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
-    
+
     const audioContext = contextRef.current;
     const source = audioContext.createMediaStreamSource(stream);
     const analyser = audioContext.createAnalyser();
@@ -34,7 +34,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ stream, isRecording }
 
     const draw = () => {
       if (!isRecording) return;
-      
+
       animationRef.current = requestAnimationFrame(draw);
       analyser.getByteFrequencyData(dataArray);
 
@@ -48,12 +48,12 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ stream, isRecording }
       for (let i = 0; i < bufferLength; i++) {
         barHeight = dataArray[i] / 2;
 
-        // Indigo color palette (indigo-600 is approx 79, 70, 229)
-        const r = 79;
-        const g = 70;
-        const b = 229; 
+        // Rangam Blue color palette (#376497 is approx 55, 100, 151)
+        const r = 55;
+        const g = 100;
+        const b = 151;
 
-        ctx.fillStyle = `rgba(${r},${g},${b}, ${0.5 + (barHeight/200)})`;
+        ctx.fillStyle = `rgba(${r},${g},${b}, ${0.5 + (barHeight / 200)})`;
 
         // Draw rounded rect
         ctx.beginPath();
@@ -76,11 +76,11 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ stream, isRecording }
   }, [stream, isRecording]);
 
   return (
-    <canvas 
-      ref={canvasRef} 
-      width={300} 
-      height={100} 
-      className="w-full h-32 rounded-xl bg-indigo-50/50"
+    <canvas
+      ref={canvasRef}
+      width={300}
+      height={100}
+      className="w-full h-32 rounded-xl bg-blue-50/50"
     />
   );
 };

@@ -104,18 +104,18 @@ const Summary: React.FC = () => {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
                         <div>
                             <h2 className="text-4xl font-display font-bold text-slate-900 tracking-tight">Interview Analysis</h2>
-                            <p className="text-lg text-slate-500 mt-2">Personalized insights for <span className="font-semibold text-indigo-600">{session.role}</span></p>
+                            <p className="text-lg text-slate-500 mt-2">Personalized insights for <span className="font-semibold text-[#376497]">{session.role}</span></p>
                         </div>
                         <div className="flex gap-3">
                             <button onClick={handleExit} className="text-slate-500 hover:text-slate-900 font-medium flex items-center gap-2 transition-colors px-4 py-2 rounded-lg hover:bg-white/50">
                                 <Home size={18} /> Home
                             </button>
                             {user ? (
-                                <button onClick={handleNewSession} className="text-slate-500 hover:text-indigo-600 font-medium flex items-center gap-2 transition-colors px-4 py-2 rounded-lg hover:bg-white/50">
+                                <button onClick={handleNewSession} className="text-slate-500 hover:text-[#376497] font-medium flex items-center gap-2 transition-colors px-4 py-2 rounded-lg hover:bg-white/50">
                                     <RotateCcw size={18} /> New Session
                                 </button>
                             ) : (
-                                <Button onClick={handleSignup} className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-lg shadow-indigo-200">
+                                <Button onClick={handleSignup} className="bg-[#376497] hover:bg-[#25466c] text-white gap-2 shadow-lg shadow-blue-200">
                                     Sign Up to Save <ChevronRight size={16} />
                                 </Button>
                             )}
@@ -124,13 +124,13 @@ const Summary: React.FC = () => {
 
                     {/* GUEST BANNER */}
                     {!user && (
-                        <div className="bg-linear-to-r from-indigo-900 to-indigo-800 rounded-3xl p-8 mb-12 text-white relative overflow-hidden shadow-2xl shadow-indigo-900/20">
+                        <div className="bg-linear-to-r from-[#376497] to-[#1e3a5f] rounded-3xl p-8 mb-12 text-white relative overflow-hidden shadow-2xl shadow-blue-900/20">
                             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                                 <div>
                                     <h3 className="text-2xl font-bold mb-3 font-display">Keep your momentum going.</h3>
-                                    <p className="text-indigo-200 text-lg max-w-xl leading-relaxed">Create a free account to unlock your personal dashboard, track your improvement over time, and access deeper AI coaching insights.</p>
+                                    <p className="text-blue-100 text-lg max-w-xl leading-relaxed">Create a free account to unlock your personal dashboard, track your improvement over time, and access deeper AI coaching insights.</p>
                                 </div>
-                                <Button onClick={handleSignup} size="lg" className="bg-white text-indigo-900 hover:bg-indigo-50 font-bold shadow-xl border-none">
+                                <Button onClick={handleSignup} size="lg" className="bg-white text-[#376497] hover:bg-blue-50 font-bold shadow-xl border-none">
                                     Create Free Account
                                 </Button>
                             </div>
@@ -144,7 +144,7 @@ const Summary: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                         {/* Score Card */}
                         <Card className="col-span-1 border-slate-200 shadow-sm relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-indigo-500 to-purple-500"></div>
+                            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-[#376497] to-[#0B8039]"></div>
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-slate-600 font-medium text-sm uppercase tracking-wider">Readiness Score</CardTitle>
                             </CardHeader>
@@ -228,7 +228,7 @@ const Summary: React.FC = () => {
                                 const isExpanded = expandedQuestionId === q.id;
 
                                 return (
-                                    <Card key={q.id} id={`question-${q.id}`} className={cn("border-slate-200 transition-all duration-300", isExpanded ? "shadow-md ring-1 ring-indigo-50 border-indigo-200" : "hover:border-indigo-200")}>
+                                    <Card key={q.id} id={`question-${q.id}`} className={cn("border-slate-200 transition-all duration-300", isExpanded ? "shadow-md ring-1 ring-blue-50 border-blue-200" : "hover:border-blue-200")}>
                                         <div
                                             onClick={() => toggleQuestion(q.id)}
                                             className="w-full flex flex-col md:flex-row md:items-center justify-between p-6 cursor-pointer gap-4"
@@ -267,7 +267,7 @@ const Summary: React.FC = () => {
                                                         </div>
                                                         <div className="flex flex-wrap gap-2 mt-4">
                                                             {ans.analysis.keyTerms.map((term, idx) => (
-                                                                <span key={idx} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-md text-xs font-medium border border-indigo-100">
+                                                                <span key={idx} className="px-3 py-1 bg-blue-50 text-[#376497] rounded-md text-xs font-medium border border-blue-100">
                                                                     {term}
                                                                 </span>
                                                             ))}

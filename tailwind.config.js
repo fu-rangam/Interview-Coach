@@ -49,6 +49,11 @@ export default {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
+                rangam: {
+                    blue: "#376497",
+                    green: "#0B8039",
+                    orange: "#C75000",
+                },
             },
         },
     },

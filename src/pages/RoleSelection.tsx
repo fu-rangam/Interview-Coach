@@ -42,7 +42,7 @@ const RoleSelection: React.FC = () => {
     const RoleGrid = ({ roles, icon: Icon, title }: { roles: string[], icon: any, title: string }) => (
         <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+                <div className="p-2 bg-blue-50/50 rounded-lg text-[#376497]">
                     <Icon size={24} />
                 </div>
                 <h3 className="text-2xl font-display font-bold text-slate-800">{title}</h3>
@@ -52,18 +52,18 @@ const RoleSelection: React.FC = () => {
                     <button
                         key={role}
                         onClick={() => selectRole(role)}
-                        className="group relative bg-indigo-50 p-6 rounded-xl shadow-sm hover:shadow-lg border border-slate-100 hover:border-indigo-500/30 transition-all duration-300 text-left overflow-hidden hover:-translate-y-1 h-32 flex flex-col justify-between"
+                        className="group relative bg-white p-6 rounded-xl shadow-sm hover:shadow-lg border border-slate-100 hover:border-[#376497]/30 transition-all duration-300 text-left overflow-hidden hover:-translate-y-1 h-32 flex flex-col justify-between"
                     >
                         {ROLE_IMAGES[role] && (
-                            <div className="absolute bottom-[-70%] right-[-10%] w-64 h-64 opacity-60 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute top-6 right-6 w-12 h-12 opacity-60 group-hover:opacity-100 transition-opacity">
                                 <img src={ROLE_IMAGES[role]} alt={role} className="w-full h-full object-contain" />
                             </div>
                         )}
                         <div className="relative z-10">
-                            <h4 className="font-semibold text-neutral-950 group-hover:text-indigo-700 transition-colors leading-tight">{role}</h4>
+                            <h4 className="font-semibold text-neutral-950 group-hover:text-[#376497] transition-colors leading-tight">{role}</h4>
                         </div>
                         <div className="relative z-10 text-xs font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            Start <span className="w-4 h-px bg-slate-200 group-hover:bg-indigo-300 transition-colors"></span>
+                            Start <span className="w-4 h-px bg-slate-200 group-hover:bg-[#376497] transition-colors"></span>
                         </div>
                     </button>
                 ))}
@@ -76,12 +76,12 @@ const RoleSelection: React.FC = () => {
             {/* Header */}
             <header className="flex-none flex justify-between items-center py-4 px-8 bg-white border-b border-slate-200 z-20">
                 <div className="flex items-center gap-3">
-                    <span className="font-display font-bold text-xl text-slate-900 tracking-tight">Interview<span className="text-indigo-600">Coach</span></span>
+                    <span className="font-display font-bold text-xl text-slate-900 tracking-tight">Interview<span className="text-[#376497]">Coach</span></span>
                 </div>
                 {user ? (
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
+                            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-[#376497] font-bold text-xs">
                                 {user.email?.[0].toUpperCase()}
                             </div>
                             <span className="text-sm font-medium text-slate-600 hidden sm:block">{user.email}</span>
@@ -115,10 +115,10 @@ const RoleSelection: React.FC = () => {
                         </div>
 
                         {/* Custom Role Banner - Staging Layout */}
-                        <div className="bg-linear-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-xl shadow-xl p-8 mb-12 flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="bg-linear-to-r from-[#376497] to-[#1e3a5f] rounded-xl shadow-xl p-8 mb-12 flex flex-col md:flex-row items-center justify-between gap-8">
                             <div className="flex-1">
                                 <div className="flex items-center gap-4 mb-3">
-                                    <div className="w-12 h-12 bg-linear-to-br from-white to-indigo-200 rounded-full flex items-center justify-center text-indigo-600 shadow-sm">
+                                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white shadow-sm">
                                         <Sparkles size={24} />
                                     </div>
                                     <h2 className="text-2xl font-display font-bold text-slate-100">Have a specific job description?</h2>
@@ -135,8 +135,8 @@ const RoleSelection: React.FC = () => {
                             </button>
                         </div>
 
-                        <RoleGrid roles={TECH_ROLES} icon={Code} title="Tech & Corporate" />
                         <RoleGrid roles={SERVICE_ROLES} icon={ShoppingBag} title="Service & Operations" />
+                        <RoleGrid roles={TECH_ROLES} icon={Code} title="Tech & Corporate" />
                     </div>
                 </main>
             </div>
@@ -145,7 +145,7 @@ const RoleSelection: React.FC = () => {
             <div className="lg:hidden fixed bottom-6 right-6 z-40">
                 <button
                     onClick={() => navigate('/job-description')}
-                    className="p-4 bg-white text-slate-900 rounded-full shadow-xl shadow-indigo-300 hover:bg-indigo-700 transition-colors"
+                    className="p-4 bg-white text-slate-900 rounded-full shadow-xl shadow-blue-200 hover:bg-slate-50 transition-colors"
                 >
                     <Sparkles size={24} />
                 </button>

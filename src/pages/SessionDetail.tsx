@@ -64,7 +64,7 @@ const SessionDetail: React.FC = () => {
                 <p className="text-xl font-medium mb-4">Session not found.</p>
                 <button
                     onClick={() => navigate('/dashboard')}
-                    className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium"
+                    className="flex items-center gap-2 text-[#376497] hover:text-[#25466c] font-medium"
                 >
                     <ChevronLeft size={20} /> Back to Dashboard
                 </button>
@@ -91,7 +91,7 @@ const SessionDetail: React.FC = () => {
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                             <div>
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+                                    <span className="bg-blue-100 text-[#376497] px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
                                         {role}
                                     </span>
                                     <span className="text-slate-400 text-sm flex items-center gap-1">
@@ -132,7 +132,7 @@ const SessionDetail: React.FC = () => {
                             if (!answerData) return null;
 
                             return (
-                                <Card key={question.id} id={`question-${question.id}`} className={cn("border-slate-200 transition-all duration-300", isExpanded ? "shadow-md ring-1 ring-indigo-50 border-indigo-200" : "hover:border-indigo-200")}>
+                                <Card key={question.id} id={`question-${question.id}`} className={cn("border-slate-200 transition-all duration-300", isExpanded ? "shadow-md ring-1 ring-blue-50 border-blue-200" : "hover:border-blue-200")}>
                                     <div
                                         onClick={() => toggleQuestion(question.id)}
                                         className="w-full flex flex-col md:flex-row md:items-center justify-between p-6 cursor-pointer gap-4"
@@ -177,7 +177,7 @@ const SessionDetail: React.FC = () => {
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                                     {/* Feedback */}
                                                     <div>
-                                                        <div className="flex items-center gap-2 mb-3 text-sm font-bold text-indigo-500 uppercase tracking-wider">
+                                                        <div className="flex items-center gap-2 mb-3 text-sm font-bold text-[#376497] uppercase tracking-wider">
                                                             <MessageSquare size={16} /> Feedback
                                                         </div>
                                                         <ul className="space-y-3">
@@ -219,7 +219,7 @@ const SessionDetail: React.FC = () => {
                                                             </div>
                                                             <div className="flex flex-wrap gap-2">
                                                                 {analysis.keyTerms.map((term, i) => (
-                                                                    <span key={i} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-md text-xs font-medium border border-indigo-100">
+                                                                    <span key={i} className="px-3 py-1 bg-blue-50 text-[#376497] rounded-md text-xs font-medium border border-blue-100">
                                                                         {term}
                                                                     </span>
                                                                 ))}
