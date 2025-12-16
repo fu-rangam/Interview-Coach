@@ -260,7 +260,7 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
 
   } catch (error) {
     console.error("TTS Fetch Error:", error);
-    return null;
+    throw error;
   }
 };
 
