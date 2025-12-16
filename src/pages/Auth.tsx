@@ -21,13 +21,13 @@ const Auth: React.FC = () => {
 
         try {
             if (mode === 'signup') {
-                if (!captchaToken) {
-                    throw new Error('Please complete the captcha verification.');
-                }
+                // if (!captchaToken) {
+                //     throw new Error('Please complete the captcha verification.');
+                // }
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
-                    options: { captchaToken }
+                    // options: { captchaToken }
                 });
                 if (error) throw error;
                 alert('Success! Check your email for the confirmation link.');
@@ -108,14 +108,14 @@ const Auth: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex justify-center my-4">
+                    {/* <div className="flex justify-center my-4">
                         <HCaptcha
                             // Reset key when mode changes to ensure clean slate
                             key={mode}
                             sitekey={import.meta.env.VITE_HCAPTCHA_SITE_KEY || "10000000-ffff-ffff-ffff-000000000001"}
                             onVerify={(token) => setCaptchaToken(token)}
                         />
-                    </div>
+                    </div> */}
 
                     <button
                         type="submit"
