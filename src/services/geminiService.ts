@@ -1,13 +1,7 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import { Question, AnalysisResult, QuestionTips } from "../types";
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+// Note: API Key is now handled server-side in api/ endpoints.
 
-if (!apiKey) {
-  console.error("CRITICAL ERROR: VITE_GEMINI_API_KEY is missing in .env.local");
-}
-
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null as any;
 
 // --- Helpers ---
 
@@ -26,46 +20,19 @@ export const blobToBase64 = (blob: Blob): Promise<string> => {
 // --- API Functions ---
 
 export const generateQuestions = async (role: string, jobDescription?: string): Promise<Question[]> => {
-  if (!apiKey) return mockQuestions(role);
-
-  const readingLevelInstruction = `
-    IMPORTANT: Adapt the reading level of the questions to the target candidate profile for a ${role}.
-    - If the role is entry-level (e.g., Cashier): STRICTLY use a 6th-7th grade reading level.
-      - Tone: Professional but accessible. Use standard workplace English, not 'child-speak.'
-      - Vocabulary: It is okay to use standard job terms like 'payment,' 'customer,' 'receipt,' and 'transaction.'
-      - Structure: Sentences must be short (under 15 words). Avoid complex clauses.
-      - Constraint: Avoid corporate jargon (e.g., 'synergy,' 'optimization'), but do not over-simplify common concepts (e.g., say 'handle a return,' not 'help people give back items').
-    - If the role is highly technical/executive: Use appropriate professional terminology but keep phrasing clear.
-    - When in doubt: Prioritize simplicity.
-`;
-
-  const prompt = jobDescription
-    ? `Generate 5 interview questions for a ${role} position based on this job description:\n\n${jobDescription}\n\nQuestions should test skills mentioned in the JD. Return strictly JSON.`
-    : `Generate 5 common interview questions for a ${role} position. The questions should be diverse (behavioral, technical, situational). Return strictly JSON.`;
-
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `${readingLevelInstruction}\n\n${prompt}`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              id: { type: Type.STRING },
-              text: { type: Type.STRING },
-            },
-            required: ["id", "text"],
-          },
-        },
-      },
+    const response = await fetch('/api/generate-questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, jobDescription })
     });
 
-    const text = response.text;
-    if (!text) throw new Error("No text returned from Gemini");
-    return JSON.parse(text) as Question[];
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    const questions = await response.json();
+    return questions as Question[];
   } catch (error) {
     console.error("Error generating questions:", error);
     return mockQuestions(role);
@@ -73,60 +40,19 @@ export const generateQuestions = async (role: string, jobDescription?: string): 
 };
 
 export const generateQuestionTips = async (question: string, role: string): Promise<QuestionTips> => {
-  if (!apiKey) return mockTips(role);
-
-  const prompt = `
-    You are an expert interview coach for ${role} roles.
-    Provide detailed interview tips for the following question: "${question}"
-
-    Return strictly JSON matching this structure:
-    {
-       lookingFor: "What the interviewer is trying to assess",
-       pointsToCover: ["Point 1", "Point 2", "Point 3"],
-       answerFramework: "Recommended structure (e.g. STAR, Past-Present-Future)",
-       industrySpecifics: { metrics: "Key KPIs to mention", tools: "Relevant software/tools" },
-       mistakesToAvoid: ["Mistake 1", "Mistake 2", "Mistake 3"],
-       proTip: "One advanced insight or unique tip"
-    }
-  `;
-
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            lookingFor: { type: Type.STRING },
-            pointsToCover: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            },
-            answerFramework: { type: Type.STRING },
-            industrySpecifics: {
-              type: Type.OBJECT,
-              properties: {
-                metrics: { type: Type.STRING },
-                tools: { type: Type.STRING }
-              }
-            },
-            mistakesToAvoid: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            },
-            proTip: { type: Type.STRING }
-          },
-          required: ["lookingFor", "pointsToCover", "answerFramework", "industrySpecifics", "mistakesToAvoid", "proTip"]
-        },
-      }
+    const response = await fetch('/api/generate-tips', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, role })
     });
 
-    const text = response.text;
-    if (!text) throw new Error("No text returned from Gemini for tips");
-    return JSON.parse(text) as QuestionTips;
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
 
+    const tips = await response.json();
+    return tips as QuestionTips;
   } catch (error) {
     console.error("Error generating tips:", error);
     return mockTips(role);
@@ -134,83 +60,32 @@ export const generateQuestionTips = async (question: string, role: string): Prom
 };
 
 export const analyzeAnswer = async (question: string, input: Blob | string): Promise<AnalysisResult> => {
-  if (!apiKey) return mockAnalysis();
-
   try {
-    let contentParts: any[] = [];
+    let payload: any = { question };
 
     if (typeof input === 'string') {
-      // Text Input Analysis
-      contentParts = [
-        {
-          text: `You are a supportive and encouraging interview coach. Analyze the user's text answer to the interview question: "${question}".
-          
-          User's Answer: "${input}"
-
-          1. Since this is a text answer, the transcript is the answer itself.
-          2. Provide 3 balanced feedback points (highlighting strengths + areas for improvement). Be constructive but kind.
-          3. Identify 3-5 key professional terms used (or that should have been used).
-          4. Give a rating: "Strong", "Good", or "Developing".
-          `
-        }
-      ];
+      payload.input = input;
     } else {
-      // Audio Input Analysis
+      // Audio Input - Convert to base64
       const base64Audio = await blobToBase64(input);
-      contentParts = [
-        {
-          text: `You are a supportive and encouraging interview coach. Analyze the user's audio answer to the interview question: "${question}".
-          1. Transcribe the audio accurately.
-          2. Provide 3 balanced feedback points (highlighting strengths + areas for improvement). Be constructive but kind.
-          3. Analyze the delivery, tone, and pace.
-             - Status: summarized in 1-2 words (e.g., "Confident", "Too Fast", "Monotone").
-             - Tips: 2 specific tips on how to improve delivery (e.g., "Slow down slightly," "Vary your pitch"). Keep these helpful, not harsh.
-          4. Identify 3-5 key professional terms used (or that should have been used).
-          5. Give a rating: "Strong", "Good", or "Developing".
-          `
-        },
-        {
-          inlineData: {
-            mimeType: input.type || 'audio/webm',
-            data: base64Audio
-          }
-        }
-      ];
+      payload.input = {
+        mimeType: input.type || 'audio/webm',
+        data: base64Audio
+      };
     }
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: { parts: contentParts },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            transcript: { type: Type.STRING },
-            feedback: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            },
-            deliveryStatus: { type: Type.STRING, nullable: true },
-            deliveryTips: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              nullable: true
-            },
-            keyTerms: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            },
-            rating: { type: Type.STRING }
-          },
-          required: ["transcript", "feedback", "keyTerms", "rating"],
-        }
-      }
+    const response = await fetch('/api/analyze-answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
 
-    const text = response.text;
-    if (!text) throw new Error("No text returned from analysis");
-    return JSON.parse(text) as AnalysisResult;
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result as AnalysisResult;
   } catch (error) {
     console.error("Error analyzing answer:", error);
     return mockAnalysis();

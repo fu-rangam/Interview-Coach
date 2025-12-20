@@ -1,31 +1,34 @@
 import path from 'path';
+import { pathToFileURL } from 'url';
 import { defineConfig, loadEnv, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
 console.log("✅ VITE CONFIG LOADED - If you see this, the file is active!");
 
-const ttsPlugin = (): Plugin => ({
-  name: 'tts-api-plugin',
+const apiPlugin = (): Plugin => ({
+  name: 'api-proxy-plugin',
   configureServer(server) {
     server.middlewares.use(async (req: any, res: any, next) => {
-      console.log(`[Vite Middleware] ${req.method} ${req.url}`);
 
-      if (req.url?.startsWith('/api/tts') && req.method === 'POST') {
-        console.log("Middleware: Intercepted /api/tts");
+      if (req.url?.startsWith('/api/')) {
+        console.log(`[Vite Middleware] Intercepting: ${req.method} ${req.url}`);
+
         try {
-          // 1. Body Parsing
-          const buffers = [];
-          for await (const chunk of req) {
-            buffers.push(chunk);
-          }
-          const data = Buffer.concat(buffers).toString();
-          try {
-            req.body = JSON.parse(data);
-          } catch (e) {
-            req.body = {};
+          // 1. Body Parsing (for POST/PUT)
+          if (['POST', 'PUT', 'PATCH'].includes(req.method || '')) {
+            const buffers = [];
+            for await (const chunk of req) {
+              buffers.push(chunk);
+            }
+            const data = Buffer.concat(buffers).toString();
+            try {
+              req.body = data ? JSON.parse(data) : {};
+            } catch (e) {
+              req.body = {};
+            }
           }
 
-          // 2. Response Wrapper (Mock Express/Vercel API)
+          // 2. Response Wrapper
           const wrappedRes = {
             status: (code: number) => {
               res.statusCode = code;
@@ -34,24 +37,42 @@ const ttsPlugin = (): Plugin => ({
             json: (data: any) => {
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify(data));
+              return wrappedRes;
             }
           };
 
-          // 3. Call Handler
-          // Dynamic import to avoid build issues if not used
-          // Note: In production, Vercel handles /api/tts from the /api folder automatically.
-          const { default: ttsHandler } = await import('./api/tts');
-          console.log("Middleware: API Key present?", !!process.env.GEMINI_API_KEY);
-          await ttsHandler(req, wrappedRes);
-        } catch (error) {
-          console.error("Middleware Error:", error);
-          // @ts-ignore
-          if (error?.response) {
-            // @ts-ignore
-            console.error("Middleware Error Response:", await error.response.text());
+
+          // 3. Resolve and Call Handler
+          const url = new URL(req.url, 'http://localhost');
+          const endpoint = url.pathname.replace('/api/', '');
+
+          // Use Vite's module loader which supports TS
+          // Path should be root-relative, e.g., /api/endpoint.ts
+          let modulePath = `/api/${endpoint}`;
+          // Try adding .ts if not present (we assume it's a TS file in api/)
+          if (!modulePath.endsWith('.ts') && !modulePath.endsWith('.js')) {
+            modulePath += '.ts';
           }
-          res.statusCode = 500;
-          res.end(JSON.stringify({ error: 'Internal Middleware Error' }));
+
+          console.log(`[Vite Middleware] Loading handler via ssrLoadModule: ${modulePath}`);
+
+          const { default: handler } = await server.ssrLoadModule(modulePath);
+
+          if (!handler) {
+            throw new Error(`No default exportHandler found for ${modulePath}`);
+          }
+
+          await handler(req, wrappedRes);
+
+        } catch (error: any) {
+          console.error("[Vite Middleware] Error:", error);
+          if (error.code === 'ERR_MODULE_NOT_FOUND') {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: `Endpoint not found: ${req.url}` }));
+          } else {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: 'Internal Middleware Error', details: error.message }));
+          }
         }
       } else {
         next();
@@ -68,7 +89,7 @@ export default defineConfig(({ mode }) => {
 
   const key = process.env.GEMINI_API_KEY;
   if (key) {
-    console.log(`[Vite Config] GEMINI_API_KEY loaded. Length: ${key.length}, Starts with: ${key.substring(0, 5)}...`);
+    console.log(`[Vite Config] GEMINI_API_KEY loaded. Length: ${key?.length}, Starts with: ${key?.substring(0, 5)}...`);
   } else {
     console.warn("[Vite Config] GEMINI_API_KEY could not be found in env!");
   }
@@ -78,7 +99,7 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0',
     },
-    plugins: [react(), ttsPlugin()],
+    plugins: [react(), apiPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
