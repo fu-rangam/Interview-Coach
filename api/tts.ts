@@ -1,7 +1,47 @@
 import { GoogleGenAI } from "@google/genai";
 
+// --- In-Memory Rate Limiter (Container Scope) ---
+const RATE_LIMIT_WINDOW = 10 * 1000; // 10 seconds
+const MAX_REQUESTS_PER_WINDOW = 5;
+const requestLog = new Map<string, number[]>();
+
+const cleanupRateLimits = () => {
+  const now = Date.now();
+  for (const [ip, timestamps] of requestLog.entries()) {
+    const validTimestamps = timestamps.filter(ts => now - ts < RATE_LIMIT_WINDOW);
+    if (validTimestamps.length === 0) {
+      requestLog.delete(ip);
+    } else {
+      requestLog.set(ip, validTimestamps);
+    }
+  }
+};
+
+const checkRateLimit = (ip) => {
+  cleanupRateLimits();
+  const now = Date.now();
+  const timestamps = requestLog.get(ip) || [];
+
+  if (timestamps.length >= MAX_REQUESTS_PER_WINDOW) {
+    return false;
+  }
+
+  timestamps.push(now);
+  requestLog.set(ip, timestamps);
+  return true;
+};
+
 export default async function handler(req, res) {
   try {
+    // 0. Rate Limiting
+    // Use x-forwarded-for if available (Vercel/Proxy), else socket address
+    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
+
+    if (!checkRateLimit(ip)) {
+      console.warn(`[TTS] Rate limit exceeded for IP: ${ip}`);
+      return res.status(429).json({ error: 'Too Many Requests. Please wait a moment.' });
+    }
+
     // 1. Input Validation
     if (req.method !== 'POST') {
       return res.status(405).json({ error: 'Method Not Allowed' });
@@ -11,6 +51,10 @@ export default async function handler(req, res) {
 
     if (!text) {
       return res.status(400).json({ error: 'Missing "text" in request body' });
+    }
+
+    if (text.length > 200) {
+      return res.status(400).json({ error: 'Text too long. Maximum 200 characters allowed.' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
