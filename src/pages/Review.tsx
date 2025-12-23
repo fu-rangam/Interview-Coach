@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mic, RefreshCw, Award, ChevronRight, MessageSquare, CheckCircle2, Activity } from '../components/Icons';
 import { useSession } from '../hooks/useSession';
-import Loader from '../components/Loader';
 import SkeletonLoader from '../components/SkeletonLoader';
 
 const Review: React.FC = () => {

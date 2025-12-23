@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, Square, MessageSquare, Send, Lightbulb, Check, ChevronLeft, StopCircle } from '../components/Icons';
+import { Mic, Square, MessageSquare, Send, Lightbulb, Check, ChevronLeft, StopCircle, List, X } from '../components/Icons';
 import AudioVisualizer from '../components/AudioVisualizer';
 import QuestionCard from '../components/QuestionCard';
 import QuestionTips from '../components/QuestionTips';
@@ -14,6 +14,7 @@ import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
 import { useGuestTracker } from '../hooks/useGuestTracker';
 import { useAuth } from '../context/AuthContext';
+import QuestionList from '../components/QuestionList';
 
 const Interview: React.FC = () => {
     const navigate = useNavigate();
@@ -26,6 +27,7 @@ const Interview: React.FC = () => {
     const [processingState, setProcessingState] = useState<{ isActive: boolean; text: string }>({ isActive: false, text: '' });
     const [activeTab, setActiveTab] = useState<'voice' | 'text'>('voice');
     const [error, setError] = useState<string | null>(null);
+    const [mobileOverlay, setMobileOverlay] = useState<'none' | 'questions' | 'tips'>('none');
 
     // Safe access to current question
     const currentQ = session.questions[session.currentQuestionIndex];
@@ -114,25 +116,98 @@ const Interview: React.FC = () => {
                 <div className="flex flex-col lg:flex-row h-full relative">
                     {/* Error Toast */}
                     {error && (
-                        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50 bg-rose-100 border border-rose-200 text-rose-700 px-6 py-3 rounded-full shadow-lg animate-fade-in font-medium flex items-center gap-2">
+                        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-60 bg-rose-100 border border-rose-200 text-rose-700 px-6 py-3 rounded-full shadow-lg animate-fade-in font-medium flex items-center gap-2">
                             <span>{error}</span>
                         </div>
                     )}
 
-                    {/* Left Column (40%): Question & Input */}
-                    <div className="w-full lg:w-[45%] h-full flex flex-col relative border-r border-slate-200 bg-white shadow-sm z-10">
+                    {/* Mobile: Overlays */}
+                    {mobileOverlay !== 'none' && (
+                        <div className="lg:hidden absolute inset-0 z-50 bg-white flex flex-col animate-fade-in">
+                            <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-white shadow-sm shrink-0">
+                                <h3 className="font-display font-bold text-slate-800 text-sm uppercase tracking-wider">
+                                    {mobileOverlay === 'questions' ? 'Question Set' : 'Tips & Advice'}
+                                </h3>
+                                <button
+                                    onClick={() => setMobileOverlay('none')}
+                                    className="p-2 text-slate-400 hover:text-slate-600 bg-slate-50 rounded-full"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto">
+                                {mobileOverlay === 'questions' ? (
+                                    <QuestionList
+                                        questions={session.questions}
+                                        currentIndex={session.currentQuestionIndex}
+                                        answers={session.answers}
+                                        onSelect={(idx) => {
+                                            goToQuestion(idx);
+                                            setMobileOverlay('none');
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="p-6">
+                                        {currentQ?.tips ? (
+                                            <QuestionTips tips={currentQ.tips} />
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center py-12 opacity-75">
+                                                <Loader />
+                                                <p className="mt-4 text-slate-400 text-sm font-medium animate-pulse">Consulting Coach...</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Left Column (20%): Question Set (Desktop) */}
+                    <div className="hidden lg:flex lg:w-[20%] h-full flex-col bg-white border-r border-slate-200 z-20">
+                        <QuestionList
+                            questions={session.questions}
+                            currentIndex={session.currentQuestionIndex}
+                            answers={session.answers}
+                            onSelect={goToQuestion}
+                        />
+                    </div>
+
+                    {/* Middle Column (45%): Main Content */}
+                    <div className="w-full lg:w-[45%] h-full flex flex-col relative bg-white lg:bg-slate-50 lg:border-r border-slate-200 shadow-sm lg:shadow-none z-10">
                         {/* Header */}
-                        <div className="flex-none px-8 py-6 flex items-center justify-between bg-white z-20">
-                            <button onClick={() => navigate('/')} className="text-slate-400 hover:text-slate-600 transition-colors">
-                                <ChevronLeft size={24} />
-                            </button>
-                            <span className="text-xs font-bold text-[#376497] uppercase tracking-widest px-3 py-1 bg-blue-50 rounded-full border border-blue-100">
-                                {session.role || "Interview Session"}
-                            </span>
+                        <div className="flex-none px-4 lg:px-8 py-4 lg:py-6 flex items-center justify-between bg-white lg:bg-transparent z-20 border-b lg:border-0 border-slate-100">
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => navigate('/')} className="text-slate-400 hover:text-slate-600 transition-colors p-1">
+                                    <ChevronLeft size={24} />
+                                </button>
+                                {/* Mobile: Question Set Button */}
+                                <button
+                                    onClick={() => setMobileOverlay('questions')}
+                                    className="lg:hidden flex items-center gap-2 text-slate-600 hover:text-[#376497] font-semibold text-sm px-2 py-1 rounded-lg hover:bg-slate-50 transition-colors"
+                                >
+                                    <List size={20} />
+                                    <span>Question Set</span>
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                {/* Mobile: Tips Button */}
+                                <button
+                                    onClick={() => setMobileOverlay('tips')}
+                                    className="lg:hidden flex items-center gap-2 text-amber-600 font-semibold text-sm px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100"
+                                >
+                                    <Lightbulb size={16} className="fill-current" />
+                                    <span>Tips</span>
+                                </button>
+
+                                <span className="hidden lg:inline-block text-xs font-bold text-[#376497] uppercase tracking-widest px-3 py-1 bg-blue-50 rounded-full border border-blue-100">
+                                    {session.role || "Interview Session"}
+                                </span>
+                            </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto px-8 pb-8 flex flex-col items-center">
-                            <div className="w-full max-w-xl mx-auto space-y-8">
+                        <div className="flex-1 overflow-y-auto px-4 lg:px-8 pb-8 flex flex-col items-center">
+                            <div className="w-full max-w-xl mx-auto space-y-6 lg:space-y-8 mt-2 lg:mt-0">
                                 <QuestionCard
                                     question={currentQ ? decodeHtml(currentQ.text) : "Loading..."}
                                     role={session.role}
@@ -244,12 +319,12 @@ const Interview: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Middle Column (35%): Tips */}
-                    <div className="hidden lg:flex lg:w-[35%] h-full bg-slate-50/50 flex-col border-r border-slate-200">
+                    {/* Right Column (35%): Tips (Desktop) */}
+                    <div className="hidden lg:flex lg:w-[35%] h-full bg-slate-50/50 flex-col border-l border-slate-200">
                         <div className="px-8 py-6 border-b border-slate-200/50 bg-slate-50/80 backdrop-blur-sm sticky top-0 z-10">
                             <div className="flex items-center gap-2 text-amber-600 mb-1">
                                 <Lightbulb size={20} className="fill-current opacity-20" />
-                                <h3 className="font-display font-bold text-slate-800 text-sm uppercase tracking-wider">Coach's Corner</h3>
+                                <h3 className="font-display font-bold text-slate-800 text-sm uppercase tracking-wider">Tips & Advice</h3>
                             </div>
                             <p className="text-sm text-slate-500">Key strategies for this specific question</p>
                         </div>
@@ -263,61 +338,6 @@ const Interview: React.FC = () => {
                                     <p className="mt-4 text-slate-400 text-sm font-medium animate-pulse">Consulting Coach...</p>
                                 </div>
                             )}
-                        </div>
-                    </div>
-
-                    {/* Right Column (20%): Sidebar Question List */}
-                    <div className="hidden lg:flex lg:w-[20%] h-full flex-col bg-white overflow-y-auto">
-                        <div className="px-6 py-6 border-b border-slate-100 bg-white sticky top-0 z-10">
-                            <h3 className="font-display font-bold text-slate-800 text-sm uppercase tracking-wider mb-4">Interview Progress</h3>
-                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-[#376497] transition-all duration-500 ease-out"
-                                    style={{ width: `${((session.currentQuestionIndex) / session.questions.length) * 100}%` }}
-                                ></div>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 p-4 space-y-1">
-                            {session.questions.map((q, index) => {
-                                const isActive = index === session.currentQuestionIndex;
-                                const isAnswered = !!session.answers[q.id];
-
-                                return (
-                                    <button
-                                        key={q.id}
-                                        onClick={() => goToQuestion(index)}
-                                        className={cn(
-                                            "w-full text-left p-4 rounded-xl text-sm transition-all duration-200 relative group flex gap-3 items-start",
-                                            isActive
-                                                ? "bg-blue-50/80 text-[#1e3a5f] shadow-sm ring-1 ring-blue-100"
-                                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                                        )}
-                                    >
-                                        <div className={cn(
-                                            "mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 transition-all",
-                                            isAnswered
-                                                ? "bg-emerald-500 text-white shadow-sm shadow-emerald-200"
-                                                : isActive
-                                                    ? "bg-[#376497] text-white shadow-sm shadow-blue-200"
-                                                    : "bg-slate-100 text-slate-400"
-                                        )}>
-                                            {isAnswered ? <Check size={12} strokeWidth={3} /> : index + 1}
-                                        </div>
-                                        <span className={cn(
-                                            "line-clamp-2 leading-relaxed",
-                                            isActive ? "font-semibold" : "font-medium"
-                                        )}>
-                                            {decodeHtml(q.text)}
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        <div className="p-6 mt-auto border-t border-slate-50 bg-slate-50/30">
-                            <button onClick={() => navigate('/')} className="w-full py-2 text-xs font-semibold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-wider text-center">
-                                End Session
-                            </button>
                         </div>
                     </div>
 
