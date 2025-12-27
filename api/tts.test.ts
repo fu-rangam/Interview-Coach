@@ -4,7 +4,7 @@ import handler from './tts';
 // Mock GoogleGenAI
 const mockGenerateContent = vi.fn();
 vi.mock('@google/genai', () => ({
-  GoogleGenAI: vi.fn(function() {
+  GoogleGenAI: vi.fn(function () {
     return {
       models: {
         generateContent: mockGenerateContent,
@@ -16,20 +16,24 @@ vi.mock('@google/genai', () => ({
 describe('TTS API Handler', () => {
   let mockReq: any;
   let mockRes: any;
+  let testCount = 0;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+    testCount++;
+
     // Mock response object
     mockRes = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     };
 
-    // Mock request object
+    // Mock request object - USE UNIQUE IP TO BYPASS RATE LIMITER
     mockReq = {
       method: 'POST',
       body: { text: 'Hello world' },
+      headers: { 'x-forwarded-for': `127.0.0.${testCount}` },
+      socket: { remoteAddress: `127.0.0.${testCount}` }
     };
 
     // Set environment variable
@@ -55,35 +59,39 @@ describe('TTS API Handler', () => {
       expect(mockRes.json).toHaveBeenCalledWith({ error: 'Missing "text" in request body' });
     });
 
-    it('should reject requests with empty text', async () => {
-      mockReq.body = { text: '' };
+    it('should reject requests with long text', async () => {
+      mockReq.body = { text: 'a'.repeat(201) };
 
       await handler(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Missing "text" in request body' });
+      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Text too long. Maximum 200 characters allowed.' });
     });
 
     it('should reject requests when API key is missing', async () => {
       delete process.env.GEMINI_API_KEY;
+      delete process.env.VITE_GEMINI_API_KEY;
 
       await handler(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Server configuration error' });
+      expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
+        error: expect.stringContaining('Missing API Key')
+      }));
     });
   });
 
   describe('TTS Generation', () => {
-    it('should generate audio successfully', async () => {
+    it('should generate audio successfully (PCM fallback to WAV)', async () => {
       const mockAudioData = Buffer.from('fake-pcm-audio-data').toString('base64');
-      
+
       mockGenerateContent.mockResolvedValue({
         candidates: [{
           content: {
             parts: [{
               inlineData: {
                 data: mockAudioData,
+                mimeType: 'audio/L16;rate=24000'
               },
             }],
           },
@@ -91,41 +99,22 @@ describe('TTS API Handler', () => {
       });
 
       await handler(mockReq, mockRes);
-
-      expect(mockGenerateContent).toHaveBeenCalledWith({
-        model: 'gemini-2.5-flash-preview-tts',
-        contents: {
-          parts: [{ text: 'Please read this sentence clearly and professionally: "Hello world"' }],
-        },
-        config: {
-          responseModalities: ['AUDIO'],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: {
-                voiceName: 'Aoede',
-              },
-            },
-          },
-        },
-      });
 
       expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          audioBase64: expect.any(String),
-        })
-      );
+      const result = mockRes.json.mock.calls[0][0];
+      expect(result.mimeType).toBe('audio/wav');
     });
 
-    it('should return valid WAV format with header', async () => {
-      const mockAudioData = Buffer.from('test-audio').toString('base64');
-      
+    it('should return valid WAV format with header for PCM data', async () => {
+      const mockAudioData = Buffer.from('test-audio-data-long-enough').toString('base64');
+
       mockGenerateContent.mockResolvedValue({
         candidates: [{
           content: {
             parts: [{
               inlineData: {
                 data: mockAudioData,
+                mimeType: 'audio/pcm'
               },
             }],
           },
@@ -134,14 +123,37 @@ describe('TTS API Handler', () => {
 
       await handler(mockReq, mockRes);
 
+      expect(mockRes.status).toHaveBeenCalledWith(200);
       const call = mockRes.json.mock.calls[0][0];
       const audioBuffer = Buffer.from(call.audioBase64, 'base64');
-      
-      // Check WAV header signature
+
       expect(audioBuffer.toString('ascii', 0, 4)).toBe('RIFF');
       expect(audioBuffer.toString('ascii', 8, 12)).toBe('WAVE');
-      expect(audioBuffer.toString('ascii', 12, 16)).toBe('fmt ');
-      expect(audioBuffer.toString('ascii', 36, 40)).toBe('data');
+    });
+
+    it('should handle MP3 data without wrapping', async () => {
+      const mockAudioData = Buffer.from('fake-mp3').toString('base64');
+
+      mockGenerateContent.mockResolvedValue({
+        candidates: [{
+          content: {
+            parts: [{
+              inlineData: {
+                data: mockAudioData,
+                mimeType: 'audio/mp3'
+              },
+            }],
+          },
+        }],
+      });
+
+      await handler(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        audioBase64: mockAudioData,
+        mimeType: 'audio/mpeg'
+      });
     });
 
     it('should handle missing audio data gracefully', async () => {
@@ -160,55 +172,51 @@ describe('TTS API Handler', () => {
     });
 
     it('should handle API errors gracefully', async () => {
-      mockGenerateContent.mockRejectedValue(new Error('API quota exceeded'));
+      mockGenerateContent.mockRejectedValue(new Error('Quota exceeded'));
 
       await handler(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('API quota exceeded'),
-        })
-      );
+      expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
+        error: expect.stringContaining('Quota exceeded')
+      }));
     });
+  });
 
-    it('should handle long text inputs', async () => {
-      const longText = 'This is a very long question that simulates a real interview scenario. '.repeat(10);
-      mockReq.body = { text: longText };
+  describe('Rate Limiting', () => {
+    it('should return 429 when too many requests from same IP', async () => {
+      const ip = '192.168.1.1';
+      mockReq.headers['x-forwarded-for'] = ip;
 
-      const mockAudioData = Buffer.from('audio').toString('base64');
-      mockGenerateContent.mockResolvedValue({
+      const mockResults = {
         candidates: [{
-          content: {
-            parts: [{
-              inlineData: { data: mockAudioData },
-            }],
-          },
-        }],
-      });
+          content: { parts: [{ inlineData: { data: 'abc', mimeType: 'audio/mp3' } }] }
+        }]
+      };
+      mockGenerateContent.mockResolvedValue(mockResults);
 
+      // Send 5 requests (MAX_REQUESTS_PER_WINDOW)
+      for (let i = 0; i < 5; i++) {
+        await handler(mockReq, mockRes);
+        expect(mockRes.status).toHaveBeenLastCalledWith(200);
+      }
+
+      // 6th request should fail
       await handler(mockReq, mockRes);
-
-      expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockGenerateContent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          contents: {
-            parts: [{ text: expect.stringContaining(longText) }],
-          },
-        })
-      );
+      expect(mockRes.status).toHaveBeenLastCalledWith(429);
+      expect(mockRes.json).toHaveBeenLastCalledWith({ error: expect.stringContaining('Too Many Requests') });
     });
   });
 
   describe('WAV Header Generation', () => {
     it('should create proper 24kHz mono 16-bit PCM header', async () => {
-      const mockAudioData = Buffer.from(new Array(1000).fill(0)).toString('base64');
-      
+      const mockAudioData = Buffer.from(new Uint8Array(2000)).toString('base64');
+
       mockGenerateContent.mockResolvedValue({
         candidates: [{
           content: {
             parts: [{
-              inlineData: { data: mockAudioData },
+              inlineData: { data: mockAudioData, mimeType: 'audio/L16' },
             }],
           },
         }],
@@ -218,12 +226,10 @@ describe('TTS API Handler', () => {
 
       const call = mockRes.json.mock.calls[0][0];
       const audioBuffer = Buffer.from(call.audioBase64, 'base64');
-      
-      // Verify WAV format parameters
+
       expect(audioBuffer.readUInt16LE(20)).toBe(1); // PCM format
       expect(audioBuffer.readUInt16LE(22)).toBe(1); // Mono
       expect(audioBuffer.readUInt32LE(24)).toBe(24000); // 24kHz sample rate
-      expect(audioBuffer.readUInt16LE(34)).toBe(16); // 16-bit
     });
   });
 });

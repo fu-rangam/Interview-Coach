@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGuestTracker } from '../hooks/useGuestTracker';
 import { useAuth } from '../context/AuthContext';
 
-import { ROLE_IMAGES } from '../constants';
+import { ROLE_IMAGES } from '../lib/constants';
 
 const Home: React.FC = () => {
     const navigate = useNavigate();

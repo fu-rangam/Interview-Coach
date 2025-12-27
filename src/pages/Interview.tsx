@@ -107,7 +107,7 @@ const Interview: React.FC = () => {
     return (
         <div className="flex flex-col h-screen w-full bg-slate-50 overflow-hidden font-sans">
             {processingState.isActive ? (
-                <SkeletonLoader variant="history" />
+                <SkeletonLoader variant="review" text={processingState.text} />
             ) : (
                 <div className="flex flex-col lg:flex-row h-full relative">
                     {/* Error Toast */}

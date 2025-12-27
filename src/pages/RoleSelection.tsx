@@ -6,7 +6,7 @@ import { TECH_ROLES, SERVICE_ROLES } from '../types';
 import { useSession } from '../hooks/useSession';
 import { useAuth } from '../context/AuthContext';
 import { useGuestTracker } from '../hooks/useGuestTracker';
-import { ROLE_IMAGES } from '../constants';
+import { ROLE_IMAGES } from '../lib/constants';
 
 const RoleSelection: React.FC = () => {
     const navigate = useNavigate();

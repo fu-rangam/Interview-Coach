@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import { QuestionTips as QuestionTipsType } from '../types';
-import { Lightbulb, Target, Layers, AlertTriangle, Star, CheckSquare, Sparkles, ChevronDown, ChevronUp, Briefcase } from './Icons';
+import { Target, Layers, AlertTriangle, Star, CheckSquare, Sparkles, ChevronDown, ChevronUp, Briefcase } from './Icons';
 
 interface QuestionTipsProps {
     tips?: QuestionTipsType;
 }
 
-const QuestionTips: React.FC<QuestionTipsProps> = ({ tips }) => {
-    if (!tips) return null;
-
-    const [expandedSection, setExpandedSection] = useState<string | null>(null);
-
-    const toggleSection = (section: string) => {
-        setExpandedSection(expandedSection === section ? null : section);
-    };
-
+const SectionHeader = ({ id, icon: Icon, title, color, isExpanded, onToggle }: {
+    id: string;
+    icon: any;
+    title: string;
+    color: string;
+    isExpanded: boolean;
+    onToggle: (id: string) => void;
+}) => {
     const colorStyles: Record<string, { bg: string; text: string; lightBg: string; ring: string }> = {
         indigo: { bg: 'bg-blue-100', text: 'text-[#376497]', lightBg: 'bg-blue-50', ring: 'ring-blue-100' },
         emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600', lightBg: 'bg-emerald-50', ring: 'ring-emerald-100' },
@@ -24,23 +23,33 @@ const QuestionTips: React.FC<QuestionTipsProps> = ({ tips }) => {
         amber: { bg: 'bg-amber-100', text: 'text-amber-600', lightBg: 'bg-amber-50', ring: 'ring-amber-100' },
     };
 
-    const SectionHeader = ({ id, icon: Icon, title, color }: { id: string; icon: any; title: string; color: string }) => {
-        const styles = colorStyles[color] || colorStyles.indigo;
-        return (
-            <button
-                onClick={() => toggleSection(id)}
-                className={`w-full flex items-center justify-between p-4 rounded-xl transition-all ${expandedSection === id ? `${styles.lightBg} ring-2 ${styles.ring}` : 'bg-white hover:bg-slate-50 border border-slate-100'
-                    } mb-2`}
-            >
-                <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${styles.bg} ${styles.text}`}>
-                        <Icon size={20} />
-                    </div>
-                    <span className="font-semibold text-slate-700">{title}</span>
+    const styles = colorStyles[color] || colorStyles.indigo;
+    return (
+        <button
+            onClick={() => onToggle(id)}
+            className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors duration-200 border ${isExpanded
+                ? `${styles.lightBg} ring-2 ${styles.ring} border-transparent`
+                : 'bg-white hover:bg-slate-50 border-slate-100'
+                } mb-2`}
+        >
+            <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg transition-colors ${styles.bg} ${styles.text}`}>
+                    <Icon size={20} />
                 </div>
-                {expandedSection === id ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
-            </button>
-        );
+                <span className="font-semibold text-slate-700">{title}</span>
+            </div>
+            {isExpanded ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
+        </button>
+    );
+};
+
+const QuestionTips: React.FC<QuestionTipsProps> = ({ tips }) => {
+    if (!tips) return null;
+
+    const [expandedSection, setExpandedSection] = useState<string | null>(null);
+
+    const toggleSection = (section: string) => {
+        setExpandedSection(prev => prev === section ? null : section);
     };
 
     const decodeHtml = (html: string) => {
@@ -53,7 +62,7 @@ const QuestionTips: React.FC<QuestionTipsProps> = ({ tips }) => {
         <div className="w-full animate-fade-in-up h-full">
             <div className="space-y-1 pb-6">
                 {/* What They're Looking For */}
-                <SectionHeader id="lookingFor" icon={Target} title="What They're Looking For" color="indigo" />
+                <SectionHeader id="lookingFor" icon={Target} title="What They're Looking For" color="indigo" isExpanded={expandedSection === 'lookingFor'} onToggle={toggleSection} />
                 {expandedSection === 'lookingFor' && (
                     <div className="p-5 bg-white border border-slate-100 rounded-xl mb-3 animate-fade-in text-slate-600 leading-relaxed italic">
                         {decodeHtml(tips.lookingFor)}
@@ -61,7 +70,7 @@ const QuestionTips: React.FC<QuestionTipsProps> = ({ tips }) => {
                 )}
 
                 {/* Specific Points to Cover */}
-                <SectionHeader id="pointsToCover" icon={CheckSquare} title="Specific Points to Cover" color="emerald" />
+                <SectionHeader id="pointsToCover" icon={CheckSquare} title="Specific Points to Cover" color="emerald" isExpanded={expandedSection === 'pointsToCover'} onToggle={toggleSection} />
                 {expandedSection === 'pointsToCover' && (
                     <div className="p-5 bg-white border border-slate-100 rounded-xl mb-3 animate-fade-in">
                         <ul className="space-y-3">
@@ -78,7 +87,7 @@ const QuestionTips: React.FC<QuestionTipsProps> = ({ tips }) => {
                 )}
 
                 {/* Answer Framework */}
-                <SectionHeader id="framework" icon={Layers} title="Answer Framework" color="violet" />
+                <SectionHeader id="framework" icon={Layers} title="Answer Framework" color="violet" isExpanded={expandedSection === 'framework'} onToggle={toggleSection} />
                 {expandedSection === 'framework' && (
                     <div className="p-5 bg-white border border-slate-100 rounded-xl mb-3 animate-fade-in text-slate-600">
                         {decodeHtml(tips.answerFramework)}
@@ -86,7 +95,7 @@ const QuestionTips: React.FC<QuestionTipsProps> = ({ tips }) => {
                 )}
 
                 {/* Industry Specifics */}
-                <SectionHeader id="industry" icon={Briefcase} title="Industry Specifics" color="blue" />
+                <SectionHeader id="industry" icon={Briefcase} title="Industry Specifics" color="blue" isExpanded={expandedSection === 'industry'} onToggle={toggleSection} />
                 {expandedSection === 'industry' && (
                     <div className="p-5 bg-white border border-slate-100 rounded-xl mb-3 animate-fade-in space-y-4">
                         <div>
@@ -101,7 +110,7 @@ const QuestionTips: React.FC<QuestionTipsProps> = ({ tips }) => {
                 )}
 
                 {/* Critical Mistakes to Avoid */}
-                <SectionHeader id="mistakes" icon={AlertTriangle} title="Critical Mistakes to Avoid" color="rose" />
+                <SectionHeader id="mistakes" icon={AlertTriangle} title="Critical Mistakes to Avoid" color="rose" isExpanded={expandedSection === 'mistakes'} onToggle={toggleSection} />
                 {expandedSection === 'mistakes' && (
                     <div className="p-5 bg-white border border-slate-100 rounded-xl mb-3 animate-fade-in">
                         <ul className="space-y-3">
@@ -116,7 +125,7 @@ const QuestionTips: React.FC<QuestionTipsProps> = ({ tips }) => {
                 )}
 
                 {/* Expert Pro Tip */}
-                <SectionHeader id="protip" icon={Star} title="Expert Pro Tip" color="amber" />
+                <SectionHeader id="protip" icon={Star} title="Expert Pro Tip" color="amber" isExpanded={expandedSection === 'protip'} onToggle={toggleSection} />
                 {expandedSection === 'protip' && (
                     <div className="p-5 bg-amber-50 border border-amber-100 rounded-xl mb-3 animate-fade-in">
                         <div className="flex gap-3">
@@ -125,7 +134,6 @@ const QuestionTips: React.FC<QuestionTipsProps> = ({ tips }) => {
                         </div>
                     </div>
                 )}
-
             </div>
         </div>
     );

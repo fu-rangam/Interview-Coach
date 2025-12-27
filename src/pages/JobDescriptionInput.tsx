@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home, Briefcase } from '../components/Icons';
-import { sanitizeInput, truncateInput } from '../utils/sanitize';
+import { sanitizeInput, truncateInput } from '../lib/sanitize';
 import { useSession } from '../hooks/useSession';
 import Loader from '../components/Loader';
 

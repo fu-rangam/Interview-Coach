@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { sanitizeInput, truncateInput } from '../utils/sanitize';
+import { sanitizeInput, truncateInput } from '../lib/sanitize';
 
 const MAX_TEXT_LENGTH = 1500;
 
