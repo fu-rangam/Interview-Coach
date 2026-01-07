@@ -16,14 +16,15 @@ export interface SessionHistory {
 
 /**
  * Save a completed interview session to Supabase (or localStorage fallback)
+ * Returns the ID of the saved session (Supabase ID or LocalStorage timestamp ID)
  */
-export async function saveSession(session: InterviewSession, score: number): Promise<void> {
+export async function saveSession(session: InterviewSession, score: number): Promise<string | null> {
     try {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (user) {
             // Save to Supabase
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('interviews')
                 .insert({
                     user_id: user.id,
@@ -32,25 +33,62 @@ export async function saveSession(session: InterviewSession, score: number): Pro
                     score: score,
                     feedback: JSON.stringify(session), // Store full session as JSON
                     completed_at: new Date().toISOString()
-                });
+                })
+                .select('id')
+                .single();
 
             if (error) throw error;
+            return data.id;
         } else {
             // Fallback to localStorage for guest users
-            saveToLocalStorage(session, score);
+            return saveToLocalStorage(session, score);
         }
     } catch (error) {
         console.error('Failed to save session:', error);
         // Fallback if Supabase fails (e.g. offline)
-        saveToLocalStorage(session, score);
+        return saveToLocalStorage(session, score);
     }
 }
 
-function saveToLocalStorage(session: InterviewSession, score: number) {
+/**
+ * Update an existing history/interview session with new data
+ */
+export async function updateHistorySession(id: string, session: InterviewSession, score: number): Promise<void> {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user && id.length > 20) { // Supabase UUID check
+            const { error } = await supabase
+                .from('interviews')
+                .update({
+                    score: score,
+                    feedback: JSON.stringify(session)
+                })
+                .eq('id', id);
+
+            if (error) throw error;
+        } else {
+            // LocalStorage update
+            const history = getLocalStorageSessions();
+            const index = history.findIndex(s => s.id === id);
+            if (index !== -1) {
+                history[index].score = score;
+                history[index].session = session;
+                history[index].questionsCount = session.questions.length;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+            }
+        }
+    } catch (error) {
+        console.error('Failed to update session:', error);
+    }
+}
+
+function saveToLocalStorage(session: InterviewSession, score: number): string {
     const history = getLocalStorageSessions();
+    const id = Date.now().toString();
     const newSession: SessionHistory = {
-        id: Date.now().toString(),
-        timestamp: Date.now(),
+        id,
+        timestamp: parseInt(id),
         date: new Date().toLocaleDateString(),
         role: session.role,
         score,
@@ -59,6 +97,7 @@ function saveToLocalStorage(session: InterviewSession, score: number) {
     };
     history.push(newSession);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(-50)));
+    return id;
 }
 
 /**

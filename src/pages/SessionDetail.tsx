@@ -153,9 +153,6 @@ const SessionDetail: React.FC = () => {
                                         </div>
 
                                         <div className="flex items-center justify-between md:justify-end gap-6 pl-12 md:pl-0">
-                                            <span className={cn("px-4 py-1.5 rounded-full text-xs font-bold uppercase border tracking-wider", getRatingColor(analysis?.rating))}>
-                                                {analysis?.rating || "Skipped"}
-                                            </span>
                                             <ChevronRight className={cn("text-slate-400 transition-transform duration-300", isExpanded && "rotate-90")} size={20} />
                                         </div>
                                     </div>
@@ -166,84 +163,96 @@ const SessionDetail: React.FC = () => {
                                                 {/* Left Column: Transcript & Analysis */}
                                                 <div>
                                                     {/* User Answer */}
-                                                    <div className="mb-8">
-                                                        <div className="flex items-center gap-2 mb-3 text-sm font-bold text-slate-400 uppercase tracking-wider">
-                                                            <User size={16} /> Your Answer
-                                                        </div>
-                                                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-slate-600 text-base leading-relaxed italic relative">
-                                                            <span className="absolute top-4 left-4 text-4xl text-slate-100 font-serif leading-none">"</span>
-                                                            <p className="relative z-10 whitespace-pre-wrap">{decodeHtml(analysis?.transcript || answerData.text || "No transcript available.")}</p>
-                                                        </div>
+                                                    <div className="bg-slate-50 p-6 rounded-2xl mb-8 border border-slate-100 shadow-inner relative group">
+                                                        <h4 className="text-xs font-bold text-slate-400 uppercase mb-4 tracking-wide flex items-center gap-2">
+                                                            <User size={14} /> Your Answer
+                                                        </h4>
+                                                        <p className="text-slate-700 leading-relaxed text-lg whitespace-pre-wrap">
+                                                            {decodeHtml(analysis?.transcript || answerData.text || "No transcript available.")}
+                                                        </p>
                                                     </div>
 
-                                                    {/* Key Terms */}
-                                                    {analysis?.keyTerms && analysis.keyTerms.length > 0 && (
-                                                        <div className="mb-8">
-                                                            <div className="flex items-center gap-2 mb-3 text-sm font-bold text-slate-400 uppercase tracking-wider">
-                                                                <Award size={16} /> Key Terms
-                                                            </div>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {analysis.keyTerms.map((term, i) => (
-                                                                    <span key={i} className="px-3 py-1 bg-blue-50 text-[#376497] rounded-md text-sm font-medium border border-blue-100">
-                                                                        {term}
-                                                                    </span>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Feedback */}
-                                                    {analysis?.feedback && (
-                                                        <div className="mb-8">
-                                                            <div className="flex items-center gap-2 mb-3 text-sm font-bold text-[#376497] uppercase tracking-wider">
-                                                                <MessageSquare size={16} /> Feedback
-                                                            </div>
-                                                            <ul className="space-y-3">
-                                                                {analysis.feedback.map((point, i) => (
-                                                                    <li key={i} className="flex items-start gap-3 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                                                                        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                                                                        <span className="text-slate-600 text-sm leading-relaxed">{point}</span>
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Delivery */}
-                                                    {(analysis?.deliveryStatus || analysis?.deliveryTips) && (
-                                                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                                                            <div className="flex items-center gap-2 mb-3 text-sm font-bold text-emerald-600 uppercase tracking-wider">
-                                                                <Activity size={16} /> Delivery Analysis
-                                                            </div>
-
-                                                            {analysis.deliveryStatus && (
-                                                                <div className="mb-3 flex items-center gap-2">
-                                                                    <span className="text-sm font-bold text-slate-700">Status:</span>
-                                                                    <span className="text-sm text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">{analysis.deliveryStatus}</span>
-                                                                </div>
-                                                            )}
-
-                                                            {analysis.deliveryTips && analysis.deliveryTips.length > 0 && (
-                                                                <div className="space-y-2">
-                                                                    {analysis.deliveryTips.map((tip, i) => (
-                                                                        <div key={i} className="flex items-start gap-2 text-sm text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                                                                            <Lightbulb size={14} className="mt-0.5 text-amber-500 shrink-0" />
-                                                                            {tip}
+                                                    <div className="space-y-6 mb-8">
+                                                        {/* Feedback */}
+                                                        {analysis?.feedback && (
+                                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                                                <div className="flex items-center justify-between mb-4">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                                                                            <MessageSquare size={20} />
                                                                         </div>
+                                                                        <h4 className="font-semibold text-slate-800">Feedback</h4>
+                                                                    </div>
+                                                                    <span className={cn("px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider", getRatingColor(analysis?.rating))}>
+                                                                        {analysis.rating}
+                                                                    </span>
+                                                                </div>
+                                                                <ul className="space-y-4">
+                                                                    {analysis.feedback.map((point, i) => (
+                                                                        <li key={i} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/50">
+                                                                            <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                                                            <p className="text-slate-600 leading-relaxed">{point}</p>
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Speaking Delivery */}
+                                                        {(analysis?.deliveryStatus || analysis?.deliveryTips) && (
+                                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                                                <div className="flex items-center gap-3 mb-4">
+                                                                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                                                                        <Activity size={20} />
+                                                                    </div>
+                                                                    <h4 className="font-semibold text-slate-800">Speaking Delivery</h4>
+                                                                    {analysis.deliveryStatus && (
+                                                                        <span className="ml-auto text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md uppercase tracking-wider">
+                                                                            {analysis.deliveryStatus}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                {analysis.deliveryTips && analysis.deliveryTips.length > 0 && (
+                                                                    <ul className="space-y-3">
+                                                                        {analysis.deliveryTips.map((tip, i) => (
+                                                                            <li key={i} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/50">
+                                                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0" />
+                                                                                <p className="text-slate-600 text-sm leading-relaxed">{tip}</p>
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Key Professional Terms */}
+                                                        {analysis?.keyTerms && analysis.keyTerms.length > 0 && (
+                                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                                                <div className="flex items-center gap-3 mb-4">
+                                                                    <div className="p-2 bg-blue-50 rounded-lg text-[#376497]">
+                                                                        <Award size={20} />
+                                                                    </div>
+                                                                    <h4 className="font-semibold text-slate-800">Key Professional Terms</h4>
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {analysis.keyTerms.map((term, i) => (
+                                                                        <span key={i} className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium border border-slate-200">
+                                                                            {term}
+                                                                        </span>
                                                                     ))}
                                                                 </div>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
 
                                                 {/* Right Column: Strong Response & Why This Works */}
                                                 <div>
                                                     {/* Strong Response Card */}
                                                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-8 overflow-hidden">
-                                                        <div className="bg-amber-50 px-6 py-4 border-b border-amber-100 flex items-center gap-2">
-                                                            <Star size={18} className="text-amber-500 fill-current" />
-                                                            <h3 className="font-bold text-amber-700 text-sm uppercase tracking-wide">Strong Response Example</h3>
+                                                        <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                                                            <Star size={18} className="text-[#376497] fill-current" />
+                                                            <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wide">Strong Response Example</h3>
                                                         </div>
                                                         <div className="p-6">
                                                             {analysis?.strongResponse ? (

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, CheckCircle2, Lock, Share2, Download, Home, RotateCcw } from '../components/Icons';
+import { User, MessageSquare, Activity, Award, Star, CheckSquare } from 'lucide-react';
+import QuestionTips from '../components/QuestionTips';
 import { useSession } from '../hooks/useSession';
 import { AnalysisResult } from '../types';
-import { saveSession } from '../services/storageService';
+import { saveSession, updateHistorySession } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import { useGuestTracker } from '../hooks/useGuestTracker';
 import { Button } from '../components/ui/button';
@@ -16,7 +18,8 @@ const Summary: React.FC = () => {
     const { user } = useAuth();
     const { markSessionComplete } = useGuestTracker();
     const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
-    const hasSaved = useRef(false);
+    const historyId = useRef<string | null>(null);
+    const savePromiseRef = useRef<Promise<string | null> | null>(null);
 
     const decodeHtml = (html: string) => {
         const txt = document.createElement('textarea');
@@ -56,16 +59,35 @@ const Summary: React.FC = () => {
 
     // Side Effects: Save (if user) and Track (if guest)
     useEffect(() => {
-        if (!hasSaved.current && session.questions.length > 0) {
-            if (user) {
-                // Member: Save permanently
-                saveSession(session, score);
-            } else {
-                // Guest: Mark as "Hooked"
-                markSessionComplete();
+        const saveOrUpdate = async () => {
+            if (session.questions.length > 0) {
+                // Determine ID if not present
+                if (!historyId.current) {
+                    if (!savePromiseRef.current) {
+                        // Initiate the single creation request
+                        savePromiseRef.current = (async () => {
+                            if (user) {
+                                return saveSession(session, score);
+                            } else {
+                                markSessionComplete();
+                                return saveSession(session, score);
+                            }
+                        })();
+                    }
+
+                    // Wait for the creation to finish
+                    const id = await savePromiseRef.current;
+                    historyId.current = id;
+                }
+
+                // Perform update (Debouncing handled by storage logic overhead or purely sequential awaits)
+                if (historyId.current) {
+                    await updateHistorySession(historyId.current, session, score);
+                }
             }
-            hasSaved.current = true;
-        }
+        };
+
+        saveOrUpdate();
     }, [session, score, user, markSessionComplete]);
 
     const handleExit = () => {
@@ -257,34 +279,127 @@ const Summary: React.FC = () => {
 
                                         {isExpanded && ans?.analysis && (
                                             <div className="px-6 pb-8 pt-2 border-t border-slate-50 animate-fade-in bg-slate-50/30">
-                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
-                                                    {/* Left: Transcript */}
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+                                                    {/* Left Column: Transcript & Analysis */}
                                                     <div>
-                                                        <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Your Response</h5>
-                                                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-slate-600 text-base leading-relaxed italic relative">
-                                                            <span className="absolute top-4 left-4 text-4xl text-slate-100 font-serif leading-none">"</span>
-                                                            <p className="relative z-10">{decodeHtml(ans.analysis.transcript)}</p>
+                                                        {/* User Answer */}
+                                                        <div className="bg-slate-50 p-6 rounded-2xl mb-8 border border-slate-100 shadow-inner relative group">
+                                                            <h4 className="text-xs font-bold text-slate-400 uppercase mb-4 tracking-wide flex items-center gap-2">
+                                                                <User size={14} /> Your Answer
+                                                            </h4>
+                                                            <p className="text-slate-700 leading-relaxed text-lg whitespace-pre-wrap">
+                                                                {decodeHtml(ans.analysis.transcript)}
+                                                            </p>
                                                         </div>
-                                                        <div className="flex flex-wrap gap-2 mt-4">
-                                                            {ans.analysis.keyTerms.map((term, idx) => (
-                                                                <span key={idx} className="px-3 py-1 bg-blue-50 text-[#376497] rounded-md text-xs font-medium border border-blue-100">
-                                                                    {term}
-                                                                </span>
-                                                            ))}
+
+                                                        <div className="space-y-6 mb-8">
+                                                            {/* Feedback */}
+                                                            {ans.analysis.feedback && (
+                                                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                                                    <div className="flex items-center justify-between mb-4">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                                                                                <MessageSquare size={20} />
+                                                                            </div>
+                                                                            <h4 className="font-semibold text-slate-800">Feedback</h4>
+                                                                        </div>
+                                                                        <span className={cn("px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider", getRatingColor(ans.analysis.rating))}>
+                                                                            {ans.analysis.rating}
+                                                                        </span>
+                                                                    </div>
+                                                                    <ul className="space-y-4">
+                                                                        {ans.analysis.feedback.map((point, i) => (
+                                                                            <li key={i} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/50">
+                                                                                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                                                                <p className="text-slate-600 leading-relaxed">{point}</p>
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Speaking Delivery */}
+                                                            {(ans.analysis.deliveryStatus || ans.analysis.deliveryTips) && (
+                                                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                                                    <div className="flex items-center gap-3 mb-4">
+                                                                        <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                                                                            <Activity size={20} />
+                                                                        </div>
+                                                                        <h4 className="font-semibold text-slate-800">Speaking Delivery</h4>
+                                                                        {ans.analysis.deliveryStatus && (
+                                                                            <span className="ml-auto text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md uppercase tracking-wider">
+                                                                                {ans.analysis.deliveryStatus}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    {ans.analysis.deliveryTips && ans.analysis.deliveryTips.length > 0 && (
+                                                                        <ul className="space-y-3">
+                                                                            {ans.analysis.deliveryTips.map((tip, i) => (
+                                                                                <li key={i} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/50">
+                                                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0" />
+                                                                                    <p className="text-slate-600 text-sm leading-relaxed">{tip}</p>
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    )}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Key Professional Terms */}
+                                                            {ans.analysis.keyTerms && ans.analysis.keyTerms.length > 0 && (
+                                                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                                                    <div className="flex items-center gap-3 mb-4">
+                                                                        <div className="p-2 bg-blue-50 rounded-lg text-[#376497]">
+                                                                            <Award size={20} />
+                                                                        </div>
+                                                                        <h4 className="font-semibold text-slate-800">Key Professional Terms</h4>
+                                                                    </div>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {ans.analysis.keyTerms.map((term, i) => (
+                                                                            <span key={i} className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium border border-slate-200">
+                                                                                {term}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
 
-                                                    {/* Right: Feedback */}
+                                                    {/* Right Column: Strong Response & Why This Works */}
                                                     <div>
-                                                        <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Coach's Feedback</h5>
-                                                        <ul className="space-y-4">
-                                                            {ans.analysis.feedback.map((fb, idx) => (
-                                                                <li key={idx} className="flex items-start gap-3 text-slate-700 bg-white p-4 rounded-xl border border-slate-100">
-                                                                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                                                                    <span className="leading-snug">{fb}</span>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
+                                                        {/* Strong Response Card */}
+                                                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 mb-8 overflow-hidden">
+                                                            <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                                                                <Star size={18} className="text-[#376497] fill-current" />
+                                                                <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wide">Strong Response Example</h3>
+                                                            </div>
+                                                            <div className="p-6 md:p-8">
+                                                                {ans.analysis.strongResponse ? (
+                                                                    <p className="text-slate-700 leading-relaxed text-lg italic">
+                                                                        "{ans.analysis.strongResponse}"
+                                                                    </p>
+                                                                ) : (
+                                                                    <div className="flex flex-col items-center text-center p-4">
+                                                                        <p className="text-slate-400 italic mb-2">Example response not available.</p>
+                                                                        <p className="text-xs text-slate-300">Analysis may be incomplete.</p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Why This Works Section */}
+                                                        {ans.analysis.whyThisWorks && (
+                                                            <div className="animate-fade-in">
+                                                                <div className="flex items-center gap-2 text-[#376497] mb-4">
+                                                                    <CheckSquare size={20} className="stroke-[2.5]" />
+                                                                    <h3 className="font-display font-bold text-slate-800 text-lg">Why This Works</h3>
+                                                                </div>
+                                                                <p className="text-slate-500 text-sm mb-6">Deep dive into the strategies used in the example above.</p>
+
+                                                                <QuestionTips tips={ans.analysis.whyThisWorks} />
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
