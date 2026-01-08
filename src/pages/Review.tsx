@@ -49,6 +49,9 @@ const Review: React.FC = () => {
 
     const handleNextQuestion = () => {
         if (isLastQuestion) {
+            import('../services/auditLogger').then(({ logAuditEvent }) => {
+                logAuditEvent('SESSION_COMPLETED', { totalQuestions: session.questions.length });
+            });
             navigate('/summary');
         } else {
             nextQuestion();

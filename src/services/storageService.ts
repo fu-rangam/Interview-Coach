@@ -1,5 +1,6 @@
 import { InterviewSession } from '../types';
 import { supabase } from './supabase';
+import { encrypt, decrypt } from '../utils/encryption';
 
 const STORAGE_KEY = 'ai_interview_coach_sessions';
 
@@ -75,7 +76,8 @@ export async function updateHistorySession(id: string, session: InterviewSession
                 history[index].score = score;
                 history[index].session = session;
                 history[index].questionsCount = session.questions.length;
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+                const ciphertext = encrypt(history);
+                localStorage.setItem(STORAGE_KEY, ciphertext);
             }
         }
     } catch (error) {
@@ -86,6 +88,16 @@ export async function updateHistorySession(id: string, session: InterviewSession
 function saveToLocalStorage(session: InterviewSession, score: number): string {
     const history = getLocalStorageSessions();
     const id = Date.now().toString();
+
+    // HIPAA: Sanitize Blobs (Minimization)
+    // We do NOT store audio blobs permanently in history, only analysis.
+    const sanitizedSession = { ...session };
+    Object.keys(sanitizedSession.answers).forEach(k => {
+        if (sanitizedSession.answers[k].audioBlob) {
+            delete sanitizedSession.answers[k].audioBlob; // Purge raw audio
+        }
+    });
+
     const newSession: SessionHistory = {
         id,
         timestamp: parseInt(id),
@@ -93,10 +105,13 @@ function saveToLocalStorage(session: InterviewSession, score: number): string {
         role: session.role,
         score,
         questionsCount: session.questions.length,
-        session
+        session: sanitizedSession
     };
     history.push(newSession);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(-50)));
+
+    // Encrypt the entire history block
+    const ciphertext = encrypt(history.slice(-50));
+    localStorage.setItem(STORAGE_KEY, ciphertext);
     return id;
 }
 
@@ -150,7 +165,17 @@ export async function getAllSessions(): Promise<SessionHistory[]> {
 
 function getLocalStorageSessions(): SessionHistory[] {
     const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    if (!data) return [];
+
+    // Try to decrypt (or fallback to plain JSON if legacy data exists during migration)
+    const decrypted = decrypt(data);
+    if (decrypted) return decrypted;
+
+    try {
+        return JSON.parse(data); // Legacy fallback
+    } catch {
+        return [];
+    }
 }
 
 /**
@@ -171,7 +196,8 @@ export async function deleteSession(id: string): Promise<boolean> {
             // It's a local storage ID
             const sessions = getLocalStorageSessions();
             const filtered = sessions.filter(s => s.id !== id);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+            const ciphertext = encrypt(filtered);
+            localStorage.setItem(STORAGE_KEY, ciphertext);
             return true;
         }
     } catch (error) {

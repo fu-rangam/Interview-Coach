@@ -2,18 +2,6 @@ import { Question, AnalysisResult, QuestionTips } from "../types";
 
 // --- Helpers ---
 
-export const blobToBase64 = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = (reader.result as string).split(',')[1];
-      resolve(base64String);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
-
 // --- Mock Data Generators ---
 
 const mockQuestions = (role: string): Question[] => [
@@ -56,13 +44,35 @@ const mockAnalysis = (): AnalysisResult => ({
   }
 });
 
+import { supabase } from "./supabase";
+
+// --- Helpers ---
+
+export const getAuthHeader = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {};
+};
+
+export const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = (reader.result as string).split(',')[1];
+      resolve(base64String);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
 // --- API Functions ---
 
 export const generateQuestions = async (role: string, jobDescription?: string): Promise<Question[]> => {
   try {
+    const authHeaders = await getAuthHeader();
     const response = await fetch('/api/generate-questions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({ role, jobDescription })
     });
 
@@ -80,9 +90,10 @@ export const generateQuestions = async (role: string, jobDescription?: string): 
 
 export const generateQuestionTips = async (question: string, role: string): Promise<QuestionTips> => {
   try {
+    const authHeaders = await getAuthHeader();
     const response = await fetch('/api/generate-tips', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({ question, role })
     });
 
@@ -99,6 +110,7 @@ export const generateQuestionTips = async (question: string, role: string): Prom
 };
 
 // Reverted to fast analysis (no tips needed)
+// Reverted to fast analysis (no tips needed)
 export const analyzeAnswer = async (question: string, input: Blob | string): Promise<AnalysisResult> => {
   try {
     let payload: any = { question };
@@ -114,9 +126,10 @@ export const analyzeAnswer = async (question: string, input: Blob | string): Pro
       };
     }
 
+    const authHeaders = await getAuthHeader();
     const response = await fetch('/api/analyze-answer', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify(payload)
     });
 
@@ -134,9 +147,10 @@ export const analyzeAnswer = async (question: string, input: Blob | string): Pro
 
 export const generateStrongResponse = async (question: string, tips: QuestionTips): Promise<{ strongResponse: string; whyThisWorks: QuestionTips }> => {
   try {
+    const authHeaders = await getAuthHeader();
     const response = await fetch('/api/generate-strong-response', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({ question, tips })
     });
 
@@ -159,9 +173,10 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
   if (!text.trim()) return null;
 
   try {
+    const authHeaders = await getAuthHeader();
     const response = await fetch('/api/tts', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({ text })
     });
 

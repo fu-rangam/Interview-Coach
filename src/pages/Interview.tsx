@@ -29,6 +29,8 @@ const Interview: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [mobileOverlay, setMobileOverlay] = useState<'none' | 'questions' | 'tips'>('none');
 
+    const hasLoggedStart = React.useRef(false);
+
     // Safe access to current question
     const currentQ = session.questions[session.currentQuestionIndex];
 
@@ -44,6 +46,16 @@ const Interview: React.FC = () => {
             navigate('/auth?mode=signup');
         }
     }, [user, hasCompletedSession, navigate]);
+
+    // Log Session Start (AUTOMATIC)
+    React.useEffect(() => {
+        if (currentQ && !hasLoggedStart.current) {
+            hasLoggedStart.current = true;
+            import('../services/auditLogger').then(({ logAuditEvent }) => {
+                logAuditEvent('SESSION_START', { questionId: currentQ.id });
+            });
+        }
+    }, [currentQ?.id]);
 
     // Redirect if no questions (e.g. page reload on empty session) - BUT WAIT FOR LOADING
     React.useEffect(() => {
@@ -93,6 +105,9 @@ const Interview: React.FC = () => {
                 text: typeof input === 'string' ? input : undefined,
                 analysis: result
             });
+            import('../services/auditLogger').then(({ logAuditEvent }) => {
+                logAuditEvent('ANSWER_RECORDED', { questionId: currentQ.id, type: typeof input === 'string' ? 'text' : 'audio' });
+            });
 
             resetText();
             navigate('/review');
@@ -106,6 +121,8 @@ const Interview: React.FC = () => {
 
     return (
         <div className="flex flex-col h-screen w-full bg-slate-50 overflow-hidden font-sans">
+            {/* ... */}
+
             {processingState.isActive ? (
                 <SkeletonLoader variant="review" text={processingState.text} />
             ) : (

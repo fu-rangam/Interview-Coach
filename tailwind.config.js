@@ -54,6 +54,25 @@ export default {
                     green: "#0B8039",
                     orange: "#C75000",
                 },
+                // Liquid Glass Theme Colors
+                glass: {
+                    bg: "var(--glass-bg)",
+                    border: "var(--glass-border)",
+                },
+                glow: {
+                    cyan: "var(--glow-cyan)",
+                    purple: "var(--glow-purple)",
+                    pink: "var(--glow-pink)",
+                }
+            },
+            animation: {
+                'glow-pulse': 'glow-pulse 3s infinite',
+            },
+            keyframes: {
+                'glow-pulse': {
+                    '0%, 100%': { opacity: '0.8' },
+                    '50%': { opacity: '0.4' },
+                }
             },
         },
     },

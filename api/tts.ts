@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { validateUser } from "./utils/auth.js";
 
 // --- In-Memory Rate Limiter (Container Scope) ---
 const RATE_LIMIT_WINDOW = 10 * 1000; // 10 seconds
@@ -32,8 +33,17 @@ const checkRateLimit = (ip) => {
 };
 
 export default async function handler(req, res) {
+  // CORS Preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   try {
-    // 0. Rate Limiting
+    // 0. Auth Validation (P0 Security)
+    await validateUser(req);
+
+    // 1. Rate Limiting (IP base fallback)
+    // ...existing code...
     // Use x-forwarded-for if available (Vercel/Proxy), else socket address
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
 
@@ -57,9 +67,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Text too long. Maximum 200 characters allowed.' });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.error("Server Error: GEMINI_API_KEY (and VITE_ fallback) is missing");
+      console.error("Server Error: GEMINI_API_KEY is missing");
       return res.status(500).json({ error: 'Server configuration error: Missing API Key' });
     }
 
@@ -125,6 +135,9 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("[TTS] Server Error:", error);
+    if (error.message.includes("Authorization") || error.message.includes("Token")) {
+      return res.status(401).json({ error: error.message });
+    }
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 }

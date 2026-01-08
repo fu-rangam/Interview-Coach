@@ -1,4 +1,4 @@
-import { useSessionContext } from '../context/SessionContext';
+import { useSessionContext } from './useSessionContext';
 
 export function useSession() {
     return useSessionContext();

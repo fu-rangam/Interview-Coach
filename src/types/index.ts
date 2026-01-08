@@ -45,6 +45,7 @@ export interface InterviewSession {
     text?: string;    // Optional if answering via voice
     analysis: AnalysisResult | null;
   }>;
+  status?: 'IDLE' | 'ACTIVE' | 'COMPLETED';
 }
 
 export const TECH_ROLES = [
