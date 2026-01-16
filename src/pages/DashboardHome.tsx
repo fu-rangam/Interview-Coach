@@ -80,13 +80,7 @@ export const DashboardHome: React.FC = () => {
     return (
         <div className="space-y-8">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold">Dashboard Overview</h1>
-                <div className="flex gap-3">
-                    {/* Data Rights / Settings */}
-                    <GlassButton onClick={() => navigate('/interview')}>
-                        Start New Session
-                    </GlassButton>
-                </div>
+                <h1 className="text-2xl font-bold">Dashboard</h1>
             </div>
 
             {/* Stats Grid */}
@@ -95,7 +89,7 @@ export const DashboardHome: React.FC = () => {
                     <GlassCard key={i}>
                         <div className="flex justify-between items-start mb-4">
                             <div className="p-3 rounded-lg bg-white/5">{stat.icon}</div>
-                            <span className="text-xs text-green-400 font-medium bg-green-500/10 px-2 py-1 rounded-full">{stat.trend}</span>
+                            <span className="text-xs text-gray-300 font-medium bg-zinc-800/80 border border-white/10 px-2 py-1 rounded-full">{stat.trend}</span>
                         </div>
                         <h3 className="text-3xl font-bold mb-1">{stat.value}</h3>
                         <p className="text-sm text-gray-400">{stat.label}</p>
@@ -116,83 +110,90 @@ export const DashboardHome: React.FC = () => {
                                 No sessions yet. Start practicing!
                             </div>
                         ) : (
-                            recentSessions.map((session) => (
-                                <div key={session.id} className="border border-transparent hover:border-white/5 rounded-lg overflow-hidden transition-all bg-white/0 hover:bg-white/5">
-                                    <div
-                                        onClick={() => toggleSession(session.id)}
-                                        className="flex items-center justify-between p-3 cursor-pointer group"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 font-bold">
-                                                {session.score || '?'}
-                                            </div>
-                                            <div>
-                                                <h4 className="font-medium group-hover:text-cyan-400 transition-colors flex items-center gap-2">
-                                                    {session.role}
-                                                    {expandedSessionId === session.id ? <ChevronUp size={14} className="text-gray-500" /> : <ChevronDown size={14} className="text-gray-500" />}
-                                                </h4>
-                                                <p className="text-xs text-gray-500">{session.date}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs bg-white/10 px-2 py-1 rounded text-gray-400 mr-2">{session.questionsCount} Qs</span>
+                            recentSessions.map((session) => {
+                                const score = session.score || 0;
+                                let borderColor = "border-white/10";
+                                if (score >= 80) borderColor = "border-emerald-500/50";
+                                else if (score >= 60) borderColor = "border-amber-500/50";
+                                else if (score > 0) borderColor = "border-red-500/50";
 
-                                            <button
-                                                onClick={(e) => handleExport(session.id, e)}
-                                                className="p-2 text-gray-500 hover:text-cyan-400 hover:bg-white/10 rounded-full transition-colors"
-                                                title="Export JSON"
-                                            >
-                                                <Download size={14} />
-                                            </button>
-                                            <button
-                                                onClick={(e) => handleDelete(session.id, e)}
-                                                className="p-2 text-gray-500 hover:text-red-400 hover:bg-white/10 rounded-full transition-colors"
-                                                title="Delete"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Expanded Content */}
-                                    <AnimatePresence>
-                                        {expandedSessionId === session.id && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: "auto", opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                className="overflow-hidden"
-                                            >
-                                                <div className="p-4 space-y-6 bg-black/20 border-t border-white/5">
-                                                    {session.session.questions && session.session.questions.length > 0 ? (
-                                                        session.session.questions.map((q, idx) => {
-                                                            const answer = session.session.answers[q.id];
-                                                            return (
-                                                                <ReviewQuestionItem
-                                                                    key={q.id}
-                                                                    q={{
-                                                                        ...q,
-                                                                        analysis: answer?.analysis,
-                                                                        transcript: answer?.text || "No transcript available.",
-                                                                        audioBlob: undefined // Not stored in history
-                                                                    }}
-                                                                    index={idx}
-                                                                    isExpanded={true}
-                                                                    onToggle={() => { }}
-                                                                    blueprint={session.session.blueprint}
-                                                                    hideExpandIcon={true}
-                                                                />
-                                                            );
-                                                        })
-                                                    ) : (
-                                                        <p className="text-center text-gray-500 text-sm py-4">No detailed feedback available for this session.</p>
-                                                    )}
+                                return (
+                                    <div key={session.id} className="border border-transparent hover:border-white/5 rounded-lg overflow-hidden transition-all bg-white/0 hover:bg-white/5">
+                                        <div
+                                            onClick={() => toggleSession(session.id)}
+                                            className="flex items-center justify-between p-3 cursor-pointer group"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-10 h-10 rounded-full bg-zinc-800/80 border ${borderColor} flex items-center justify-center text-gray-200 font-bold`}>
+                                                    {session.score || '?'}
                                                 </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                            ))
+                                                <div>
+                                                    <h4 className="font-medium group-hover:text-cyan-400 transition-colors flex items-center gap-2">
+                                                        {session.role}
+                                                        {expandedSessionId === session.id ? <ChevronUp size={14} className="text-gray-500" /> : <ChevronDown size={14} className="text-gray-500" />}
+                                                    </h4>
+                                                    <p className="text-xs text-gray-500">{session.date}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs bg-white/10 px-2 py-1 rounded text-gray-400 mr-2">{session.questionsCount} Qs</span>
+
+                                                <button
+                                                    onClick={(e) => handleExport(session.id, e)}
+                                                    className="p-2 text-gray-500 hover:text-cyan-400 hover:bg-white/10 rounded-full transition-colors"
+                                                    title="Export JSON"
+                                                >
+                                                    <Download size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => handleDelete(session.id, e)}
+                                                    className="p-2 text-gray-500 hover:text-red-400 hover:bg-white/10 rounded-full transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Expanded Content */}
+                                        <AnimatePresence>
+                                            {expandedSessionId === session.id && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: "auto", opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="p-4 space-y-6 bg-black/20 border-t border-white/5">
+                                                        {session.session.questions && session.session.questions.length > 0 ? (
+                                                            session.session.questions.map((q, idx) => {
+                                                                const answer = session.session.answers[q.id];
+                                                                return (
+                                                                    <ReviewQuestionItem
+                                                                        key={q.id}
+                                                                        q={{
+                                                                            ...q,
+                                                                            analysis: answer?.analysis,
+                                                                            transcript: answer?.text || "No transcript available.",
+                                                                            audioBlob: undefined // Not stored in history
+                                                                        }}
+                                                                        index={idx}
+                                                                        isExpanded={true}
+                                                                        onToggle={() => { }}
+                                                                        blueprint={session.session.blueprint}
+                                                                        hideExpandIcon={true}
+                                                                    />
+                                                                );
+                                                            })
+                                                        ) : (
+                                                            <p className="text-center text-gray-500 text-sm py-4">No detailed feedback available for this session.</p>
+                                                        )}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                ))
                         )}
                     </div>
                 </GlassCard>
