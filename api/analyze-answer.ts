@@ -95,7 +95,7 @@ ${readingLevelContext}
       - Example: If the question is "How do you clean a floor?" (Technical), do NOT score "Teamwork" or "Leadership".
       - **ACTION**: If a dimension is irrelevant, **OMIT IT** from the \`dimensionScores\` array entirely. Do not score it as 0.
     - Do NOT invent new IDs. Do NOT use the string "dimensionId" as an ID.
-    - If no scoring model is provided, use generic IDs: "content", "communication", "impact".
+    - If no scoring model is provided, use generic IDs: "Content", "Communication", "Impact".
     - **CRITICAL**: Write the "note" for each dimension in the **2nd PERSON** (addressing the user as "You").
       - BAD: "The candidate showed..."
       - GOOD: "You demonstrated strong..."

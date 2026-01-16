@@ -195,7 +195,12 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
                 }
             } else {
                 console.warn("Unified Init failed. Falling back to specific generation...");
-                firstBatch = await generateQuestions(role, jobDescription);
+                const [questions, generatedBlueprint] = await Promise.all([
+                    generateQuestions(role, jobDescription),
+                    generateBlueprint(role, jobDescription)
+                ]);
+                firstBatch = questions;
+                blueprint = generatedBlueprint;
             }
 
             // 2. Prepare Question List with Placeholders
