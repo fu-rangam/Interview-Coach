@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import handler from './tts';
+import handler from '../../api/tts';
 
 // Mock GoogleGenAI
 const mockGenerateContent = vi.fn();

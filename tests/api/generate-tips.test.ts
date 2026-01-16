@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import handler from './generate-questions';
+import handler from '../../api/generate-tips';
 
 // Mock GoogleGenAI
 const mockGenerateContent = vi.fn();
@@ -18,7 +18,7 @@ vi.mock('@google/genai', () => ({
     }
 }));
 
-describe('Generate Questions API Handler', () => {
+describe('Generate Tips API Handler', () => {
     let mockReq: any;
     let mockRes: any;
 
@@ -35,7 +35,8 @@ describe('Generate Questions API Handler', () => {
         mockReq = {
             method: 'POST',
             body: {
-                role: 'Software Engineer'
+                role: 'Software Engineer',
+                question: 'Tell me about yourself'
             },
         };
 
@@ -54,12 +55,21 @@ describe('Generate Questions API Handler', () => {
         });
 
         it('should reject requests missing role', async () => {
-            mockReq.body = {};
+            mockReq.body = { question: 'test' };
 
             await handler(mockReq, mockRes);
 
             expect(mockRes.status).toHaveBeenCalledWith(400);
-            expect(mockRes.json).toHaveBeenCalledWith({ error: 'Missing "role" in request body' });
+            expect(mockRes.json).toHaveBeenCalledWith({ error: 'Missing "question" or "role" in request body' });
+        });
+
+        it('should reject requests missing question', async () => {
+            mockReq.body = { role: 'test' };
+
+            await handler(mockReq, mockRes);
+
+            expect(mockRes.status).toHaveBeenCalledWith(400);
+            expect(mockRes.json).toHaveBeenCalledWith({ error: 'Missing "question" or "role" in request body' });
         });
 
         it('should reject requests when API key is missing', async () => {
@@ -76,65 +86,31 @@ describe('Generate Questions API Handler', () => {
     });
 
     describe('Generation Logic', () => {
-        it('should use basic prompt when no JD is provided', async () => {
+        it('should construct prompt with role and question', async () => {
+            const mockResult = {
+                lookingFor: "Experience",
+                pointsToCover: ["Exp", "Skills"],
+                answerFramework: "STAR",
+                industrySpecifics: { metrics: "KPIs", tools: "IDE" },
+                mistakesToAvoid: ["Bad grammar"],
+                proTip: "Confidence"
+            };
+
             mockGenerateContent.mockResolvedValue({
-                text: JSON.stringify([{ id: '1', text: 'Test?' }])
+                text: JSON.stringify(mockResult)
             });
 
             await handler(mockReq, mockRes);
 
             expect(mockGenerateContent).toHaveBeenCalledWith(expect.objectContaining({
-                contents: expect.stringContaining('Generate 5 common interview questions')
-            }));
-        });
-
-        it('should use JD-specific prompt when JD is provided', async () => {
-            mockReq.body.jobDescription = 'Must know React.';
-            mockGenerateContent.mockResolvedValue({
-                text: JSON.stringify([{ id: '1', text: 'Test?' }])
-            });
-
-            await handler(mockReq, mockRes);
-
-            expect(mockGenerateContent).toHaveBeenCalledWith(expect.objectContaining({
-                contents: expect.stringContaining('based on this job description')
+                contents: expect.stringContaining('Software Engineer')
             }));
             expect(mockGenerateContent).toHaveBeenCalledWith(expect.objectContaining({
-                contents: expect.stringContaining('Must know React.')
+                contents: expect.stringContaining('Tell me about yourself')
             }));
-        });
-
-        it('should return valid question objects', async () => {
-            const mockQuestions = [
-                { id: '1', text: 'Q1' },
-                { id: '2', text: 'Q2' },
-                { id: '3', text: 'Q3' },
-                { id: '4', text: 'Q4' },
-                { id: '5', text: 'Q5' }
-            ];
-
-            mockGenerateContent.mockResolvedValue({
-                text: JSON.stringify(mockQuestions)
-            });
-
-            await handler(mockReq, mockRes);
 
             expect(mockRes.status).toHaveBeenCalledWith(200);
-            expect(mockRes.json).toHaveBeenCalledWith(mockQuestions);
-        });
-    });
-
-    describe('Reading Level Adaptation', () => {
-        it('should include scale instructions in the prompt', async () => {
-            mockGenerateContent.mockResolvedValue({
-                text: JSON.stringify([{ id: '1', text: 'Test?' }])
-            });
-
-            await handler(mockReq, mockRes);
-
-            expect(mockGenerateContent).toHaveBeenCalledWith(expect.objectContaining({
-                contents: expect.stringContaining('6th-7th grade reading level')
-            }));
+            expect(mockRes.json).toHaveBeenCalledWith(mockResult);
         });
     });
 
@@ -146,18 +122,18 @@ describe('Generate Questions API Handler', () => {
 
             expect(mockRes.status).toHaveBeenCalledWith(500);
             expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
-                error: 'Failed to generate questions'
+                error: 'Failed to generate tips'
             }));
         });
 
         it('should handle AI service failure', async () => {
-            mockGenerateContent.mockRejectedValue(new Error('Quota Exceeded'));
+            mockGenerateContent.mockRejectedValue(new Error('AI Overloaded'));
 
             await handler(mockReq, mockRes);
 
             expect(mockRes.status).toHaveBeenCalledWith(500);
             expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
-                details: 'Quota Exceeded'
+                details: 'AI Overloaded'
             }));
         });
     });

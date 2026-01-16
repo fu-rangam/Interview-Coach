@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import handler from './health';
+import handler from '../../api/health';
 
 describe('Health API Handler', () => {
     it('should return 200 and ok status', async () => {
