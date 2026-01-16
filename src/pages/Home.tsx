@@ -27,7 +27,7 @@ const Home: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-zinc-950 font-sans selection:bg-cyan-500/30">
+        <div className="h-screen w-full flex flex-col items-center justify-start md:justify-center relative overflow-y-auto overflow-x-hidden bg-zinc-950 font-sans selection:bg-cyan-500/30 pt-20 md:pt-0 pb-10 custom-scrollbar">
             {/* Background Atmosphere */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-purple-900/20 rounded-full blur-[120px] animate-pulse-slow" />
