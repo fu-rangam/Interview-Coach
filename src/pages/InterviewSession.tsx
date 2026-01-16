@@ -480,7 +480,7 @@ export const InterviewSession: React.FC = () => {
                     </header>
 
                     {/* Main Layout */}
-                    <main className="flex-1 flex overflow-hidden p-4 md:p-6 lg:p-8 gap-6 max-w-[1600px] mx-auto w-full relative z-10">
+                    <main className="flex-1 flex overflow-hidden p-2 md:p-6 lg:p-8 gap-6 max-w-[1600px] mx-auto w-full relative z-10">
 
                         {/* Lei Column: Tips & Transcript (Hidden on Mobile) */}
                         <div className="hidden md:flex flex-col flex-[0_0_28%] min-w-[320px] shrink-0 gap-6">
@@ -555,7 +555,7 @@ export const InterviewSession: React.FC = () => {
 
                                 {/* Main Interaction Area */}
                                 <div className="relative flex flex-col h-full overflow-y-auto custom-scrollbar min-w-0" style={{ flex: '3 1 0%' }}>
-                                    <div className="flex-1 flex flex-col items-center pt-2 sm:pt-4 lg:pt-8 px-0 lg:px-4 gap-6 sm:gap-8 pb-32">
+                                    <div className="flex-1 flex flex-col items-center pt-0 sm:pt-4 lg:pt-8 px-0 lg:px-4 gap-2 md:gap-8 pb-20 md:pb-32">
 
                                         {/* Question Text */}
                                         <div className="text-center max-w-3xl animate-fade-in-up">
@@ -634,7 +634,7 @@ export const InterviewSession: React.FC = () => {
 
                                         {/* Input Area */}
                                         {!isAnswered && mode === 'voice' && (
-                                            <div className="flex-1 w-full flex flex-col items-center justify-start gap-4 animate-fade-in min-h-[250px] md:min-h-[300px]">
+                                            <div className="flex-1 w-full flex flex-col items-center justify-start gap-4 animate-fade-in min-h-[200px] md:min-h-[300px]">
                                                 {/* Visualizer */}
                                                 <div className="w-full h-32 md:h-40 flex flex-col items-center justify-center relative gap-4">
                                                     {isRecording ? (
@@ -660,7 +660,7 @@ export const InterviewSession: React.FC = () => {
                                                     <button
                                                         onClick={handleToggleRecording}
                                                         className={cn(
-                                                            "group relative w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center transition-all duration-300 shadow-[0_0_40px_rgba(6,182,212,0.2)]",
+                                                            "group relative w-16 h-16 md:w-24 md:h-24 rounded-full flex items-center justify-center transition-all duration-300 shadow-[0_0_40px_rgba(6,182,212,0.2)]",
                                                             isRecording
                                                                 ? "bg-red-500/10 text-red-500 border-2 border-red-500/50 shadow-[0_0_60px_rgba(239,68,68,0.4)] scale-110"
                                                                 : "bg-black/40 text-cyan-400 border-2 border-cyan-500/30 hover:border-cyan-400 hover:shadow-[0_0_60px_rgba(6,182,212,0.4)] hover:scale-105"
