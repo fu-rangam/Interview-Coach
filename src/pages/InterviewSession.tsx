@@ -60,7 +60,8 @@ export const InterviewSession: React.FC = () => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [playbackAudio, setPlaybackAudio] = useState<HTMLAudioElement | null>(null);
     const [playingUrl, setPlayingUrl] = useState<string | null>(null);
-    const [showPopover, setShowPopover] = useState(false);
+    const [showPopover, setShowPopover] = useState(false); // Used for internal Feedback Modal
+    const [showAnswerPopover, setShowAnswerPopover] = useState(false); // Used for main Submission Popover visibility
 
     // Sidebar State
     const [sidebarTab, setSidebarTab] = useState<'tips' | 'transcript'>('tips');
@@ -166,7 +167,9 @@ export const InterviewSession: React.FC = () => {
             clearAnswer(currentQuestion.id);
         }
         resetTranscript();
+        resetTranscript();
         setShowPopover(false);
+        setShowAnswerPopover(false);
     };
 
     // Track which questions have already been auto-played to prevent re-playing on revisit
@@ -307,6 +310,7 @@ export const InterviewSession: React.FC = () => {
 
                 logAuditEvent('ANSWER_RECORDED', { questionId: currentQuestion.id, size: recordedAudioBlob.size });
                 setAnalysisReady(true);
+                setShowAnswerPopover(true);
             } catch (err) {
                 console.error("Analysis failed", err);
                 saveAnswer(currentQuestion.id, {
@@ -372,6 +376,7 @@ export const InterviewSession: React.FC = () => {
             });
             logAuditEvent('ANSWER_RECORDED', { questionId: currentQuestion.id, type: 'text', length: validText.length });
             setAnalysisReady(true);
+            setShowAnswerPopover(true);
         } catch (err) {
             saveAnswer(currentQuestion.id, {
                 text: validText,
@@ -392,8 +397,13 @@ export const InterviewSession: React.FC = () => {
             playbackAudio.pause();
         }
         // Do NOT clear transcript to preserve history
+        // Do NOT clear transcript to preserve history
         nextQuestion();
+        // Reset popover visibility for next question (though next question typically starts with no answer)
+        setShowAnswerPopover(false);
     };
+
+
 
     const handleFinish = async () => {
         await sessionCtx.finishSession();
@@ -436,6 +446,17 @@ export const InterviewSession: React.FC = () => {
     const isFirstQuestion = session.currentQuestionIndex === 0;
     const isLastQuestion = session.currentQuestionIndex === session.questions.length - 1;
     const allQuestionsAnswered = Object.keys(session.answers).length === session.questions.length;
+
+    const hasSkippedQuestions = !allQuestionsAnswered && isLastQuestion;
+
+    const handlePopoverNext = () => {
+        if (hasSkippedQuestions) {
+            // Just dismiss the popover to allow manual navigation
+            setShowAnswerPopover(false);
+        } else {
+            handleNext();
+        }
+    };
 
     // Handle initial loading or empty state
     if (!currentQuestion) {
@@ -656,31 +677,40 @@ export const InterviewSession: React.FC = () => {
                                             </p>
                                         </div>
 
-                                        {/* Mode Toggle */}
-                                        <div className="flex bg-zinc-900/50 rounded-full p-1.5 border border-white/10 shadow-inner">
+                                        {/* Mode Toggle or Retry Button */}
+                                        {isAnswered ? (
                                             <button
-                                                onClick={() => setMode('voice')}
-                                                className={cn(
-                                                    "flex items-center gap-2 px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-semibold transition-all outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                                    mode === 'voice'
-                                                        ? "bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)] border border-cyan-500/10"
-                                                        : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
-                                                )}
+                                                onClick={handleRetry}
+                                                className="flex items-center gap-2 px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-semibold transition-all outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)] border border-cyan-500/10 hover:bg-cyan-500/30 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)]"
                                             >
-                                                <Mic size={14} className="md:w-4 md:h-4" /> Voice
+                                                <RotateCcw size={14} className="md:w-4 md:h-4" /> Retry Your Answer
                                             </button>
-                                            <button
-                                                onClick={() => setMode('text')}
-                                                className={cn(
-                                                    "flex items-center gap-2 px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-semibold transition-all outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                                    mode === 'text'
-                                                        ? "bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)] border border-cyan-500/10"
-                                                        : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
-                                                )}
-                                            >
-                                                <MessageSquare size={14} className="md:w-4 md:h-4" /> Text
-                                            </button>
-                                        </div>
+                                        ) : (
+                                            <div className="flex bg-zinc-900/50 rounded-full p-1.5 border border-white/10 shadow-inner">
+                                                <button
+                                                    onClick={() => setMode('voice')}
+                                                    className={cn(
+                                                        "flex items-center gap-2 px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-semibold transition-all outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                                        mode === 'voice'
+                                                            ? "bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)] border border-cyan-500/10"
+                                                            : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                                                    )}
+                                                >
+                                                    <Mic size={14} className="md:w-4 md:h-4" /> Voice
+                                                </button>
+                                                <button
+                                                    onClick={() => setMode('text')}
+                                                    className={cn(
+                                                        "flex items-center gap-2 px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-semibold transition-all outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                                        mode === 'text'
+                                                            ? "bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)] border border-cyan-500/10"
+                                                            : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                                                    )}
+                                                >
+                                                    <MessageSquare size={14} className="md:w-4 md:h-4" /> Text
+                                                </button>
+                                            </div>
+                                        )}
 
                                         {/* Input Area */}
                                         {!isAnswered && mode === 'voice' && (
@@ -763,21 +793,7 @@ export const InterviewSession: React.FC = () => {
                                             </div>
                                         )}
 
-                                        {/* Answered State */}
-                                        {isAnswered && (
-                                            <div className="flex-1 flex items-center justify-center flex-col gap-4 opacity-50 pointer-events-none grayscale">
-                                                {mode === 'voice' ? (
-                                                    <div className="w-24 h-24 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center">
-                                                        <CheckCircle2 size={32} className="text-white/20" />
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-full max-w-lg h-32 rounded-xl bg-zinc-800 border border-white/10 flex items-center justify-center">
-                                                        <CheckCircle2 size={32} className="text-white/20" />
-                                                    </div>
-                                                )}
-                                                <p className="text-white/30 text-sm">Reviewing answer...</p>
-                                            </div>
-                                        )}
+
 
                                     </div>
                                 </div>
@@ -930,10 +946,10 @@ export const InterviewSession: React.FC = () => {
             />
 
             <SubmissionPopover
-                isOpen={!!currentAnswer && !showLoader}
+                isOpen={!!currentAnswer && !showLoader && showAnswerPopover}
                 onRetry={handleRetry}
                 onFeedback={() => setShowPopover(true)}
-                onNext={handleNext}
+                onNext={handlePopoverNext}
                 isSessionComplete={allQuestionsAnswered}
                 onFinish={handleFinish}
                 question={currentQuestion}
@@ -944,6 +960,7 @@ export const InterviewSession: React.FC = () => {
                     analysis: answers[currentQuestion.id].analysis
                 } : undefined : undefined}
                 blueprint={session.blueprint}
+                hasSkippedQuestions={hasSkippedQuestions}
             />
         </div>
     );

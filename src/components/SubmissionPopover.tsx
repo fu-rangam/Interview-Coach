@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GlassCard } from './ui/glass/GlassCard';
 import { GlassButton } from './ui/glass/GlassButton';
-import { RefreshCcw, ArrowRight, Activity, Save, X, Copy } from 'lucide-react';
+import { RefreshCcw, ArrowRight, Activity, Save, X, Copy, List } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { ReviewQuestionItem } from './ui/glass/ReviewQuestionItem';
 import { Question, AnalysisResult, CompetencyBlueprint } from '../types';
@@ -21,6 +21,7 @@ interface SubmissionPopoverProps {
         analysis: AnalysisResult | null;
     };
     blueprint?: CompetencyBlueprint;
+    hasSkippedQuestions?: boolean;
 }
 
 export const SubmissionPopover: React.FC<SubmissionPopoverProps> = ({
@@ -33,7 +34,8 @@ export const SubmissionPopover: React.FC<SubmissionPopoverProps> = ({
     question,
     questionIndex = 0,
     answer,
-    blueprint
+    blueprint,
+    hasSkippedQuestions = false
 }) => {
     const [showFeedback, setShowFeedback] = useState(false);
 
@@ -106,13 +108,20 @@ export const SubmissionPopover: React.FC<SubmissionPopoverProps> = ({
                             "w-full h-14 text-base text-white border-none shadow-lg font-semibold",
                             isSessionComplete
                                 ? "bg-linear-to-r from-emerald-600 to-emerald-500 hover:to-emerald-400 shadow-emerald-900/20"
-                                : "bg-linear-to-r from-cyan-600 to-cyan-500 hover:to-cyan-400 shadow-cyan-900/20"
+                                : hasSkippedQuestions
+                                    ? "bg-linear-to-r from-cyan-600 to-cyan-500 hover:to-cyan-400 shadow-cyan-900/20"
+                                    : "bg-linear-to-r from-cyan-600 to-cyan-500 hover:to-cyan-400 shadow-cyan-900/20"
                         )}
                     >
                         {isSessionComplete ? (
                             <>
                                 <Save size={18} className="mr-2" />
                                 Save & Review Session
+                            </>
+                        ) : hasSkippedQuestions ? (
+                            <>
+                                <List size={18} className="mr-2" />
+                                Select Another Question
                             </>
                         ) : (
                             <>
