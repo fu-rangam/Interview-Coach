@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { validateUser } from "./utils/auth.js";
+import { validateUser } from "./utils/auth";
 
 export default async function handler(req, res) {
     if (req.method === 'OPTIONS') {
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
             return res.status(405).json({ error: 'Method Not Allowed' });
         }
 
-        const { role, jobDescription } = req.body || {};
+        const { role, jobDescription, intakeData } = req.body || {};
 
         if (!role) {
             return res.status(400).json({ error: 'Missing "role" in request body' });
@@ -26,10 +26,25 @@ export default async function handler(req, res) {
 
         const ai = new GoogleGenAI({ apiKey });
 
+        let intakeContext = "";
+        if (intakeData) {
+            intakeContext = `
+            USER PREFERENCES (INTAKE):
+            - Confidence Level: ${intakeData.confidenceScore}/5 (Adapt tone accordingly)
+            - Biggest Struggle: ${intakeData.biggestStruggle} (Focus help here)
+            - Challenge Level: ${intakeData.challengeLevel} (Adjust difficulty)
+            - Goal: ${intakeData.primaryGoal}
+            - Stage: ${intakeData.stage}
+            - Must Practice: ${intakeData.mustPracticeQuestions?.join(', ') || "None"}
+            - Follow-ups: ${intakeData.allowFollowUps ? "Enabled" : "Disabled"}
+            `;
+        }
+
         const prompt = `
         ACT AS: Expert Interview Coach.
         TASK: Prepare an interview session for a candidate applying for: "${role}".
         CONTEXT: ${jobDescription ? `Job Description: ${jobDescription}` : "General Role"}
+        ${intakeContext}
 
         YOU MUST GENERATE 3 THINGS IN ONE JSON OBJECT:
         1. "blueprint": A Competency Blueprint (5 key competencies for this role).
@@ -41,6 +56,9 @@ export default async function handler(req, res) {
         - Plan: 5 questions.
         - First Question: Must match the first item in the plan.
         - Reading Level: Adapt to role (Simple for entry, Professional for senior).
+        - IF "Must Practice" questions are provided, INJECT them into the Question Plan where relevant (replacing generic ones).
+        - IF "Challenge Level" is "pressure_test", increase difficulty of questions.
+        - IF "Challenge Level" is "warm_up", keep questions encouraging and simpler.
 
         OUTPUT SCHEMA:
         {
@@ -64,12 +82,126 @@ export default async function handler(req, res) {
             contents: prompt,
             config: {
                 responseMimeType: "application/json",
-                // We let the model infer specific details for blueprint/plan based on the prompt instructions
-                // to avoid overly massive schema definition here if possible, 
-                // but supplying a strict schema is safer.
-                // For brevity in this tool call, I'll omit the full deep schema if the model is smart enough,
-                // but for production, full schema is best. 
-                // I will trust 2.5 Flash with the detailed prompt structure.
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        blueprint: {
+                            type: Type.OBJECT,
+                            properties: {
+                                role: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        title: { type: Type.STRING },
+                                        seniority: { type: Type.STRING }
+                                    },
+                                    required: ["title"]
+                                },
+                                readingLevel: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        mode: { type: Type.STRING },
+                                        maxSentenceWords: { type: Type.INTEGER },
+                                        avoidJargon: { type: Type.BOOLEAN }
+                                    },
+                                    required: ["mode", "maxSentenceWords", "avoidJargon"]
+                                },
+                                competencies: {
+                                    type: Type.ARRAY,
+                                    items: {
+                                        type: Type.OBJECT,
+                                        properties: {
+                                            id: { type: Type.STRING },
+                                            name: { type: Type.STRING },
+                                            definition: { type: Type.STRING },
+                                            signals: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                            evidenceExamples: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                            weight: { type: Type.INTEGER },
+                                            bands: {
+                                                type: Type.OBJECT,
+                                                properties: {
+                                                    Developing: { type: Type.STRING },
+                                                    Good: { type: Type.STRING },
+                                                    Strong: { type: Type.STRING }
+                                                },
+                                                required: ["Developing", "Good", "Strong"]
+                                            }
+                                        },
+                                        required: ["id", "name", "definition", "signals", "evidenceExamples", "weight", "bands"]
+                                    }
+                                },
+                                scoringModel: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        dimensions: {
+                                            type: Type.ARRAY,
+                                            items: {
+                                                type: Type.OBJECT,
+                                                properties: {
+                                                    id: { type: Type.STRING },
+                                                    name: { type: Type.STRING },
+                                                    weight: { type: Type.INTEGER }
+                                                },
+                                                required: ["id", "name", "weight"]
+                                            }
+                                        },
+                                        ratingBands: {
+                                            type: Type.OBJECT,
+                                            properties: {
+                                                Developing: {
+                                                    type: Type.OBJECT,
+                                                    properties: { min: { type: Type.INTEGER }, max: { type: Type.INTEGER } },
+                                                    required: ["min", "max"]
+                                                },
+                                                Good: {
+                                                    type: Type.OBJECT,
+                                                    properties: { min: { type: Type.INTEGER }, max: { type: Type.INTEGER } },
+                                                    required: ["min", "max"]
+                                                },
+                                                Strong: {
+                                                    type: Type.OBJECT,
+                                                    properties: { min: { type: Type.INTEGER }, max: { type: Type.INTEGER } },
+                                                    required: ["min", "max"]
+                                                }
+                                            },
+                                            required: ["Developing", "Good", "Strong"]
+                                        }
+                                    },
+                                    required: ["dimensions", "ratingBands"]
+                                }
+                            },
+                            required: ["role", "readingLevel", "competencies", "scoringModel"]
+                        },
+                        questionPlan: {
+                            type: Type.OBJECT,
+                            properties: {
+                                questions: {
+                                    type: Type.ARRAY,
+                                    items: {
+                                        type: Type.OBJECT,
+                                        properties: {
+                                            id: { type: Type.STRING },
+                                            competencyId: { type: Type.STRING },
+                                            type: { type: Type.STRING },
+                                            difficulty: { type: Type.STRING },
+                                            intent: { type: Type.STRING }
+                                        },
+                                        required: ["id", "competencyId", "type", "difficulty", "intent"]
+                                    }
+                                }
+                            },
+                            required: ["questions"]
+                        },
+                        firstQuestion: {
+                            type: Type.OBJECT,
+                            properties: {
+                                id: { type: Type.STRING },
+                                text: { type: Type.STRING }
+                            },
+                            required: ["id", "text"]
+                        }
+                    },
+                    required: ["blueprint", "questionPlan", "firstQuestion"]
+                }
             }
         });
 

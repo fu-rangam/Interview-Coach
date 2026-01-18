@@ -6,6 +6,8 @@ import { Upload, FileText, Mic, AlertCircle, Briefcase } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSessionContext } from '../hooks/useSessionContext';
 import { ResumeUploadZone } from '../components/ResumeUploadZone';
+import { IntakeForm } from '../components/IntakeForm';
+import { OnboardingIntakeV1, DEFAULT_ONBOARDING_INTAKE_V1 } from '../types/intake';
 
 export const InterviewSetup: React.FC = () => {
     const navigate = useNavigate();
@@ -16,9 +18,21 @@ export const InterviewSetup: React.FC = () => {
     const [role, setRole] = useState(location.state?.role || '');
     const [isStarting, setIsStarting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showIntake, setShowIntake] = useState(false);
 
-    const handleStartSession = () => {
-        console.log("handleStartSession triggered");
+    const validateAndContinue = () => {
+        if (!jobDescription.trim() || !role.trim()) {
+            console.warn("Missing fields");
+            setError("Please provide both a Role and Job Description.");
+            return;
+        }
+        setError(null);
+        setShowIntake(true);
+    };
+
+    const handleStartSession = (intakeData: OnboardingIntakeV1 = DEFAULT_ONBOARDING_INTAKE_V1) => {
+        console.log("handleStartSession triggered with intake:", intakeData);
+
         if (!jobDescription.trim() || !role.trim()) {
             console.warn("Missing fields");
             setError("Please provide both a Role and Job Description.");
@@ -33,7 +47,7 @@ export const InterviewSetup: React.FC = () => {
         console.log("Session reset, calling startSession...");
 
         // Start session in background (non-blocking) to allow immediate UI transition
-        startSession(role, jobDescription)
+        startSession(role, jobDescription, intakeData)
             .then(() => console.log("startSession completed successfully"))
             .catch(err => {
                 console.error("Background session start failed:", err);
@@ -44,6 +58,23 @@ export const InterviewSetup: React.FC = () => {
         console.log("Navigating to /interview/session");
         navigate('/interview/session', { state: { isStarting: true } });
     };
+
+    if (showIntake) {
+        return (
+            <div className="max-w-4xl mx-auto py-8 px-4">
+                <button
+                    onClick={() => setShowIntake(false)}
+                    className="mb-4 text-sm text-gray-400 hover:text-white flex items-center gap-1"
+                >
+                    &larr; Back to Role Setup
+                </button>
+                <IntakeForm
+                    onSubmit={handleStartSession}
+                    onSkip={() => handleStartSession(DEFAULT_ONBOARDING_INTAKE_V1)}
+                />
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-4xl mx-auto">
@@ -143,12 +174,12 @@ export const InterviewSetup: React.FC = () => {
                         )}
 
                         <GlassButton
-                            className="w-full py-4 text-lg shadow-[0_0_20px_rgba(6,182,212,0.3)] animate-pulse hover:animate-none"
-                            onClick={handleStartSession}
+                            className="w-full py-4 text-xs font-bold shadow-[0_0_20px_rgba(6,182,212,0.3)] animate-pulse hover:animate-none uppercase"
+                            onClick={validateAndContinue}
                             disabled={isStarting}
                         >
-                            <Mic className="mr-2" />
-                            {isStarting ? 'Generating...' : 'Start Session'}
+                            <Mic className="mr-2 w-5 h-5" />
+                            {isStarting ? 'Generating...' : 'Customize Session'}
                         </GlassButton>
 
                         <p className="text-xs text-center text-gray-500 mt-4">
@@ -173,16 +204,16 @@ export const InterviewSetup: React.FC = () => {
                     </div>
                     <GlassButton
                         className="flex-1 py-3 text-base shadow-[0_0_15px_rgba(6,182,212,0.3)]"
-                        onClick={handleStartSession}
+                        onClick={validateAndContinue}
                         disabled={isStarting}
                     >
-                        {isStarting ? '...' : 'Start Session'}
+                        {isStarting ? '...' : 'Customize Session'}
                     </GlassButton>
                 </div>
             </div>
 
             {/* Spacer for mobile footer */}
             <div className="h-24 lg:hidden"></div>
-        </div>
+        </div >
     );
 };

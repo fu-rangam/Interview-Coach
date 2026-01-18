@@ -89,24 +89,37 @@ export const TipsAndTranscriptContent = memo(({
                                         : "bg-cyan-900/20 rounded-tr-none border-cyan-500/20 mr-4 text-cyan-100"
                                 )}>
                                     {msg.audioUrl ? (
-                                        <div className="flex items-center gap-3">
-                                            <button
-                                                onClick={() => toggleAudio(msg.audioUrl!)}
-                                                className={cn(
-                                                    "flex items-center justify-center w-8 h-8 rounded-full transition-colors",
-                                                    playingUrl === msg.audioUrl
-                                                        ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/50"
-                                                        : "bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300"
-                                                )}
-                                                title={playingUrl === msg.audioUrl ? "Pause" : "Play Recording"}
-                                            >
-                                                {playingUrl === msg.audioUrl ? (
-                                                    <Pause size={14} fill="currentColor" />
-                                                ) : (
-                                                    <Play size={14} fill="currentColor" />
-                                                )}
-                                            </button>
-                                            <span className="italic opacity-80">{msg.text}</span>
+                                        <div className="flex flex-col gap-2 min-w-[200px]">
+                                            {/* 1. Transcript Text (Top) */}
+                                            <span className="text-sm italic opacity-90 leading-relaxed pl-1 pt-1">
+                                                {msg.text || "Audio recorded"}
+                                            </span>
+
+                                            {/* 2. Separator */}
+                                            <div className="h-px bg-cyan-500/20 w-full my-1" />
+
+                                            {/* 3. Player Controls (Bottom) */}
+                                            <div className="flex items-center gap-3">
+                                                <button
+                                                    onClick={() => toggleAudio(msg.audioUrl!)}
+                                                    className={cn(
+                                                        "flex items-center justify-center w-8 h-8 rounded-full transition-colors shrink-0",
+                                                        playingUrl === msg.audioUrl
+                                                            ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/50"
+                                                            : "bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300"
+                                                    )}
+                                                    title={playingUrl === msg.audioUrl ? "Pause" : "Play Recording"}
+                                                >
+                                                    {playingUrl === msg.audioUrl ? (
+                                                        <Pause size={14} fill="currentColor" />
+                                                    ) : (
+                                                        <Play size={14} fill="currentColor" />
+                                                    )}
+                                                </button>
+                                                <div className="text-xs text-cyan-400/70 font-mono">
+                                                    {playingUrl === msg.audioUrl ? "Playing..." : "Listen"}
+                                                </div>
+                                            </div>
                                         </div>
                                     ) : (
                                         msg.text

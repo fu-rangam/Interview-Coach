@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { OnboardingIntakeV1 } from '../types/intake';
 import { InterviewSession, AnalysisResult, Question, QuestionTips, CompetencyBlueprint } from '../types';
 import { generateQuestions, generateQuestionTips, generateBlueprint, generateQuestionPlan, generateSpeech, initSession } from '../services/geminiService';
 import { sessionService } from '../services/sessionService';
@@ -35,7 +36,7 @@ const secureStorage = {
 
 export interface SessionContextType {
     session: InterviewSession;
-    startSession: (role: string, jobDescription?: string) => Promise<void>;
+    startSession: (role: string, jobDescription?: string, intakeData?: OnboardingIntakeV1) => Promise<void>;
     nextQuestion: () => void;
     goToQuestion: (index: number) => void;
     loadTipsForQuestion: (questionId: string) => Promise<void>;
@@ -149,14 +150,14 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
         preFetchNextAudio();
     }, [session.currentQuestionIndex, session.questions, audioUrls]);
 
-    const startSession = useCallback(async (role: string, jobDescription?: string) => {
+    const startSession = useCallback(async (role: string, jobDescription?: string, intakeData?: OnboardingIntakeV1) => {
         setIsLoading(true);
         setAudioUrls({}); // Clear audio cache for new session
         try {
             console.log("Initializing Session (Unified - Final Attempt)...");
 
             // 1. Unified Call
-            const initData = await initSession(role, jobDescription);
+            const initData = await initSession(role, jobDescription, intakeData);
 
             let blueprint = null;
             let questionPlan = null;
@@ -173,7 +174,8 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
                         ...initData.firstQuestion,
                         competencyId: planQ1?.competencyId,
                         type: planQ1?.type,
-                        difficulty: planQ1?.difficulty
+                        difficulty: planQ1?.difficulty,
+                        intent: planQ1?.intent
                     }];
 
                     // OPTIMIZATION: Pre-fetch audio immediately
@@ -314,7 +316,8 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (!question || question.tips) return; // Already loaded or invalid
 
         try {
-            const tips = await generateQuestionTips(question.text, session.role || 'General');
+            const competency = session.blueprint?.competencies.find(c => c.id === question.competencyId);
+            const tips = await generateQuestionTips(question.text, session.role || 'General', competency);
             setSession(prev => ({
                 ...prev,
                 questions: prev.questions.map(q =>

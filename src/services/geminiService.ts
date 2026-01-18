@@ -1,4 +1,5 @@
 import { Question, AnalysisResult, QuestionTips, CompetencyBlueprint, QuestionPlan } from "../types";
+import { OnboardingIntakeV1 } from "../types/intake";
 import { supabase } from "./supabase";
 
 // --- Helpers ---
@@ -42,15 +43,19 @@ export const generateBlueprint = async (role: string, jobDescription?: string, s
   }
 };
 
-export const initSession = async (role: string, jobDescription?: string) => {
+export const initSession = async (role: string, jobDescription?: string, intakeData?: OnboardingIntakeV1) => {
   try {
     const authHeaders = await getAuthHeader();
     const response = await fetch('/api/init-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify({ role, jobDescription })
+      body: JSON.stringify({ role, jobDescription, intakeData })
     });
-    if (!response.ok) throw new Error("Init session failed");
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`Init Session Failed: ${response.status} ${response.statusText}`, errText);
+      throw new Error(`Init session failed: ${response.status} ${errText}`);
+    }
     return await response.json();
   } catch (error) {
     console.error("Error initializing session:", error);
@@ -106,13 +111,13 @@ export const generateQuestions = async (role: string, jobDescription?: string, q
   }
 };
 
-export const generateQuestionTips = async (question: string, role: string): Promise<QuestionTips> => {
+export const generateQuestionTips = async (question: string, role: string, competency?: any): Promise<QuestionTips> => {
   try {
     const authHeaders = await getAuthHeader();
     const response = await fetch('/api/generate-tips', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify({ question, role })
+      body: JSON.stringify({ question, role, competency })
     });
 
     if (!response.ok) {

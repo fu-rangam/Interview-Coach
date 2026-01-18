@@ -60,6 +60,7 @@ REQUIREMENTS:
                                 title: { type: Type.STRING },
                                 seniority: { type: Type.STRING }
                             },
+                            required: ["title"]
                         },
                         readingLevel: {
                             type: Type.OBJECT,
@@ -68,6 +69,7 @@ REQUIREMENTS:
                                 maxSentenceWords: { type: Type.INTEGER },
                                 avoidJargon: { type: Type.BOOLEAN }
                             },
+                            required: ["mode", "maxSentenceWords", "avoidJargon"]
                         },
                         competencies: {
                             type: Type.ARRAY,
@@ -86,9 +88,11 @@ REQUIREMENTS:
                                             Developing: { type: Type.STRING },
                                             Good: { type: Type.STRING },
                                             Strong: { type: Type.STRING }
-                                        }
+                                        },
+                                        required: ["Developing", "Good", "Strong"]
                                     }
-                                }
+                                },
+                                required: ["id", "name", "definition", "signals", "evidenceExamples", "weight", "bands"]
                             }
                         },
                         questionMix: {
@@ -97,7 +101,8 @@ REQUIREMENTS:
                                 behavioral: { type: Type.NUMBER },
                                 situational: { type: Type.NUMBER },
                                 technical: { type: Type.NUMBER }
-                            }
+                            },
+                            required: ["behavioral", "situational", "technical"]
                         },
                         scoringModel: {
                             type: Type.OBJECT,
@@ -110,7 +115,8 @@ REQUIREMENTS:
                                             id: { type: Type.STRING },
                                             name: { type: Type.STRING },
                                             weight: { type: Type.INTEGER }
-                                        }
+                                        },
+                                        required: ["id", "name", "weight"]
                                     }
                                 },
                                 ratingBands: {
@@ -118,22 +124,27 @@ REQUIREMENTS:
                                     properties: {
                                         Developing: {
                                             type: Type.OBJECT,
-                                            properties: { min: { type: Type.INTEGER }, max: { type: Type.INTEGER } }
+                                            properties: { min: { type: Type.INTEGER }, max: { type: Type.INTEGER } },
+                                            required: ["min", "max"]
                                         },
                                         Good: {
                                             type: Type.OBJECT,
-                                            properties: { min: { type: Type.INTEGER }, max: { type: Type.INTEGER } }
+                                            properties: { min: { type: Type.INTEGER }, max: { type: Type.INTEGER } },
+                                            required: ["min", "max"]
                                         },
                                         Strong: {
                                             type: Type.OBJECT,
-                                            properties: { min: { type: Type.INTEGER }, max: { type: Type.INTEGER } }
+                                            properties: { min: { type: Type.INTEGER }, max: { type: Type.INTEGER } },
+                                            required: ["min", "max"]
                                         }
-                                    }
+                                    },
+                                    required: ["Developing", "Good", "Strong"]
                                 }
-                            }
+                            },
+                            required: ["dimensions", "ratingBands"]
                         }
                     },
-                    required: ["role", "readingLevel", "competencies", "scoringModel"]
+                    required: ["role", "readingLevel", "competencies", "scoringModel", "questionMix"]
                 }
             }
         });

@@ -22,92 +22,96 @@ export const DebugInfoModal: React.FC<DebugInfoModalProps> = ({ isOpen, onClose,
         let report = `# Competency-Driven Interview Session Debug Report\n\n`;
 
         // Section 1: Competency Blueprint (A1)
-        report += `## 1. Competency Blueprint (A1)\n`;
+        report += `## 1. Competency Blueprint (A1)\n\n`;
         if (blueprint) {
-            report += `- Role: ${blueprint.role.title} (${blueprint.role.seniority || 'N/A'})\n`;
-            report += `- Reading Level: ${blueprint.readingLevel?.mode} (Max words: ${blueprint.readingLevel?.maxSentenceWords})\n`;
-            report += `### Competencies:\n`;
+            report += `**Role:** ${blueprint.role.title} (${blueprint.role.seniority || 'N/A'})\n`;
+            report += `**Reading Level:** ${blueprint.readingLevel?.mode} (Max words: ${blueprint.readingLevel?.maxSentenceWords || 'N/A'})\n\n`;
+
+            report += `### Competencies\n`;
             blueprint.competencies?.forEach(c => {
-                report += `- **${c.name}** (${c.id}) [Weight: ${c.weight}]\n`;
-                report += `  - Definition: ${c.definition}\n`;
-                report += `  - Signals: ${(c.signals || []).join(', ')}\n`;
-                report += `  - Evidence: ${(c.evidenceExamples || []).join(', ')}\n`;
-                report += `  - Bands: Dev="${c.bands?.Developing}", Good="${c.bands?.Good}", Strong="${c.bands?.Strong}"\n`;
+                report += `#### ${c.name} (${c.id}) [Weight: ${c.weight}]\n`;
+                report += `- **Definition:** ${c.definition}\n`;
+                report += `- **Signals:** ${(c.signals || []).join(', ')}\n`;
+                report += `- **Evidence:** ${(c.evidenceExamples || []).join(', ')}\n`;
+                report += `- **Bands:**\n  - Developing: "${c.bands?.Developing}"\n  - Good: "${c.bands?.Good}"\n  - Strong: "${c.bands?.Strong}"\n\n`;
             });
-            report += `### Question Mix:\n`;
-            report += `- Behavioral: ${blueprint.questionMix?.behavioral}, Situational: ${blueprint.questionMix?.situational}, Technical: ${blueprint.questionMix?.technical}\n`;
-            report += `### Scoring Model:\n`;
-            report += `- Dimensions:\n`;
+
+            report += `### Scoring Model\n`;
+            report += `**Dimensions:**\n`;
             blueprint.scoringModel?.dimensions?.forEach(d => {
-                report += `  - ${d.name} (${d.id}) [Weight: ${d.weight}]\n`;
+                report += `- ${d.name} (${d.id}) [Weight: ${d.weight}]\n`;
             });
-            report += `- Rating Bands: Dev=${JSON.stringify(blueprint.scoringModel.ratingBands.Developing)}, Good=${JSON.stringify(blueprint.scoringModel.ratingBands.Good)}, Strong=${JSON.stringify(blueprint.scoringModel.ratingBands.Strong)}\n`;
+            report += `\n**Rating Bands:**\n- Developing: ${JSON.stringify(blueprint.scoringModel.ratingBands.Developing)}\n- Good: ${JSON.stringify(blueprint.scoringModel.ratingBands.Good)}\n- Strong: ${JSON.stringify(blueprint.scoringModel.ratingBands.Strong)}\n\n`;
         } else {
-            report += `(Blueprint missing)\n`;
+            report += `_(Blueprint missing)_\n\n`;
         }
-        report += `\n`;
+        report += `---\n\n`; // Separator
 
         // Section 2: Question Plan (B1)
-        report += `## 2. Question Plan (B1)\n`;
+        report += `## 2. Question Plan (B1)\n\n`;
         questions?.forEach((q) => {
-            report += `- [${q.id}] ${q.competencyId || 'N/A'} | ${q.type || 'N/A'} | ${q.difficulty || 'N/A'} | Intent: ${q.intent || 'N/A'}\n`;
-            if (q.tips) { // Proxy for rubric hints if not strictly available
-                report += `  - Rubric Hints (from Tips): ${JSON.stringify(q.tips.pointsToCover)}\n`;
+            report += `- **[${q.id}]** ${q.competencyId || 'N/A'} | ${q.type || 'N/A'} | ${q.difficulty || 'N/A'}\n`;
+            report += `  - **Intent:** ${q.intent || 'N/A'}\n`;
+            if (q.tips) {
+                report += `  - **Rubric Hints (from Tips):**\n    - ${q.tips.pointsToCover.join('\n    - ')}\n`;
             }
+            report += `\n`;
         });
-        report += `\n`;
+        report += `---\n\n`;
 
         // Section 3: Question Text (C1)
-        report += `## 3. Question Text (C1)\n`;
-        report += `**${currentQ.id}:** ${currentQ.text}\n`;
+        report += `## 3. Active Question (C1)\n\n`;
+        report += `**${currentQ.id}:** "${currentQ.text}"\n`;
         report += `(Type: ${currentQ.type}, Difficulty: ${currentQ.difficulty}, C-ID: ${currentQ.competencyId})\n\n`;
+        report += `---\n\n`;
 
         // Section 4: Micro-Acknowledgement (F1)
-        report += `## 4. Micro-Acknowledgement (F1)\n`;
+        report += `## 4. Micro-Acknowledgement (F1)\n\n`;
         if (analysis?.coachReaction) {
-            report += `"${analysis.coachReaction}"\n`;
+            report += `> "${analysis.coachReaction}"\n`;
         } else {
-            report += `(Not generated)\n`;
+            report += `_(Not generated)_\n`;
         }
-        report += `\n`;
+        report += `\n---\n\n`;
 
         // Section 5: Answer Text
-        report += `## 5. Answer Text\n`;
+        report += `## 5. Answer Text\n\n`;
         if (currentAnswer?.text) {
             report += `"${currentAnswer.text}"\n`;
         } else if (currentAnswer?.audioBlob) {
-            report += `(Audio Blob Present, Transcript missing)\n`;
+            report += `_(Audio Blob Present, Transcript missing)_\n`;
         } else {
-            report += `(No answer yet)\n`;
+            report += `_(No answer yet)_\n`;
         }
-        report += `\n`;
+        report += `\n---\n\n`;
 
         // Section 6: Speaking Delivery (G1)
-        report += `## 6. Speaking Delivery (G1)\n`;
+        report += `## 6. Speaking Delivery (G1)\n\n`;
         if (analysis?.deliveryStatus) {
-            report += `- Status: ${analysis.deliveryStatus}\n`;
+            report += `- **Status:** ${analysis.deliveryStatus}\n`;
             if (analysis.deliveryTips && analysis.deliveryTips.length > 0) {
-                analysis.deliveryTips.forEach(tip => report += `- Tip: ${tip}\n`);
+                analysis.deliveryTips.forEach(tip => report += `- **Tip:** ${tip}\n`);
             }
         } else {
-            report += `(N/A or Text Mode)\n`;
+            report += `_(N/A or Text Mode)_\n`;
         }
-        report += `\n`;
+        report += `\n---\n\n`;
 
         // Section 7: Answer Evaluation (D1 & D2)
-        report += `## 7. Answer Evaluation (D1 & D2)\n`;
+        report += `## 7. Answer Evaluation (D1 & D2)\n\n`;
         if (analysis?.answerScore) {
-            report += `- Rating: **${analysis.rating}** (${analysis.answerScore}/100)\n`;
-            report += `### Dimension Scores:\n`;
+            report += `**Rating:** ${analysis.rating} (${analysis.answerScore}/100)\n\n`;
+
+            report += `### Dimension Scores\n`;
             if (analysis.dimensionScores) {
                 analysis.dimensionScores?.forEach(ds => {
-                    const dim = blueprint?.scoringModel?.dimensions?.find(d => d.name === ds.dimensionId || d.id === ds.dimensionId); // Try to match ID or Name
+                    const dim = blueprint?.scoringModel?.dimensions?.find(d => d.name === ds.dimensionId || d.id === ds.dimensionId);
                     const weight = dim?.weight || 1;
-                    report += `- **${ds.dimensionId}**: ${ds.score} (Weight: ${weight}) -> Note: "${ds.note}"\n`;
+                    report += `- **${ds.dimensionId}**: ${ds.score} (Weight: ${weight})\n  - Note: "${ds.note}"\n`;
                 });
             }
-            // Math Check
-            report += `### D2 Math Check:\n`;
+
+            report += `\n### D2 Math Check\n`;
             const totalWeightedScore = analysis.dimensionScores?.reduce((sum, ds) => {
                 const dim = blueprint?.scoringModel?.dimensions?.find(d => d.name === ds.dimensionId || d.id === ds.dimensionId);
                 return sum + (ds.score * (dim?.weight || 1));
@@ -116,44 +120,40 @@ export const DebugInfoModal: React.FC<DebugInfoModalProps> = ({ isOpen, onClose,
                 const dim = blueprint?.scoringModel?.dimensions?.find(d => d.name === ds.dimensionId || d.id === ds.dimensionId);
                 return sum + (dim?.weight || 1);
             }, 0) || 1;
-            report += `Weighted Sum (${totalWeightedScore}) / Total Weight (${totalWeight}) = ${Math.round(totalWeightedScore / totalWeight)}\n`;
+            report += `Weighted Sum (${totalWeightedScore}) / Total Weight (${totalWeight}) = **${Math.round(totalWeightedScore / totalWeight)}**\n\n`;
 
-            report += `### Evidence:\n`;
+            report += `### Evidence\n`;
             analysis.evidenceExtracts?.forEach(e => report += `- "${e}"\n`);
-            report += `### Missing Elements:\n`;
+
+            report += `\n### Missing Elements\n`;
             analysis.missingElements?.forEach(m => report += `- ${m}\n`);
         } else {
-            report += `(Evaluation pending)\n`;
+            report += `_(Evaluation pending)_\n`;
         }
-        report += `\n`;
+        report += `\n---\n\n`;
 
         // Section 8: Feedback (E1)
-        report += `## 8. Feedback (E1)\n`;
+        report += `## 8. Feedback (E1)\n\n`;
         if (analysis) {
-            report += `### Key Feedback:\n`;
+            report += `### Key Feedback\n`;
             analysis.feedback?.forEach(f => report += `- ${f}\n`);
-            report += `### Biggest Upgrade:\n${analysis.biggestUpgrade || 'N/A'}\n`;
-            report += `### Redo Prompt:\n${analysis.redoPrompt || 'N/A'}\n`;
+            report += `\n### Biggest Upgrade\n${analysis.biggestUpgrade || 'N/A'}\n`;
+            report += `\n### Redo Prompt\n${analysis.redoPrompt || 'N/A'}\n`;
             if (analysis.strongResponse) {
-                report += `### Strong Answer Example:\n${analysis.strongResponse}\n`;
+                report += `\n### Strong Answer Example\n${analysis.strongResponse}\n`;
             }
         }
-        report += `\n`;
+        report += `\n---\n\n`;
 
         // Section 9: Session Aggregation (H2)
-        report += `## 9. Session Aggregation (H2)\n`;
-        // Calc on the fly
+        report += `## 9. Session Aggregation (H2)\n\n`;
         const allAnswered = Object.values(session.answers).filter(a => a.analysis?.answerScore);
         if (allAnswered.length > 0) {
             const avgScore = Math.round(allAnswered.reduce((sum, a) => sum + (a.analysis?.answerScore || 0), 0) / allAnswered.length);
-            report += `- Overall Score: ${avgScore}\n`;
-            // Competency Breakdown
-            report += `### Competency Scores:\n`;
-            // Crude breakdown if competencyId is tracked on questions
-            // ... (Simple summary)
-            report += `(Calculated based on ${allAnswered.length} answers)\n`;
+            report += `- **Overall Score:** ${avgScore}\n`;
+            report += `_(Calculated based on ${allAnswered.length} answers)_\n`;
         } else {
-            report += `(Not enough data)\n`;
+            report += `_(Not enough data)_\n`;
         }
 
         return report;

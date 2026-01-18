@@ -15,7 +15,7 @@ export default async function handler(req, res) {
             return res.status(405).json({ error: 'Method Not Allowed' });
         }
 
-        const { question, role } = req.body || {};
+        const { question, role, competency } = req.body || {};
 
         if (!question || !role) {
             return res.status(400).json({ error: 'Missing "question" or "role" in request body' });
@@ -29,9 +29,29 @@ export default async function handler(req, res) {
 
         const ai = new GoogleGenAI({ apiKey });
 
+        // Competency-Driven Context
+        let competencyContext = "";
+        if (competency) {
+            competencyContext = `
+            COMPETENCY FOCUS: ${competency.name}
+            DEFINITION: ${competency.definition}
+            SIGNALS (Points to Cover): ${competency.signals?.join('; ') || "N/A"}
+            DEVELOPING BEHAVIOR (Mistakes): ${competency.bands?.Developing || "N/A"}
+            STRONG BEHAVIOR (Pro Tip): ${competency.bands?.Strong || "N/A"}
+            
+            INSTRUCTIONS:
+            - "lookingFor": Use the Definition.
+            - "pointsToCover": Simplify the Signals into bullet points.
+            - "mistakesToAvoid": Base this on the Developing behavior (what NOT to do).
+            - "proTip": Base this on the Strong behavior (what TO do).
+            `;
+        }
+
         const prompt = `
     You are an expert interview coach for ${role} roles.
     Provide detailed interview tips for the following question: "${question}"
+
+    ${competencyContext}
 
     Return strictly JSON matching this structure:
     {
