@@ -105,7 +105,7 @@ export const STRONG_EXAMPLE_OPTIONS: {
     label: string;
 }[] = [
         { value: "always", label: "Always" },
-        { value: "only_when_developing", label: "Only when my answer score is 'Developing'" },
+        { value: "only_when_developing", label: "Only if my score isn't strong" },
         { value: "never", label: "Never" }
     ];
 
