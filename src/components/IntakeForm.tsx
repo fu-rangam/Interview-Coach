@@ -131,7 +131,7 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit, onSkip }) => {
                                     options={BIGGEST_STRUGGLE_OPTIONS}
                                     value={formData.biggestStruggle}
                                     onChange={(val) => updateField('biggestStruggle', val as BiggestStruggle)}
-                                    placeholder="Select a struggle area to work on"
+                                    placeholder="Select a struggle"
                                 />
                             </div>
 
