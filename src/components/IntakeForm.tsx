@@ -274,7 +274,7 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
                     <GlassButton
                         onClick={goNext}
                         disabled={!canProceed()}
-                        className="bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 border-none shadow-lg shadow-cyan-900/20"
+                        className="bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 border-none shadow-lg shadow-cyan-900/20 whitespace-nowrap"
                     >
                         {isLastStep ? (
                             <>

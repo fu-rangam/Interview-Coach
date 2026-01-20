@@ -204,23 +204,7 @@ export const InterviewSetup: React.FC = () => {
                 </p>
             </div>
 
-            {/* Mobile Fixed Bottom Bar (Visible only on small screens < lg) */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-zinc-900/90 backdrop-blur-xl border-t border-white/10 lg:hidden z-50">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="text-sm">
-                        <div className="text-gray-400 text-xs">Target Role</div>
-                        <div className="font-bold truncate max-w-[150px]">{role || 'Not set'}</div>
-                    </div>
-                    <GlassButton
-                        className="flex-1 py-3 text-base shadow-[0_0_15px_rgba(6,182,212,0.3)]"
-                        onClick={validateAndContinue}
-                        disabled={isStarting}
-                    >
-                        {isStarting ? '...' : 'Next'}
-                        <ArrowRight className="ml-2 w-4 h-4" />
-                    </GlassButton>
-                </div>
-            </div>
+
         </div >
     );
 };

@@ -34,7 +34,7 @@ export const GlassRadioGroup: React.FC<GlassRadioGroupProps> = ({
         <div
             className={cn(
                 "grid gap-3",
-                colCount === 2 ? "grid-cols-2" : "grid-cols-1",
+                colCount === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1",
                 className
             )}
         >
@@ -44,7 +44,7 @@ export const GlassRadioGroup: React.FC<GlassRadioGroupProps> = ({
                     <label
                         key={option.value}
                         className={cn(
-                            "relative flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all",
+                            "relative flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all h-full",
                             "border",
                             isSelected
                                 ? "bg-cyan-500/10 border-cyan-500/50 text-white"
@@ -65,6 +65,7 @@ export const GlassRadioGroup: React.FC<GlassRadioGroupProps> = ({
                         <div
                             className={cn(
                                 "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                                "mt-0.5", // Align with top of text if wrapping
                                 isSelected
                                     ? "border-cyan-500 bg-cyan-500"
                                     : "border-gray-500"
@@ -76,7 +77,7 @@ export const GlassRadioGroup: React.FC<GlassRadioGroupProps> = ({
                         </div>
                         {/* Label */}
                         <span className={cn(
-                            "text-sm font-medium",
+                            "text-sm font-medium flex-1", // FLEX-1 for wrapping
                             isSelected && "text-cyan-400"
                         )}>
                             {option.label}
