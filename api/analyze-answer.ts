@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { validateUser } from './utils/auth.js';
-import { AnalyzeAnswerSchema } from '../src/schemas/apiSchemas';
+import { AnalyzeAnswerSchema } from './schemas.js';
 import { logger } from './utils/logger.js';
 
 export default async function handler(req: any, res: any) {
