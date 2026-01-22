@@ -1,97 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { GlassCard } from './ui/glass/GlassCard';
 import { GlassButton } from './ui/glass/GlassButton';
-import { RefreshCcw, ArrowRight, Activity, Save, X, Copy, List } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { ReviewQuestionItem } from './ui/glass/ReviewQuestionItem';
-import { Question, AnalysisResult, CompetencyBlueprint } from '../types';
+import { ArrowRight, Activity } from 'lucide-react';
 
 interface SubmissionPopoverProps {
     isOpen: boolean;
-    onRetry: () => void;
     onFeedback: () => void;
     onNext: () => void;
-    onClose?: () => void;
     isSessionComplete?: boolean;
     onFinish?: () => void;
-    question?: Question;
-    questionIndex?: number;
-    answer?: {
-        text?: string;
-        audioBlob?: Blob;
-        analysis: AnalysisResult | null;
-    };
-    blueprint?: CompetencyBlueprint;
-    hasSkippedQuestions?: boolean;
-    inline?: boolean;
 }
 
 export const SubmissionPopover: React.FC<SubmissionPopoverProps> = ({
     isOpen,
-    onRetry,
     onFeedback,
     onNext,
-    onClose,
     isSessionComplete = false,
-    onFinish,
-    question,
-    questionIndex = 0,
-    answer,
-    blueprint,
-    hasSkippedQuestions = false
+    onFinish
 }) => {
-    const [showFeedback, setShowFeedback] = useState(false);
-
     if (!isOpen) return null;
 
-    // Feedback Modal Overlay (Keep fixed overlay for the modal itself)
-    if (showFeedback && question && answer) {
-        return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:pl-64 bg-black/80 backdrop-blur-md animate-fade-in">
-                <div className="w-full max-w-7xl max-h-[90vh] overflow-y-auto custom-scrollbar relative bg-transparent rounded-2xl">
-                    {/* Header Controls: Copy & Close */}
-                    <div className="sticky top-0 right-0 z-50 flex justify-end gap-2 px-6 py-6 md:px-8 md:py-8 pointer-events-none">
-                        {/* Copy Button */}
-                        <button
-                            className="pointer-events-auto p-2 rounded-full bg-black/50 text-gray-400 hover:text-white hover:bg-white/10 transition-colors border border-white/10 backdrop-blur-sm shadow-lg"
-                            title="Copy Answer"
-                            aria-label="Copy Answer"
-                        >
-                            <Copy size={20} />
-                        </button>
-
-                        {/* Close Button */}
-                        <button
-                            onClick={() => setShowFeedback(false)}
-                            className="pointer-events-auto p-2 rounded-full bg-black/50 text-gray-400 hover:text-white hover:bg-white/10 transition-colors border border-white/10 backdrop-blur-sm shadow-lg"
-                            aria-label="Close"
-                        >
-                            <X size={20} />
-                        </button>
-                    </div>
-
-                    <div className="px-1 md:px-4 pb-8 -mt-24 md:-mt-32">
-                        <ReviewQuestionItem
-                            q={{
-                                ...question,
-                                analysis: answer.analysis,
-                                transcript: answer.text,
-                                audioBlob: answer.audioBlob
-                            }}
-                            index={questionIndex}
-                            isExpanded={true}
-                            onToggle={() => { }}
-                            hideExpandIcon={true}
-                            className="pt-24 md:pt-32 min-h-[500px]"
-                            blueprint={blueprint}
-                        />
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // If session complete, show special state (Text only, transparent inline) -> MOVED TO MODAL
     if (isSessionComplete) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
@@ -111,7 +39,6 @@ export const SubmissionPopover: React.FC<SubmissionPopoverProps> = ({
         );
     }
 
-    // Standard View Answer Analysis (Text + Buttons, NOW MODAL)
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in md:pl-64">
             <GlassCard className="w-full max-w-md p-8 flex flex-col items-center gap-6 border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">

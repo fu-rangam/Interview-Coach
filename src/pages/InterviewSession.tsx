@@ -1092,7 +1092,6 @@ export const InterviewSession: React.FC = () => {
 
             <SubmissionPopover
                 isOpen={showAnswerPopover && !!currentAnswer}
-                onRetry={handleRetry}
                 onFeedback={() => {
                     if (currentAnswer?.analysis) {
                         setShowPopover(true);
@@ -1104,12 +1103,6 @@ export const InterviewSession: React.FC = () => {
                 onNext={() => setShowAnswerPopover(false)}
                 isSessionComplete={allQuestionsAnswered}
                 onFinish={handleFinish}
-                question={currentQuestion}
-                questionIndex={session.currentQuestionIndex}
-                answer={currentAnswer}
-                blueprint={session.blueprint}
-                hasSkippedQuestions={hasSkippedQuestions}
-                onClose={() => setShowAnswerPopover(false)}
             />
         </div>
     );
