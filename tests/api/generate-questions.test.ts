@@ -18,6 +18,14 @@ vi.mock('@google/genai', () => ({
     }
 }));
 
+// Mock Auth logic
+vi.mock('../../api/utils/auth', () => ({
+    validateUser: vi.fn().mockResolvedValue({ id: 'test-user' })
+}));
+vi.mock('../../api/utils/auth.js', () => ({
+    validateUser: vi.fn().mockResolvedValue({ id: 'test-user' })
+}));
+
 describe('Generate Questions API Handler', () => {
     let mockReq: any;
     let mockRes: any;

@@ -109,6 +109,7 @@ export const TipsAndTranscriptContent = memo(({
                                                             : "bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300"
                                                     )}
                                                     title={playingUrl === msg.audioUrl ? "Pause" : "Play Recording"}
+                                                    aria-label={playingUrl === msg.audioUrl ? "Pause Recording" : "Play Recording"}
                                                 >
                                                     {playingUrl === msg.audioUrl ? (
                                                         <Pause size={14} fill="currentColor" />
@@ -130,6 +131,6 @@ export const TipsAndTranscriptContent = memo(({
                     </div>
                 )}
             </div>
-        </GlassCard>
+        </GlassCard >
     );
 });

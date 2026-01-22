@@ -247,7 +247,9 @@ export const InterviewSession: React.FC = () => {
             const timer = setTimeout(() => {
                 setShowLoader(false);
                 setLoaderComplete(false);
-                setAnalysisReady(false);
+                // Do NOT reset analysisReady to allow subsequent views without re-analysis
+                // setAnalysisReady(false); 
+                setShowPopover(true);
             }, 500);
             return () => clearTimeout(timer);
         }
@@ -469,24 +471,9 @@ export const InterviewSession: React.FC = () => {
     useEffect(() => {
         if (currentQuestion?.id) {
             loadTipsForQuestion(currentQuestion.id);
-
-            // Add Question to Transcript if not already last item
-            setTranscript(prev => {
-                const lastItem = prev[prev.length - 1];
-                if (lastItem?.text === currentQuestion.text && lastItem?.type === 'question') return prev;
-
-                return [
-                    ...prev,
-                    {
-                        sender: 'ai',
-                        text: currentQuestion.text,
-                        type: 'question',
-                        label: `Question ${session.currentQuestionIndex + 1}`
-                    }
-                ];
-            });
+            // Transcript update for questions removed as per requirement
         }
-    }, [currentQuestion?.id, loadTipsForQuestion, session.currentQuestionIndex]);
+    }, [currentQuestion?.id, loadTipsForQuestion]);
 
     const handlePrev = useCallback(() => {
         goToQuestion(session.currentQuestionIndex - 1);
@@ -679,7 +666,7 @@ export const InterviewSession: React.FC = () => {
                             <div className="flex-1 flex gap-4 xl:gap-6 min-h-0 relative">
 
                                 {/* Main Interaction Area */}
-                                <div className="relative flex flex-col h-full overflow-y-auto custom-scrollbar min-w-0" style={{ flex: '3 1 0%' }}>
+                                <div className="relative flex flex-col h-full overflow-y-auto custom-scrollbar min-w-0 border-b border-white/10 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] border-x border-x-white/5 bg-zinc-900/20 backdrop-blur-sm rounded-b-2xl" style={{ flex: '3 1 0%' }}>
                                     <div className="flex-1 flex flex-col items-center pt-0 sm:pt-4 lg:pt-8 px-0 lg:px-4 gap-2 md:gap-8 pb-20 md:pb-32">
 
                                         {/* Question Text */}
@@ -779,7 +766,7 @@ export const InterviewSession: React.FC = () => {
 
                                         {/* Input Area */}
                                         {(!isAnswered || (showAnswerPopover && currentAnswer)) && mode === 'voice' && (
-                                            <div className="flex-1 w-full flex flex-col items-center justify-start gap-4 animate-fade-in min-h-[200px] md:min-h-[300px]">
+                                            <div className="flex-1 w-full flex flex-col items-center justify-center gap-4 animate-fade-in min-h-[200px] md:min-h-[300px]">
                                                 {/* Visualizer */}
                                                 <div className="w-full h-32 md:h-40 flex flex-col items-center justify-center relative gap-4">
                                                     {isRecording ? (
@@ -791,7 +778,14 @@ export const InterviewSession: React.FC = () => {
                                                         <SubmissionPopover
                                                             isOpen={true} // Always open if rendered here
                                                             onRetry={handleRetry}
-                                                            onFeedback={() => setShowLoader(true)}
+                                                            onFeedback={() => {
+                                                                if (currentAnswer?.analysis) {
+                                                                    setShowPopover(true);
+                                                                } else {
+                                                                    setShowLoader(true);
+                                                                }
+                                                                setShowAnswerPopover(false);
+                                                            }}
                                                             onNext={() => setShowAnswerPopover(false)}
                                                             isSessionComplete={allQuestionsAnswered}
                                                             onFinish={handleFinish}
@@ -835,6 +829,7 @@ export const InterviewSession: React.FC = () => {
                                                     <div className="flex flex-col items-center gap-4 z-10 relative mt-2">
                                                         <button
                                                             onClick={handleToggleRecording}
+                                                            aria-label="Toggle Recording"
                                                             className={cn(
                                                                 "group relative w-16 h-16 md:w-24 md:h-24 rounded-full flex items-center justify-center transition-all duration-300 shadow-[0_0_40px_rgba(6,182,212,0.2)]",
                                                                 isRecording
@@ -869,7 +864,14 @@ export const InterviewSession: React.FC = () => {
                                                         <SubmissionPopover
                                                             isOpen={true}
                                                             onRetry={handleRetry}
-                                                            onFeedback={() => setShowLoader(true)}
+                                                            onFeedback={() => {
+                                                                if (currentAnswer?.analysis) {
+                                                                    setShowPopover(true);
+                                                                } else {
+                                                                    setShowLoader(true);
+                                                                }
+                                                                setShowAnswerPopover(false);
+                                                            }}
                                                             onNext={() => setShowAnswerPopover(false)}
                                                             isSessionComplete={allQuestionsAnswered}
                                                             onFinish={handleFinish}
@@ -1008,7 +1010,7 @@ export const InterviewSession: React.FC = () => {
                                 <GlassButton
                                     onClick={handlePrev}
                                     disabled={isFirstQuestion}
-                                    variant="secondary"
+                                    variant="outline"
                                     className="h-10 w-10 md:w-auto md:px-6 rounded-full flex items-center justify-center p-0 md:p-4"
                                     title="Previous Question"
                                 >
@@ -1019,7 +1021,7 @@ export const InterviewSession: React.FC = () => {
                                 <GlassButton
                                     onClick={handleNextQuestion}
                                     disabled={isLastQuestion}
-                                    variant="secondary"
+                                    variant="outline"
                                     className="h-10 w-10 md:w-auto md:px-6 rounded-full flex items-center justify-center p-0 md:p-4"
                                     title="Next Question"
                                 >

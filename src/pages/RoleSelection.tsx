@@ -156,6 +156,7 @@ const RoleSelection: React.FC = () => {
                 <button
                     onClick={() => navigate('/job-description')}
                     className="p-4 bg-white text-slate-900 rounded-full shadow-xl shadow-blue-200 hover:bg-slate-50 transition-colors"
+                    aria-label="Use Custom Job Description"
                 >
                     <Sparkles size={24} />
                 </button>

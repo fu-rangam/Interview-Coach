@@ -4,35 +4,8 @@ import { InterviewSession, AnalysisResult, Question, QuestionTips, CompetencyBlu
 import { generateQuestions, generateQuestionTips, generateBlueprint, generateQuestionPlan, generateSpeech, initSession } from '../services/geminiService';
 import { sessionService } from '../services/sessionService';
 import { supabase } from '../services/supabase';
-import CryptoJS from 'crypto-js';
+import { secureStorage } from '../utils/encryption';
 
-const ENCRYPTION_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'default-session-key';
-
-// Helper: Secure storage wrapper
-const secureStorage = {
-    getItem: (key: string): InterviewSession | null => {
-        const raw = localStorage.getItem(key);
-        if (!raw) return null;
-        try {
-            // Try decrypting first
-            const bytes = CryptoJS.AES.decrypt(raw, ENCRYPTION_KEY);
-            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
-            if (!decrypted) throw new Error("Decryption failed");
-            return JSON.parse(decrypted);
-        } catch (e) {
-            // Fallback: It might be plain JSON (migration path)
-            try {
-                return JSON.parse(raw);
-            } catch {
-                return null;
-            }
-        }
-    },
-    setItem: (key: string, value: InterviewSession) => {
-        const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(value), ENCRYPTION_KEY).toString();
-        localStorage.setItem(key, ciphertext);
-    }
-};
 
 export interface SessionContextType {
     session: InterviewSession;
@@ -55,7 +28,7 @@ export const SessionContext = createContext<SessionContextType | undefined>(unde
 export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Session State
     const [session, setSession] = useState<InterviewSession>(() => {
-        const saved = secureStorage.getItem('current_session');
+        const saved = secureStorage.getItem<InterviewSession>('current_session');
         const defaultSession: InterviewSession = {
             id: 'default',
             role: '',

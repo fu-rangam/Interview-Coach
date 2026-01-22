@@ -33,8 +33,10 @@ export const GlassRadioGroup: React.FC<GlassRadioGroupProps> = ({
     return (
         <div
             className={cn(
-                "grid gap-3",
+                "grid gap-3 w-full mx-auto",
                 colCount === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1",
+                // Center the group itself if max-width is applied
+                colCount === 1 ? "max-w-3xl" : "",
                 className
             )}
         >
@@ -77,7 +79,7 @@ export const GlassRadioGroup: React.FC<GlassRadioGroupProps> = ({
                         </div>
                         {/* Label */}
                         <span className={cn(
-                            "text-sm font-medium flex-1", // FLEX-1 for wrapping
+                            "text-lg font-medium flex-1 text-left", // FLEX-1 for wrapping
                             isSelected && "text-cyan-400"
                         )}>
                             {option.label}

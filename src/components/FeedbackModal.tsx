@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, Copy } from 'lucide-react';
+import { X, Copy, Check } from 'lucide-react';
+import { cn } from '../lib/utils';
 import { ReviewQuestionItem } from './ui/glass/ReviewQuestionItem';
 import { Question, AnalysisResult, CompetencyBlueprint } from '../types';
 
@@ -24,6 +25,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
     questionIndex,
     blueprint
 }) => {
+    const [isCopied, setIsCopied] = React.useState(false);
+
     if (!isOpen) return null;
 
     return (
@@ -33,21 +36,32 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 <div className="sticky top-0 right-0 z-50 flex justify-end gap-2 px-6 py-6 md:px-8 md:py-8 pointer-events-none">
                     {/* Copy Button */}
                     <button
-                        className="pointer-events-auto p-2 rounded-full bg-black/50 text-gray-400 hover:text-white hover:bg-white/10 transition-colors border border-white/10 backdrop-blur-sm shadow-lg"
+                        className={cn(
+                            "pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full transition-all border text-xs font-medium backdrop-blur-sm shadow-lg",
+                            isCopied
+                                ? "bg-green-500/20 text-green-400 border-green-500/30"
+                                : "bg-black/50 text-gray-400 hover:text-white hover:bg-white/10 border-white/10"
+                        )}
                         title="Copy Answer"
+                        aria-label="Copy Answer"
+                        disabled={isCopied}
                         onClick={() => {
                             if (answer.text) {
                                 navigator.clipboard.writeText(answer.text);
+                                setIsCopied(true);
+                                setTimeout(() => setIsCopied(false), 2000);
                             }
                         }}
                     >
-                        <Copy size={20} />
+                        {isCopied ? <Check size={16} /> : <Copy size={16} />}
+                        {isCopied ? "Copied!" : "Copy Answer"}
                     </button>
 
                     {/* Close Button */}
                     <button
                         onClick={onClose}
                         className="pointer-events-auto p-2 rounded-full bg-black/50 text-gray-400 hover:text-white hover:bg-white/10 transition-colors border border-white/10 backdrop-blur-sm shadow-lg"
+                        aria-label="Close"
                     >
                         <X size={20} />
                     </button>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from '../../../lib/utils';
-import { motion } from 'framer-motion';
+
 
 interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
     children: React.ReactNode;
@@ -10,22 +10,18 @@ interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
 export const GlassCard = React.forwardRef<HTMLDivElement, GlassCardProps>(
     ({ className, children, hoverEffect = false, ...props }, ref) => {
         return (
-            <motion.div
+            <div
                 ref={ref}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                whileHover={hoverEffect ? { scale: 1.02, boxShadow: "0 0 20px var(--glow-cyan)" } : {}}
                 className={cn(
-                    "glass-panel rounded-xl p-6 transition-all duration-300",
+                    "glass-panel rounded-xl p-6 transition-all duration-300 animate-fade-in-up",
+                    hoverEffect && "hover:scale-[1.02] hover:shadow-glow-cyan/50",
                     "hover:border-white/20",
                     className
                 )}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                {...(props as any)}
+                {...props}
             >
                 {children}
-            </motion.div>
+            </div>
         );
     }
 );

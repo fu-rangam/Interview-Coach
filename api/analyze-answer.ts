@@ -22,6 +22,14 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Missing "question" or "input" in request body' });
         }
 
+        // 3. Payload Size Check
+        // Limit base64 payload to prevent memory abuse (approx 10MB)
+        const MAX_PAYLOAD_SIZE = 10 * 1024 * 1024;
+        if (input.data && input.data.length > MAX_PAYLOAD_SIZE) {
+            console.warn(`Blocked large payload: ${input.data.length} bytes`);
+            return res.status(413).json({ error: 'Payload Too Large' });
+        }
+
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
@@ -81,7 +89,8 @@ Ratings Bands: ${JSON.stringify(blueprint.scoringModel.ratingBands)}
 
             // Confidence / Struggle Context
             let struggleContext = "";
-            const { intakeData } = req.body; // Extract if available
+            // const { intakeData } = req.body; // Removed duplicate declaration
+
 
             if (intakeData?.biggestStruggle) {
                 const s = intakeData.biggestStruggle;
@@ -108,7 +117,7 @@ Ratings Bands: ${JSON.stringify(blueprint.scoringModel.ratingBands)}
     GRADING STRINGENCY (Level: ${level}):
     - ${level === 'warm_up' ? "Be encouraging. Overlook minor flaws. Focus on confidence." : ""}
     - ${level === 'realistic' ? "Fair professional standard. Flag obvious gaps." : ""}
-    - ${level === 'pressure_test' ? "RUTHLESS CRITIQUE. High bar for 'Strong'. Nitpick missing nuances. Assume they are applying for a Senior/Staff role." : ""}
+    - ${level === 'challenge' ? "RUTHLESS CRITIQUE. High bar for 'Strong'. Nitpick missing nuances. Assume they are applying for a Senior/Staff role." : ""}
                 `;
             }
 

@@ -56,7 +56,7 @@ export default async function handler(req, res) {
         - First Question: Must match the first item in the plan.
         - Reading Level: Adapt to role (Simple for entry, Professional for senior).
         - IF "Must Practice" questions are provided, INJECT them into the Question Plan where relevant (replacing generic ones).
-        - IF "Challenge Level" is "pressure_test", increase difficulty of questions.
+        - IF "Challenge Level" is "challenge", increase difficulty of questions.
         - IF "Challenge Level" is "warm_up", keep questions encouraging and simpler.
 
         OUTPUT SCHEMA:

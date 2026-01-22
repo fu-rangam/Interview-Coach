@@ -55,6 +55,7 @@ export const SubmissionPopover: React.FC<SubmissionPopoverProps> = ({
                         <button
                             className="pointer-events-auto p-2 rounded-full bg-black/50 text-gray-400 hover:text-white hover:bg-white/10 transition-colors border border-white/10 backdrop-blur-sm shadow-lg"
                             title="Copy Answer"
+                            aria-label="Copy Answer"
                         >
                             <Copy size={20} />
                         </button>
@@ -63,6 +64,7 @@ export const SubmissionPopover: React.FC<SubmissionPopoverProps> = ({
                         <button
                             onClick={() => setShowFeedback(false)}
                             className="pointer-events-auto p-2 rounded-full bg-black/50 text-gray-400 hover:text-white hover:bg-white/10 transition-colors border border-white/10 backdrop-blur-sm shadow-lg"
+                            aria-label="Close"
                         >
                             <X size={20} />
                         </button>

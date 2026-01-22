@@ -11,6 +11,10 @@ import React from 'react';
 vi.mock('../services/geminiService', () => ({
     generateQuestions: vi.fn(),
     generateQuestionTips: vi.fn(),
+    initSession: vi.fn().mockResolvedValue(null),
+    generateBlueprint: vi.fn(),
+    generateQuestionPlan: vi.fn(),
+    generateSpeech: vi.fn(),
 }));
 
 vi.mock('../services/sessionService', () => ({

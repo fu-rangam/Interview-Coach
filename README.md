@@ -1,9 +1,9 @@
 # AI Interview Coach: Ready2Work
 
-**Master your next interview with hyper-realistic AI coaching.**
+**Master your next interview with hyper-realistic AI coaching.**  
 Ready2Work's Interview Coach is a production-grade interview preparation platform that uses advanced AI to simulate real interview scenarios, analyze your verbal performance, and provide competent, actionable feedback.
 
-![Dashboard Preview](./public/dashboard-preview.png) *(Note: Placeholder for actual screenshot)*
+![Preview Screenshots](./public/dashboard-preview.png) *(Note: Placeholder for actual screenshot)*
 
 ## 🚀 Key Features
 
@@ -14,7 +14,7 @@ Ready2Work's Interview Coach is a production-grade interview preparation platfor
 
 ### 🎙️ Immersive "Glass" Interface
 *   **Voice-First Interaction**: Speak your answers naturally. The AI utilizes **Speech-to-Text** to transcribe and analyze your response in real-time.
-*   **AI Voice**: Questions are narrated by a lifelike AI voice (Google Gemini Audio) for a true conversational feel.
+*   **Accessible Design**: Fully keyboard navigable with semantic HTML and ARIA labels for screen reader support (WCAG best practices).
 *   **Premium UI**: Built with a modern, dark-mode "Glassmorphism" aesthetic using Tailwind CSS and Framer Motion.
 
 ### 📊 Deep Performance Analysis
@@ -22,17 +22,37 @@ Unlike generic tools, Ready2Work provides granular, structured feedback:
 *   **Dimension Scoring**: Scores you on specific competencies (e.g., "Technical Depth", "Communication") relevant *only* to the question asked.
 *   **Logical Feedback Chain**:
     1.  **Missing Signals**: Identifies key professional concepts you missed.
-    2.  **One Big Upgrade**: select the single most critical gap to fix.
+    2.  **One Big Upgrade**: Simplifies feedback into the single most critical gap to fix.
     3.  **"Try Saying This"**: Generates a script demonstrating exactly how to fix that upgrade.
-*   **Conditional Depth**:
-    *   **High Scores (80+)**: Brief validation.
-    *   **Mid Scores (60-79)**: Validation + 1 actionable tip.
-    *   **Low Scores (<60)**: Detailed remediation advice.
 
 ### 📈 Dashboard & History
-*   **Session Persistence**: All sessions are saved (Supabase for users, Local Encrypted Storage for guests).
-*   **Accordion Insights**: Expand any past session directly from the dashboard to review full transcripts and AI analysis without leaving the page.
-*   **Resume Builder**: (Beta) Integrated tools to help you get ready for the application phase.
+*   **Hybrid Storage**:
+    *   **Guests**: Data stored locally in browser (encrypted) for privacy.
+    *   **Users**: Data synced securely to Supabase (PostgreSQL) with Row Level Security (RLS).
+*   **Accordion Insights**: Review full transcripts and AI analysis directly from the dashboard.
+
+---
+
+## 🛡️ Engineering Standards
+
+We prioritize production readiness, security, and maintainability.
+
+### Architecture & Security
+*   **Defense in Depth**: API Endpoints (`/api/*`) are secured with explicit Auth Validation tiers, Payload Size Limits (10MB), and Method enforcement.
+*   **Decision Logging**: Architecture decisions and structural changes are tracked in `DECISION_LOG.md`.
+*   **Constraint Enforced**: Strict separation of concerns between UI Components, Service Logic, and API Handlers.
+
+### Testing Strategy
+We employ a robust testing pyramid using [Vitest](https://vitest.dev/).
+*   **API Coverage**: Critical backend handlers (`init-session`, `generate-questions`, `analyze-answer`) are unit tested with mocked Auth and AI services.
+*   **Component Testing**: Accessible components (`GlassInput`, `DebugInfoModal`) are tested for DOM structure and ARIA compliance.
+
+**Run the test suite:**
+```bash
+npm test
+# or specifically for API
+npx vitest run tests/api/
+```
 
 ---
 
@@ -40,15 +60,15 @@ Unlike generic tools, Ready2Work provides granular, structured feedback:
 
 ### Frontend
 *   **Framework**: [React 19](https://react.dev/) (Vite)
-*   **Language**: [TypeScript](https://www.typescriptlang.org/)
+*   **Language**: [TypeScript](https://www.typescriptlang.org/) (Strict Mode)
 *   **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) + Custom Glass UI System
 *   **Animation**: [Framer Motion](https://www.framer.com/motion/)
-*   **Icons**: [Lucide React](https://lucide.dev/)
 
 ### Backend & AI
 *   **AI Model**: [Google Gemini 2.5 Flash](https://deepmind.google/technologies/gemini/) (Multimodal: Audio/Text)
-*   **Database & Auth**: [Supabase](https://supabase.com/) (PostgreSQL + GoTrue)
-*   **Serverless**: Vercel Serverless Functions (`/api`)
+*   **Database**: [Supabase](https://supabase.com/) (PostgreSQL + RLS)
+*   **Serverless**: Vercel Serverless Functions
+*   **Testing**: Vitest + Node Mocks HTTP
 
 ---
 
@@ -73,7 +93,7 @@ Unlike generic tools, Ready2Work provides granular, structured feedback:
     ```
 
 3.  **Environment Configuration**
-    Create a `.env` file in the root based on `.env.example`:
+    Create a `.env` file in the root:
     ```env
     # Supabase (Auth & Data)
     VITE_SUPABASE_URL=https://your-project.supabase.co
@@ -87,28 +107,13 @@ Unlike generic tools, Ready2Work provides granular, structured feedback:
     ```bash
     npm run dev
     ```
-    Visit `http://localhost:5173` to start practicing.
+    Visit `http://localhost:5173`.
 
 ---
 
-## 📂 Project Structure
-
-```
-/src
- ├── /api            # Serverless functions (Gemini interaction)
- ├── /components     
- │    ├── /ui/glass  # Custom Glassmorphic Component Library
- │    └── ...
- ├── /pages          # Key Views (Dashboard, Interview, Review)
- ├── /services       # Logic Layers (Storage, Gemini, Audio)
- ├── /types          # Shared TypeScript Interfaces (Blueprints, Analysis)
- └── /utils          # Helpers (Encryption, Auth)
-```
-
 ## 🔒 Privacy & Security
-
 *   **Audio Privacy**: Raw user audio is processed for transcription and then **immediately discarded**. It is never stored permanently.
-*   **Guest Mode**: Guest data is stored in **Local Storage** using AES encryption and never touches the cloud database.
+*   **Guest Mode**: Guest data is stored in **Local Storage** using AES encryption.
 *   **Authenticated Mode**: User data is secured via Supabase Row Level Security (RLS).
 
 ## 📄 License

@@ -10,7 +10,7 @@ export type BiggestStruggle =
     | "nerves_anxiety"
     | ""; // Added empty state
 
-export type ChallengeLevel = "warm_up" | "realistic" | "pressure_test";
+export type ChallengeLevel = "warm_up" | "realistic" | "challenge";
 
 export type PrimaryGoal =
     | "build_confidence"
@@ -68,8 +68,8 @@ export const CHALLENGE_LEVEL_OPTIONS: {
             description: "Like a real interview"
         },
         {
-            value: "pressure_test",
-            label: "Pressure test",
+            value: "challenge",
+            label: "Challenge Mode",
             description: "Tougher follow-ups and expectations"
         }
     ];

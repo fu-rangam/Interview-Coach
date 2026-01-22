@@ -15,7 +15,16 @@ vi.mock('@google/genai', () => ({
         OBJECT: 'OBJECT',
         STRING: 'STRING',
         ARRAY: 'ARRAY',
+        NUMBER: 'NUMBER'
     }
+}));
+
+// Mock Auth
+vi.mock('../../api/utils/auth', () => ({
+    validateUser: vi.fn().mockResolvedValue({ id: 'test-user' })
+}));
+vi.mock('../../api/utils/auth.js', () => ({
+    validateUser: vi.fn().mockResolvedValue({ id: 'test-user' })
 }));
 
 describe('Analyze Answer API Handler', () => {
@@ -83,6 +92,22 @@ describe('Analyze Answer API Handler', () => {
             expect(mockRes.status).toHaveBeenCalledWith(400);
             expect(mockRes.json).toHaveBeenCalledWith({ error: 'Invalid input format' });
         });
+
+        it('should reject audio payloads exceeding 10MB', async () => {
+            const largeData = 'a'.repeat(10.1 * 1024 * 1024);
+            mockReq.body = {
+                question: 'test',
+                input: {
+                    mimeType: 'audio/webm',
+                    data: largeData
+                }
+            };
+
+            await handler(mockReq, mockRes);
+
+            expect(mockRes.status).toHaveBeenCalledWith(413);
+            expect(mockRes.json).toHaveBeenCalledWith({ error: 'Payload Too Large' });
+        });
     });
 
     describe('Text Analysis', () => {
@@ -142,7 +167,7 @@ describe('Analyze Answer API Handler', () => {
             expect(mockGenerateContent).toHaveBeenCalledWith(expect.objectContaining({
                 contents: {
                     parts: [
-                        expect.objectContaining({ text: expect.stringContaining('audio answer') }),
+                        expect.objectContaining({ text: expect.stringContaining('Transcribe the audio') }),
                         expect.objectContaining({
                             inlineData: {
                                 mimeType: 'audio/webm',

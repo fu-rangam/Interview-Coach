@@ -6,7 +6,6 @@ import { cn } from '../lib/utils';
 import {
     Activity,
     Target,
-    Share2,
     Download
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -189,9 +188,6 @@ export const InterviewReview: React.FC = () => {
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <GlassButton variant="outline" size="sm" className="flex items-center gap-2">
-                        <Share2 size={16} /> Share
-                    </GlassButton>
                     <GlassButton onClick={handleExport} variant="outline" size="sm" className="flex items-center gap-2">
                         <Download size={16} /> Export
                     </GlassButton>

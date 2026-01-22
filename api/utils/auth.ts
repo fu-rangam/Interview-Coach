@@ -12,23 +12,19 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export async function validateUser(req) {
     const authHeader = req.headers['authorization'];
 
-    // Allow Guest Access (Missing Header)
-    // If no header is present, we assume it's a guest user and proceed without a user object.
-    // The individual handlers can decide if they strictly need a user, but for AI generation, we allow it.
     if (!authHeader) {
-        console.warn("API Access: Guest User (No Auth Header)");
-        return null;
+        throw new Error("Unauthorized: Missing Authorization Header");
     }
 
     const token = authHeader.split(' ')[1];
     if (!token) {
-        throw new Error("Invalid Bearer Token");
+        throw new Error("Unauthorized: Invalid Bearer Token");
     }
 
     const { data: { user }, error } = await supabase.auth.getUser(token);
 
     if (error || !user) {
-        throw new Error("Invalid or Expired Token");
+        throw new Error("Unauthorized: Invalid or Expired Token");
     }
 
     return user;

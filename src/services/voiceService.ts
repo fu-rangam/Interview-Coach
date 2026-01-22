@@ -1,10 +1,16 @@
-// Client-side helper to request natural voice narration from serverless TTS API
-// Converts returned base64 audio to an object URL suitable for playback.
+import { supabase } from './supabase';
 
 export async function synthesizeQuestion(text: string): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`;
+  }
+
   const resp = await fetch('/api/tts', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ text })
   });
   if (!resp.ok) {

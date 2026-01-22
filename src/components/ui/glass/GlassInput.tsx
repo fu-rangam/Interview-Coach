@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from '../../../lib/utils';
-import { motion } from 'framer-motion';
+
 
 interface GlassInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     icon?: React.ReactNode;
@@ -9,11 +9,14 @@ interface GlassInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const GlassInput = React.forwardRef<HTMLInputElement, GlassInputProps>(
-    ({ className, icon, label, error, ...props }, ref) => {
+    ({ className, icon, label, error, id, ...props }, ref) => {
+        const generatedId = React.useId();
+        const inputId = id || generatedId;
+
         return (
             <div className="w-full">
                 {label && (
-                    <label className="block text-sm font-medium text-gray-300 mb-1.5 ml-1">
+                    <label htmlFor={inputId} className="block text-sm font-medium text-gray-300 mb-1.5 ml-1">
                         {label}
                     </label>
                 )}
@@ -23,18 +26,17 @@ export const GlassInput = React.forwardRef<HTMLInputElement, GlassInputProps>(
                             {icon}
                         </div>
                     )}
-                    <motion.input
+                    <input
                         ref={ref}
-                        whileFocus={{ scale: 1.01 }}
+                        id={inputId}
                         className={cn(
                             "w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 outline-none transition-all duration-300",
-                            "focus:border-cyan-500/50 focus:bg-white/10 focus:shadow-[0_0_10px_rgba(6,182,212,0.1)]",
+                            "focus:border-cyan-500/50 focus:bg-white/10 focus:shadow-[0_0_10px_rgba(6,182,212,0.1)] focus:scale-[1.01]",
                             icon && "pl-10",
                             error && "border-red-500/50 focus:border-red-500",
                             className
                         )}
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        {...(props as any)}
+                        {...props}
                     />
                 </div>
                 {error && (

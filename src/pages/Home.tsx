@@ -64,7 +64,7 @@ const Home: React.FC = () => {
                             Access our extensive e-learning library to upskill and certifications to boost your profile.
                         </p>
                         <GlassButton
-                            variant="secondary"
+                            variant="default"
                             onClick={() => user ? navigate('/training') : navigate('/auth')}
                             className="w-full"
                         >
@@ -84,7 +84,7 @@ const Home: React.FC = () => {
                             Create professional, ATS-friendly resumes in minutes with our AI-powered builder.
                         </p>
                         <GlassButton
-                            variant="secondary"
+                            variant="default"
                             onClick={() => user ? navigate('/resume-builder') : navigate('/auth')}
                             className="w-full"
                         >
@@ -94,7 +94,7 @@ const Home: React.FC = () => {
 
                     {/* Interview Prep Module (Active) */}
                     <GlassCard
-                        className="p-8 flex flex-col items-center text-center group hover:bg-white/5 transition-all duration-300 border-cyan-500/30 hover:border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.1)] hover:shadow-[0_0_40px_rgba(6,182,212,0.2)]"
+                        className="p-8 flex flex-col items-center text-center group hover:bg-white/5 transition-all duration-300 border-cyan-500/30 hover:border-cyan-400/50 shadow-glow-cyan"
                     >
                         <div className="w-16 h-16 rounded-full bg-linear-to-br from-cyan-500/20 to-purple-600/20 flex items-center justify-center mb-6 border border-cyan-500/20 group-hover:scale-110 transition-transform duration-300">
                             <Mic size={32} className="text-cyan-400" />

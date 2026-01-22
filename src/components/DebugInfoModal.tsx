@@ -1,9 +1,10 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
+// // import rehypeRaw from 'rehype-raw'; // Removed for XSS remediation // Removed for XSS remediation
 import { GlassCard } from './ui/glass/GlassCard';
-import { X, Copy, Database } from 'lucide-react';
+import { X, Copy, Database, Check } from 'lucide-react';
 import { InterviewSession } from '../types';
+import { cn } from '../lib/utils';
 
 interface DebugInfoModalProps {
     isOpen: boolean;
@@ -17,8 +18,11 @@ export const DebugInfoModal: React.FC<DebugInfoModalProps> = ({ isOpen, onClose,
     // Helper: Generate Markdown Report
     const generateMarkdownReport = () => {
         const { blueprint, questions, currentQuestionIndex, answers, intakeData } = session;
-        const currentQ = questions[currentQuestionIndex];
-        const currentAnswer = answers[currentQ.id];
+        // Safe access to current question
+        const currentQ = (questions && questions.length > currentQuestionIndex) ? questions[currentQuestionIndex] : null;
+        if (!currentQ) return "No question active.";
+
+        const currentAnswer = answers ? answers[currentQ.id] : undefined;
         const analysis = currentAnswer?.analysis;
 
         let report = `# Competency-Driven Interview Session Debug Report\n\n`;
@@ -86,9 +90,10 @@ export const DebugInfoModal: React.FC<DebugInfoModalProps> = ({ isOpen, onClose,
         report += `================================================================================\n`;
         report += `# 4. Question Plan (B1)\n`;
         report += `================================================================================\n\n`;
+
         questions?.forEach((q) => {
-            const typeLabel = q.type ? `<span class="text-cyan-400">${q.type}</span>` : 'N/A';
-            const diffLabel = q.difficulty ? `<span class="text-purple-400">${q.difficulty}</span>` : 'N/A';
+            const typeLabel = q.type ? `[${q.type}]` : 'N/A';
+            const diffLabel = q.difficulty ? `[${q.difficulty}]` : 'N/A';
             report += `**[${q.id}]:** ${q.competencyId || 'N/A'} | ${typeLabel} | ${diffLabel}\n\n`;
             report += `**Intent:** ${q.intent || 'N/A'}\n\n`;
             if (q.tips && q.tips.pointsToCover && q.tips.pointsToCover.length > 0) {
@@ -224,6 +229,7 @@ export const DebugInfoModal: React.FC<DebugInfoModalProps> = ({ isOpen, onClose,
 
     // Ref for the rendered content
     const contentRef = React.useRef<HTMLDivElement>(null);
+    const [isCopied, setIsCopied] = React.useState(false);
 
     const copyToClipboard = async () => {
         if (contentRef.current) {
@@ -238,9 +244,17 @@ export const DebugInfoModal: React.FC<DebugInfoModalProps> = ({ isOpen, onClose,
                         'text/plain': new Blob([plainText], { type: 'text/plain' }),
                     }),
                 ]);
+                setIsCopied(true);
+                setTimeout(() => setIsCopied(false), 2000);
             } catch {
                 // Fallback to plain text if HTML copy fails
-                await navigator.clipboard.writeText(plainText);
+                try {
+                    await navigator.clipboard.writeText(plainText);
+                    setIsCopied(true);
+                    setTimeout(() => setIsCopied(false), 2000);
+                } catch (err) {
+                    console.error('Failed to copy', err);
+                }
             }
         }
     };
@@ -259,14 +273,23 @@ export const DebugInfoModal: React.FC<DebugInfoModalProps> = ({ isOpen, onClose,
                     <div className="flex items-center gap-2">
                         <button
                             onClick={copyToClipboard}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition-colors border border-white/10 text-xs font-medium"
+                            disabled={isCopied}
+                            className={cn(
+                                "flex items-center gap-2 px-3 py-1.5 rounded-full transition-all border text-xs font-medium",
+                                isCopied
+                                    ? "bg-green-500/20 text-green-400 border-green-500/30"
+                                    : "bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border-white/10"
+                            )}
                             title="Copy Markdown Report"
+                            aria-label="Copy Markdown Report"
                         >
-                            <Copy size={16} /> Copy Report
+                            {isCopied ? <Check size={16} /> : <Copy size={16} />}
+                            {isCopied ? "Copied!" : "Copy Report"}
                         </button>
                         <button
                             onClick={onClose}
                             className="p-2 hover:bg-red-500/20 rounded-full text-zinc-400 hover:text-red-400 transition-colors"
+                            aria-label="Close Debug View"
                         >
                             <X size={20} />
                         </button>
@@ -276,7 +299,6 @@ export const DebugInfoModal: React.FC<DebugInfoModalProps> = ({ isOpen, onClose,
                 {/* Content - Rendered Markdown */}
                 <div ref={contentRef} className="flex-1 overflow-auto p-6 custom-scrollbar bg-black/40">
                     <ReactMarkdown
-                        rehypePlugins={[rehypeRaw]}
                         components={{
                             h1: ({ children }) => (
                                 <h1 className="text-2xl font-bold text-zinc-400 mb-4 pb-2">

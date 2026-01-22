@@ -71,7 +71,7 @@ export default async function handler(req, res) {
     DIFFICULTY ADJUSTMENT (Level: ${level}):
     - ${level === 'warm_up' ? "Keep questions friendly, standard, and confidence-building. Avoid edge cases." : ""}
     - ${level === 'realistic' ? "Standard interview difficulty. Mix of standard and behavioral questions." : ""}
-    - ${level === 'pressure_test' ? "HARD MODE. Ask complex, multi-layered questions. Test edge cases and stress-test their knowledge." : ""}
+    - ${level === 'challenge' ? "HARD MODE. Ask complex, multi-layered questions. Test edge cases and stress-test their knowledge." : ""}
             `;
         }
 
@@ -143,8 +143,8 @@ CONSTRAINTS:
         } else {
             // Legacy / Quick Flow
             promptInfo = jobDescription
-                ? `Generate 5 interview questions for a ${role} position based on this job description:\n\n${jobDescription}\n\nQuestions should test skills mentioned in the JD. Return strictly JSON.`
-                : `Generate 5 common interview questions for a ${role} position. The questions should be diverse (behavioral, technical, situational). Return strictly JSON.`;
+                ? `Generate 5 interview questions for a ${role} position based on this job description:\n\n${jobDescription}\n\nQuestions should test skills mentioned in the JD. Return strictly JSON.\nCRITICAL: Ensure that each question covers a distinct aspect or scenario. Avoid generating questions that overlap significantly in the situation or skill being tested (e.g. do not ask two questions about 'dealing with an angry customer' or 'handling conflict').`
+                : `Generate 5 common interview questions for a ${role} position. The questions should be diverse (behavioral, technical, situational). Return strictly JSON.\nCRITICAL: Ensure that each question covers a distinct aspect or scenario. Avoid generating questions that overlap significantly in the situation or skill being tested (e.g. do not ask two questions about 'dealing with an angry customer' or 'handling conflict').`;
 
             schema = {
                 type: Type.ARRAY,

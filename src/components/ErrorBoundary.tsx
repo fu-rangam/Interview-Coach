@@ -60,7 +60,7 @@ export class ErrorBoundary extends Component<Props, State> {
                         )}
 
                         <div className="flex gap-4 justify-center">
-                            <GlassButton onClick={() => window.location.reload()} variant="secondary" className="flex items-center gap-2">
+                            <GlassButton onClick={() => window.location.reload()} variant="outline" className="flex items-center gap-2">
                                 <RotateCcw size={16} /> Reload
                             </GlassButton>
                             <GlassButton onClick={this.handleReset} className="flex items-center gap-2">

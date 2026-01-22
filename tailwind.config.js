@@ -15,6 +15,21 @@ export default {
                 md: "calc(var(--radius) - 2px)",
                 sm: "calc(var(--radius) - 4px)",
             },
+            boxShadow: {
+                // Elevation System (Paper/Surface)
+                'elevation-1': '0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 0 0 rgba(255, 255, 255, 0.1) inset', // Low
+                'elevation-2': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 0 0 rgba(255, 255, 255, 0.1) inset', // Medium
+                'elevation-3': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 1px 0 0 rgba(255, 255, 255, 0.1) inset', // High
+                'console': '0 -1px 1px rgba(255,255,255,0.1), 0 20px 50px -10px rgba(0,0,0,0.8)', // Deep raised console
+
+                // Glows (Semantic)
+                'glow-cyan': '0 0 20px rgba(6, 182, 212, 0.5)',
+                'glow-cyan-sm': '0 0 10px rgba(6, 182, 212, 0.5)',
+                'glow-cyan-lg': '0 0 40px rgba(6, 182, 212, 0.4)',
+                'glow-purple': '0 0 20px rgba(147, 51, 234, 0.5)',
+                'glow-red': '0 0 40px rgba(239, 68, 68, 0.4)',
+                'glow-green': '0 0 20px rgba(34, 197, 94, 0.5)',
+            },
             colors: {
                 border: "hsl(var(--border))",
                 input: "hsl(var(--input))",

@@ -92,3 +92,53 @@ Explicit ID allows components to subscribe to `session.id` changes and force-res
 
 **Revisit if:**
 We move to a fully server-side session management model where local ID is irrelevant.
+
+### [0003] Move Client-Side Encryption to Per-Device Key
+**Status:** Accepted
+**Date:** 2026-01-22
+
+**Context:**
+Using VITE_SUPABASE_ANON_KEY for client-side encryption provides zero security against anyone with the source code.
+
+**Decision:**
+Generate a unique random key per browser (stored in localStorage) and use it for encrypting sensitive session data. Maintain backward compatibility by attempting decryption with the legacy key if the new key fails.
+
+**Alternatives considered:**
+1) Server-side encryption (Requires auth for all users, breaks Guest mode).
+2) User-provided password (Too much friction).
+
+**Why this choice:**
+Significantly prevents "global key" attacks while maintaining Guest persistence functionality.
+
+**Consequences / tradeoffs:**
+- Pros: Unique key per user, better obfuscation.
+- Cons: Key is still in localStorage (vulnerable to XSS/local access).
+
+**Revisit if:**
+We implement fully authenticated-only sessions or server-side session management for guests.
+
+
+### [0004] Enforce Request Size Limit for Audio Analysis
+**Status:** Accepted
+**Date:** 2026-01-22
+
+**Context:**
+The 'analyze-answer' API endpoint accepted base64 audio payloads of unlimited size, posing a potential DoS / memory abuse risk.
+
+**Decision:**
+Enforce a hard limit of 10MB for \input.data\ (base64) in the \nalyze-answer\ endpoint. Return 413 Payload Too Large if exceeded.
+
+**Alternatives considered:**
+1) Configure Vercel/Next.js body parser limits (Might be too broad or bypassed if custom parser is used).
+2) Stream processing (Too complex for current architecture).
+
+**Why this choice:**
+Simple application-level check protecting the specific heavy resource (Gemini API / Memory).
+
+**Consequences / tradeoffs:**
+- Pros: Prevents massive payloads.
+- Cons: Rejects valid >10MB recordings (which would be >7 mins, unlikely for interview answers).
+
+**Revisit if:**
+Users legitimately need to upload very long interview answers.
+

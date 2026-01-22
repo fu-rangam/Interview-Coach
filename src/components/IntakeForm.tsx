@@ -29,7 +29,7 @@ const STEPS = [
     {
         id: 'intro',
         title: "Let's set you up to win.",
-        subtitle: "I'm going to ask a few quick questions so this session matches your goals—whether you want a warm-up, realistic practice, or a pressure test. Ready? Let's go."
+        subtitle: "I'm going to ask a few quick questions so this session matches your goals—whether you want a warm-up, realistic practice, or a tougher challenge. Ready? Let's go."
     },
     {
         id: 'stage',
@@ -48,17 +48,17 @@ const STEPS = [
     },
     {
         id: 'challenge',
-        title: "How hard should I push you?",
-        subtitle: "Warm-up is confidence building—I'll go easy. Realistic is normal interview mode. Pressure test? I'll throw curveballs and push for depth. Your call."
+        title: "How challenging should the session be?",
+        subtitle: "Warm-up is confidence building—I'll go easy. Realistic is normal interview mode. Challenge Mode? I'll throw curveballs and push for depth. Your call."
     },
     {
         id: 'goal',
-        title: "What's your main goal today?",
+        title: "What's your primary goal this session?",
         subtitle: "Are you trying to get more structured, work on conciseness, practice STAR stories, or something else? I'll tailor my feedback to match."
     },
     {
         id: 'mustPractice',
-        title: "Any specific questions you want to include?",
+        title: "Any specific questions to include?",
         subtitle: "If there are questions you know are coming—or ones you dread—type them here (one per line). I'll make sure we cover them. This is optional, so feel free to skip if you're not sure."
     }
 ];
@@ -112,11 +112,14 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
 
             case 'stage':
                 return (
-                    <GlassRadioGroup
-                        options={INTERVIEW_STAGE_OPTIONS}
-                        value={formData.stage}
-                        onChange={(val) => updateField('stage', val as InterviewStage)}
-                    />
+                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar px-2">
+                        <GlassRadioGroup
+                            options={INTERVIEW_STAGE_OPTIONS}
+                            value={formData.stage}
+                            onChange={(val) => updateField('stage', val as InterviewStage)}
+                            columns={1}
+                        />
+                    </div>
                 );
 
             case 'confidence':
@@ -146,9 +149,10 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
                                 value={formData.confidenceScore}
                                 onChange={(e) => updateField('confidenceScore', Number(e.target.value) as ConfidenceScore)}
                                 className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-500"
+                                aria-label="Confidence Score"
                             />
                         </div>
-                        <div className="flex justify-between text-sm text-gray-400">
+                        <div className="flex justify-between text-lg text-gray-400 font-medium">
                             <span>😰 Anxious</span>
                             <span>😐 Neutral</span>
                             <span>💪 Ready</span>
@@ -158,34 +162,38 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
 
             case 'struggle':
                 return (
-                    <GlassRadioGroup
-                        options={BIGGEST_STRUGGLE_OPTIONS}
-                        value={formData.biggestStruggle}
-                        onChange={(val) => updateField('biggestStruggle', val as BiggestStruggle)}
-                    />
+                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar px-2">
+                        <GlassRadioGroup
+                            options={BIGGEST_STRUGGLE_OPTIONS}
+                            value={formData.biggestStruggle}
+                            onChange={(val) => updateField('biggestStruggle', val as BiggestStruggle)}
+                            columns={1}
+                        />
+                    </div>
                 );
 
             case 'challenge':
                 return (
-                    <div className="space-y-3">
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar px-2">
                         <GlassRadioGroup
                             options={CHALLENGE_LEVEL_OPTIONS}
                             value={formData.challengeLevel}
                             onChange={(val) => updateField('challengeLevel', val as ChallengeLevel)}
+                            columns={1}
                         />
-                        <p className="text-sm text-gray-400 text-center">
-                            {CHALLENGE_LEVEL_OPTIONS.find(o => o.value === formData.challengeLevel)?.description}
-                        </p>
                     </div>
                 );
 
             case 'goal':
                 return (
-                    <GlassRadioGroup
-                        options={PRIMARY_GOAL_OPTIONS}
-                        value={formData.primaryGoal}
-                        onChange={(val) => updateField('primaryGoal', val as PrimaryGoal)}
-                    />
+                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar px-2">
+                        <GlassRadioGroup
+                            options={PRIMARY_GOAL_OPTIONS}
+                            value={formData.primaryGoal}
+                            onChange={(val) => updateField('primaryGoal', val as PrimaryGoal)}
+                            columns={1}
+                        />
+                    </div>
                 );
 
             case 'mustPractice':
@@ -206,90 +214,149 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
     const isLastStep = currentStep === STEPS.length - 1;
     const step = STEPS[currentStep];
 
-    return (
-        <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn">
-            <GlassCard className="p-0">
-                <div className="p-6 md:p-10">
-                    {/* Progress indicator */}
-                    <div className="flex justify-center gap-1.5 mb-8">
-                        {STEPS.map((_, idx) => (
-                            <div
-                                key={idx}
-                                className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentStep
-                                    ? 'w-8 bg-cyan-400'
-                                    : idx < currentStep
-                                        ? 'w-4 bg-cyan-600'
-                                        : 'w-4 bg-gray-700'
-                                    }`}
-                            />
-                        ))}
-                    </div>
 
-                    {/* Step content with animation */}
+    // --- Helper for buttons to reuse logic ---
+    const renderPrevButton = () => (
+        <button
+            onClick={goPrev}
+            disabled={currentStep === 0}
+            className={`shrink-0 p-2 rounded-full transition-all duration-200 group ${currentStep === 0
+                ? 'opacity-0 pointer-events-none'
+                : 'hover:bg-white/5 text-gray-500 hover:text-cyan-400'
+                }`}
+            aria-label="Previous Step"
+        >
+            <div className={`p-3 rounded-full border-2 transition-all duration-300 ${currentStep === 0 ? 'border-gray-800' : 'border-gray-700/50 group-hover:border-cyan-400/50 group-hover:shadow-glow-cyan'}`}>
+                <ChevronLeft size={32} strokeWidth={1.5} />
+            </div>
+        </button>
+    );
+
+    const renderNextButton = () => (
+        <button
+            onClick={goNext}
+            disabled={!canProceed()}
+            className={`shrink-0 p-2 rounded-full transition-all duration-200 group ${!canProceed()
+                ? 'opacity-30 cursor-not-allowed'
+                : 'hover:bg-white/5 text-gray-400 hover:text-cyan-400'
+                }`}
+            aria-label={isLastStep ? "Start Session" : "Next Step"}
+        >
+            <div className={`p-3 rounded-full border-2 transition-all duration-300 ${!canProceed()
+                ? 'border-gray-800'
+                : isLastStep
+                    ? 'border-cyan-500 bg-cyan-500/10 shadow-glow-cyan animate-pulse group-hover:animate-none'
+                    : 'border-gray-700/50 group-hover:border-cyan-400/50 group-hover:shadow-glow-cyan'
+                }`}>
+                {isLastStep ? (
+                    <Play size={32} strokeWidth={1.5} className="ml-1 fill-cyan-400/20" />
+                ) : (
+                    <ChevronRight size={32} strokeWidth={1.5} />
+                )}
+            </div>
+        </button>
+    );
+
+    // --- Layout 1: Intro Card (Original Centered Layout) ---
+    if (step.id === 'intro') {
+        return (
+            <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4 animate-fadeIn min-h-[500px]">
+                {/* Prev (Hidden but keeps spacing if needed, though intro usually has none. keeping for consistency) */}
+                {renderPrevButton()}
+
+                {/* Main Content */}
+                <div className="flex-1 flex flex-col items-center justify-center relative">
+                    <motion.div
+                        key="intro"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="w-full max-w-4xl flex flex-col items-center text-center"
+                    >
+                        <h2 className="text-5xl md:text-6xl font-display font-bold text-zinc-200 mb-6 tracking-tight">
+                            {step.title}
+                        </h2>
+                        <p className="text-xl text-cyan-400 mb-10 max-w-2xl leading-relaxed">
+                            {step.subtitle}
+                        </p>
+                    </motion.div>
+                </div>
+
+                {renderNextButton()}
+            </div>
+        );
+    }
+
+    // --- Layout 2: Question Cards (Split 50% Page View) ---
+    // User Request: 50% of page dimension, Centered.
+    // Top Card: Title/Subtitle. Bottom Card: Content + Arrows vertically centered.
+    return (
+        <div className="w-[80vw] lg:w-[60vw] h-[70vh] lg:h-[60vh] mx-auto flex flex-col animate-fadeIn">  {/* Using 60vw/60vh as a safe "50% page" approximation that is distinct */}
+
+            {/* Top Nested "Invisible" Card: Title & Subtitle */}
+            <div className="w-full shrink-0 flex flex-col items-center text-center mb-6">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={`title-${currentStep}`}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: 0.3 }}
+                        className="w-full"
+                    >
+                        <h2 className="text-4xl md:text-5xl font-display font-bold text-zinc-200 mb-2 tracking-tight">
+                            {step.title}
+                        </h2>
+                        <p className="text-lg text-cyan-400 max-w-3xl mx-auto leading-relaxed">
+                            {step.subtitle}
+                        </p>
+                    </motion.div>
+                </AnimatePresence>
+            </div>
+
+            {/* Bottom Nested "Invisible" Card: Content + Navigation */}
+            <div className="flex-1 min-h-0 flex items-center gap-4 w-full">
+
+                {/* Left Arrow (Vertically centered relative to this bottom section) */}
+                {renderPrevButton()}
+
+                {/* Scrollable Content Area */}
+                <div className="flex-1 h-full min-h-0 relative flex flex-col justify-center">
                     <AnimatePresence mode="wait">
                         <motion.div
-                            key={currentStep}
+                            key={`content-${currentStep}`}
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.2 }}
-                            className="min-h-[200px] flex flex-col"
+                            transition={{ duration: 0.3 }}
+                            className="w-full h-full flex flex-col justify-center"
                         >
-                            {/* Title */}
-                            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 text-center">
-                                {step.title}
-                            </h2>
-
-                            {/* Subtitle / Coach narrative */}
-                            <p className="text-gray-400 text-center mb-8 max-w-lg mx-auto leading-relaxed">
-                                {step.subtitle}
-                            </p>
-
-                            {/* Input field */}
-                            <div className="flex-1 flex items-center justify-center">
-                                <div className="w-full">
-                                    {renderStepContent()}
-                                </div>
+                            {/* We assume renderStepContent manages its own scrolling now, or we wrap it here */}
+                            {/* The renderStepContent already has max-h wrappers, we might need to adjust them to fit 'h-full' */}
+                            <div className="w-full max-w-5xl mx-auto">
+                                {renderStepContent()}
                             </div>
                         </motion.div>
                     </AnimatePresence>
                 </div>
 
-                {/* Navigation footer */}
-                <div className="p-6 bg-black/20 border-t border-white/5 flex items-center justify-between">
-                    {/* Previous button */}
-                    <button
-                        onClick={goPrev}
-                        disabled={currentStep === 0}
-                        className={`flex items-center gap-1 px-4 py-2 rounded-lg transition-all ${currentStep === 0
-                            ? 'text-gray-600 cursor-not-allowed'
-                            : 'text-gray-400 hover:text-white hover:bg-white/5'
-                            }`}
-                    >
-                        <ChevronLeft size={18} />
-                        Previous
-                    </button>
+                {/* Right Arrow */}
+                {renderNextButton()}
+            </div>
 
-                    {/* Next / Start button */}
-                    <GlassButton
-                        onClick={goNext}
-                        disabled={!canProceed()}
-                        className="bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 border-none shadow-lg shadow-cyan-900/20 whitespace-nowrap"
-                    >
-                        {isLastStep ? (
-                            <>
-                                <Play size={18} className="mr-2 fill-current" />
-                                Start Session
-                            </>
-                        ) : (
-                            <>
-                                Next
-                                <ChevronRight size={18} className="ml-1" />
-                            </>
-                        )}
-                    </GlassButton>
-                </div>
-            </GlassCard>
+            {/* Progress Bar (Optional: Putting it at the very bottom or top of everything? Keeping it minimal/hidden for now or could place it at bottom edge) */}
+            <div className="flex justify-center gap-2 mt-4 shrink-0">
+                {STEPS.map((_, idx) => (
+                    <div
+                        key={idx}
+                        className={`h-1 rounded-full transition-all duration-500 ${idx === currentStep
+                            ? 'w-8 bg-cyan-400/80 shadow-glow-cyan'
+                            : idx < currentStep
+                                ? 'w-2 bg-cyan-900/50'
+                                : 'w-1 bg-white/10'
+                            }`}
+                    />
+                ))}
+            </div>
         </div>
     );
 };
