@@ -3,13 +3,12 @@ import { pathToFileURL } from 'url';
 import { defineConfig, loadEnv, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
-console.log("✅ VITE CONFIG LOADED - If you see this, the file is active!");
+console.log('✅ VITE CONFIG LOADED - If you see this, the file is active!');
 
 const apiPlugin = (): Plugin => ({
   name: 'api-proxy-plugin',
   configureServer(server) {
     server.middlewares.use(async (req: any, res: any, next) => {
-
       if (req.url?.startsWith('/api/')) {
         console.log(`[Vite Middleware] Intercepting: ${req.method} ${req.url}`);
 
@@ -38,9 +37,8 @@ const apiPlugin = (): Plugin => ({
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify(data));
               return wrappedRes;
-            }
+            },
           };
-
 
           // 3. Resolve and Call Handler
           const url = new URL(req.url, 'http://localhost');
@@ -63,9 +61,8 @@ const apiPlugin = (): Plugin => ({
           }
 
           await handler(req, wrappedRes);
-
         } catch (error: any) {
-          console.error("[Vite Middleware] Error:", error);
+          console.error('[Vite Middleware] Error:', error);
           if (error.code === 'ERR_MODULE_NOT_FOUND') {
             res.statusCode = 404;
             res.end(JSON.stringify({ error: `Endpoint not found: ${req.url}` }));
@@ -85,18 +82,24 @@ export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   const env = loadEnv(mode, process.cwd(), '');
-  process.env.GEMINI_API_KEY = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY;
+  process.env.GEMINI_API_KEY =
+    env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY;
   // Inject Supabase keys for API handlers running in SSR context
   process.env.VITE_SUPABASE_URL = env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  process.env.VITE_SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-  process.env.NEXT_PUBLIC_SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  process.env.VITE_SUPABASE_ANON_KEY =
+    env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  process.env.NEXT_PUBLIC_SUPABASE_URL =
+    env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY =
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   const key = process.env.GEMINI_API_KEY;
   if (key) {
-    console.log(`[Vite Config] GEMINI_API_KEY loaded. Length: ${key?.length}, Starts with: ${key?.substring(0, 5)}...`);
+    console.log(
+      `[Vite Config] GEMINI_API_KEY loaded. Length: ${key?.length}, Starts with: ${key?.substring(0, 5)}...`
+    );
   } else {
-    console.warn("[Vite Config] GEMINI_API_KEY could not be found in env!");
+    console.warn('[Vite Config] GEMINI_API_KEY could not be found in env!');
   }
 
   return {
@@ -108,7 +111,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
-      }
-    }
+      },
+    },
   };
 });

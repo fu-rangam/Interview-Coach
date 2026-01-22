@@ -1,5 +1,6 @@
-import { GoogleGenAI } from "@google/genai";
-import { validateUser } from "./utils/auth.js";
+import { GoogleGenAI } from '@google/genai';
+import { validateUser } from './utils/auth.js';
+import { logger } from '../src/utils/logger';
 
 // --- In-Memory Rate Limiter (Container Scope) ---
 const RATE_LIMIT_WINDOW = 10 * 1000; // 10 seconds
@@ -9,7 +10,7 @@ const requestLog = new Map<string, number[]>();
 const cleanupRateLimits = () => {
   const now = Date.now();
   for (const [ip, timestamps] of requestLog.entries()) {
-    const validTimestamps = timestamps.filter(ts => now - ts < RATE_LIMIT_WINDOW);
+    const validTimestamps = timestamps.filter((ts) => now - ts < RATE_LIMIT_WINDOW);
     if (validTimestamps.length === 0) {
       requestLog.delete(ip);
     } else {
@@ -18,7 +19,7 @@ const cleanupRateLimits = () => {
   }
 };
 
-const checkRateLimit = (ip) => {
+const checkRateLimit = (ip: string) => {
   cleanupRateLimits();
   const now = Date.now();
   const timestamps = requestLog.get(ip) || [];
@@ -32,7 +33,7 @@ const checkRateLimit = (ip) => {
   return true;
 };
 
-export default async function handler(req, res) {
+export default async function handler(req: any, res: any) {
   // CORS Preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -45,10 +46,12 @@ export default async function handler(req, res) {
     // 1. Rate Limiting (IP base fallback)
     // ...existing code...
     // Use x-forwarded-for if available (Vercel/Proxy), else socket address
-    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
+    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown')
+      .split(',')[0]
+      .trim();
 
     if (!checkRateLimit(ip)) {
-      console.warn(`[TTS] Rate limit exceeded for IP: ${ip}`);
+      logger.warn(`[TTS] Rate limit exceeded for IP: ${ip}`);
       return res.status(429).json({ error: 'Too Many Requests. Please wait a moment.' });
     }
 
@@ -69,7 +72,7 @@ export default async function handler(req, res) {
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.error("Server Error: GEMINI_API_KEY is missing");
+      logger.error('Server Error: GEMINI_API_KEY is missing');
       return res.status(500).json({ error: 'Server configuration error: Missing API Key' });
     }
 
@@ -81,25 +84,25 @@ export default async function handler(req, res) {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-preview-tts',
       contents: {
-        parts: [{ text: wrapped }]
+        parts: [{ text: wrapped }],
       },
       config: {
         responseModalities: ['AUDIO'],
         speechConfig: {
           voiceConfig: {
             prebuiltVoiceConfig: {
-              voiceName: 'Sulafat'
-            }
-          }
-        }
-      }
+              voiceName: 'Sulafat',
+            },
+          },
+        },
+      },
     });
 
     const candidate = response.candidates?.[0];
     const part = candidate?.content?.parts?.[0];
 
     if (!part?.inlineData?.data) {
-      console.error("[TTS] Gemini API response missing audio data");
+      logger.error('[TTS] Gemini API response missing audio data');
       return res.status(500).json({ error: 'Failed to generate audio from AI' });
     }
 
@@ -111,7 +114,7 @@ export default async function handler(req, res) {
     if (mimeType === 'audio/mpeg' || mimeType === 'audio/mp3') {
       return res.status(200).json({
         audioBase64: base64Audio,
-        mimeType: 'audio/mpeg'
+        mimeType: 'audio/mpeg',
       });
     }
 
@@ -122,20 +125,19 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         audioBase64: wavBuffer.toString('base64'),
-        mimeType: 'audio/wav'
+        mimeType: 'audio/wav',
       });
     }
 
     // Case C: Unknown format -> Try sending as is (fallback)
-    console.warn("[TTS] Unexpected mimeType:", mimeType);
+    logger.warn('[TTS] Unexpected mimeType: ' + mimeType);
     return res.status(200).json({
       audioBase64: base64Audio,
-      mimeType: mimeType
+      mimeType: mimeType,
     });
-
-  } catch (error) {
-    console.error("[TTS] Server Error:", error);
-    if (error.message.includes("Authorization") || error.message.includes("Token")) {
+  } catch (error: any) {
+    logger.error('[TTS] Server Error', error);
+    if (error.message.includes('Authorization') || error.message.includes('Token')) {
       return res.status(401).json({ error: error.message });
     }
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
@@ -144,7 +146,7 @@ export default async function handler(req, res) {
 
 // --- Helper: Create WAV Header (Node.js Buffer Version) ---
 // Specs for Gemini 2.5 Flash TTS: 24kHz, 1 Channel (Mono), 16-bit PCM
-function createWavHeader(dataLength) {
+function createWavHeader(dataLength: any) {
   const buffer = Buffer.alloc(44);
 
   // RIFF chunk descriptor
@@ -155,11 +157,11 @@ function createWavHeader(dataLength) {
   // fmt sub-chunk
   buffer.write('fmt ', 12);
   buffer.writeUInt32LE(16, 16); // Subchunk1Size (16 for PCM)
-  buffer.writeUInt16LE(1, 20);  // AudioFormat (1 for PCM)
-  buffer.writeUInt16LE(1, 22);  // NumChannels (1)
+  buffer.writeUInt16LE(1, 20); // AudioFormat (1 for PCM)
+  buffer.writeUInt16LE(1, 22); // NumChannels (1)
   buffer.writeUInt32LE(24000, 24); // SampleRate (24kHz)
   buffer.writeUInt32LE(24000 * 2, 28); // ByteRate (SampleRate * BlockAlign)
-  buffer.writeUInt16LE(2, 32);  // BlockAlign
+  buffer.writeUInt16LE(2, 32); // BlockAlign
   buffer.writeUInt16LE(16, 34); // BitsPerSample
 
   // data sub-chunk

@@ -5,28 +5,31 @@ import { FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const ResumeUploader: React.FC = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    return (
-        <div className="max-w-4xl mx-auto p-6 space-y-8">
-            <div className="flex flex-col gap-2 items-center text-center">
-                <h1 className="text-4xl font-bold text-white mb-4">Resume Builder</h1>
-                <p className="text-xl text-gray-400 max-w-2xl">
-                    Our AI-powered Resume Builder is coming soon! Create professional, ATS-friendly resumes in minutes.
-                </p>
+  return (
+    <div className="max-w-4xl mx-auto p-6 space-y-8">
+      <div className="flex flex-col gap-2 items-center text-center">
+        <h1 className="text-4xl font-bold text-white mb-4">Resume Builder</h1>
+        <p className="text-xl text-gray-400 max-w-2xl">
+          Our AI-powered Resume Builder is coming soon! Create professional, ATS-friendly resumes in
+          minutes.
+        </p>
 
-                <GlassCard className="mt-12 p-12 flex flex-col items-center justify-center border-dashed border-2 border-white/10 w-full max-w-xl">
-                    <div className="w-24 h-24 rounded-full bg-linear-to-br from-emerald-500/20 to-teal-600/20 flex items-center justify-center mb-8 border border-emerald-500/20">
-                        <FileText size={48} className="text-emerald-400" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-4">Under Construction</h3>
-                    <p className="text-gray-400 mb-8">We're working hard to bring you the best resume building experience.</p>
+        <GlassCard className="mt-12 p-12 flex flex-col items-center justify-center border-dashed border-2 border-white/10 w-full max-w-xl">
+          <div className="w-24 h-24 rounded-full bg-linear-to-br from-emerald-500/20 to-teal-600/20 flex items-center justify-center mb-8 border border-emerald-500/20">
+            <FileText size={48} className="text-emerald-400" />
+          </div>
+          <h3 className="text-2xl font-bold text-white mb-4">Under Construction</h3>
+          <p className="text-gray-400 mb-8">
+            We're working hard to bring you the best resume building experience.
+          </p>
 
-                    <GlassButton onClick={() => navigate('/dashboard')} variant="outline">
-                        Back to Dashboard
-                    </GlassButton>
-                </GlassCard>
-            </div>
-        </div>
-    );
+          <GlassButton onClick={() => navigate('/dashboard')} variant="outline">
+            Back to Dashboard
+          </GlassButton>
+        </GlassCard>
+      </div>
+    </div>
+  );
 };

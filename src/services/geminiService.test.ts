@@ -13,9 +13,9 @@ import { CompetencyBlueprint, QuestionPlan } from '../types';
 vi.mock('./supabase', () => ({
   supabase: {
     auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: { access_token: 'test-token' } } })
-    }
-  }
+      getSession: vi.fn().mockResolvedValue({ data: { session: { access_token: 'test-token' } } }),
+    },
+  },
 }));
 
 describe('geminiService', () => {
@@ -77,23 +77,26 @@ describe('geminiService', () => {
           ratingBands: {
             Developing: { min: 0, max: 2 },
             Good: { min: 3, max: 4 },
-            Strong: { min: 5, max: 5 }
-          }
-        }
+            Strong: { min: 5, max: 5 },
+          },
+        },
       };
 
       fetchMock.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockBlueprint
+        json: async () => mockBlueprint,
       });
 
       const result = await generateBlueprint('Dev', 'JD', 'Mid');
 
       expect(result).toEqual(mockBlueprint);
-      expect(fetchMock).toHaveBeenCalledWith('/api/generate-blueprint', expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ role: 'Dev', jobDescription: 'JD', seniority: 'Mid' })
-      }));
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/generate-blueprint',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ role: 'Dev', jobDescription: 'JD', seniority: 'Mid' }),
+        })
+      );
     });
 
     it('should return null on error', async () => {
@@ -108,21 +111,24 @@ describe('geminiService', () => {
       const mockBlueprint = { role: { title: 'Dev' } } as any;
       const mockPlan: QuestionPlan = {
         role: 'Dev',
-        questions: []
+        questions: [],
       };
 
       fetchMock.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockPlan
+        json: async () => mockPlan,
       });
 
       const result = await generateQuestionPlan(mockBlueprint);
 
       expect(result).toEqual(mockPlan);
-      expect(fetchMock).toHaveBeenCalledWith('/api/generate-question-plan', expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ blueprint: mockBlueprint })
-      }));
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/generate-question-plan',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ blueprint: mockBlueprint }),
+        })
+      );
     });
   });
 
@@ -134,21 +140,24 @@ describe('geminiService', () => {
 
       fetchMock.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockQuestions
+        json: async () => mockQuestions,
       });
 
       const result = await generateQuestions('Dev', 'JD', mockPlan, mockBlueprint);
 
       expect(result).toEqual(mockQuestions);
-      expect(fetchMock).toHaveBeenCalledWith('/api/generate-questions', expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({
-          role: 'Dev',
-          jobDescription: 'JD',
-          questionPlan: mockPlan,
-          blueprint: mockBlueprint
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/generate-questions',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            role: 'Dev',
+            jobDescription: 'JD',
+            questionPlan: mockPlan,
+            blueprint: mockBlueprint,
+          }),
         })
-      }));
+      );
     });
 
     it('should fallback gracefully on error', async () => {
@@ -167,15 +176,18 @@ describe('geminiService', () => {
 
       fetchMock.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockAnalysis
+        json: async () => mockAnalysis,
       });
 
       await analyzeAnswer('Question text', 'Answer text', mockBlueprint, qId);
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/analyze-answer', expect.objectContaining({
-        method: 'POST',
-        body: expect.stringContaining('"blueprint":')
-      }));
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/analyze-answer',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"blueprint":'),
+        })
+      );
 
       // Check body JSON parsing to verify deep fields
       const callBody = JSON.parse(fetchMock.mock.calls[0][1].body);
@@ -192,7 +204,7 @@ describe('geminiService', () => {
 
       fetchMock.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ audioBase64: 'MQ==' }) // "1" in base64
+        json: async () => ({ audioBase64: 'MQ==' }), // "1" in base64
       });
 
       const result = await generateSpeech('Hello');

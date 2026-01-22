@@ -33,7 +33,7 @@ describe('TTS API Handler', () => {
       method: 'POST',
       body: { text: 'Hello world' },
       headers: { 'x-forwarded-for': `127.0.0.${testCount}` },
-      socket: { remoteAddress: `127.0.0.${testCount}` }
+      socket: { remoteAddress: `127.0.0.${testCount}` },
     };
 
     // Set environment variable
@@ -65,7 +65,9 @@ describe('TTS API Handler', () => {
       await handler(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Text too long. Maximum 200 characters allowed.' });
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'Text too long. Maximum 200 characters allowed.',
+      });
     });
 
     it('should reject requests when API key is missing', async () => {
@@ -75,9 +77,11 @@ describe('TTS API Handler', () => {
       await handler(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
-        error: expect.stringContaining('Missing API Key')
-      }));
+      expect(mockRes.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: expect.stringContaining('Missing API Key'),
+        })
+      );
     });
   });
 
@@ -86,16 +90,20 @@ describe('TTS API Handler', () => {
       const mockAudioData = Buffer.from('fake-pcm-audio-data').toString('base64');
 
       mockGenerateContent.mockResolvedValue({
-        candidates: [{
-          content: {
-            parts: [{
-              inlineData: {
-                data: mockAudioData,
-                mimeType: 'audio/L16;rate=24000'
-              },
-            }],
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  inlineData: {
+                    data: mockAudioData,
+                    mimeType: 'audio/L16;rate=24000',
+                  },
+                },
+              ],
+            },
           },
-        }],
+        ],
       });
 
       await handler(mockReq, mockRes);
@@ -109,16 +117,20 @@ describe('TTS API Handler', () => {
       const mockAudioData = Buffer.from('test-audio-data-long-enough').toString('base64');
 
       mockGenerateContent.mockResolvedValue({
-        candidates: [{
-          content: {
-            parts: [{
-              inlineData: {
-                data: mockAudioData,
-                mimeType: 'audio/pcm'
-              },
-            }],
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  inlineData: {
+                    data: mockAudioData,
+                    mimeType: 'audio/pcm',
+                  },
+                },
+              ],
+            },
           },
-        }],
+        ],
       });
 
       await handler(mockReq, mockRes);
@@ -135,16 +147,20 @@ describe('TTS API Handler', () => {
       const mockAudioData = Buffer.from('fake-mp3').toString('base64');
 
       mockGenerateContent.mockResolvedValue({
-        candidates: [{
-          content: {
-            parts: [{
-              inlineData: {
-                data: mockAudioData,
-                mimeType: 'audio/mp3'
-              },
-            }],
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  inlineData: {
+                    data: mockAudioData,
+                    mimeType: 'audio/mp3',
+                  },
+                },
+              ],
+            },
           },
-        }],
+        ],
       });
 
       await handler(mockReq, mockRes);
@@ -152,17 +168,19 @@ describe('TTS API Handler', () => {
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith({
         audioBase64: mockAudioData,
-        mimeType: 'audio/mpeg'
+        mimeType: 'audio/mpeg',
       });
     });
 
     it('should handle missing audio data gracefully', async () => {
       mockGenerateContent.mockResolvedValue({
-        candidates: [{
-          content: {
-            parts: [{}],
+        candidates: [
+          {
+            content: {
+              parts: [{}],
+            },
           },
-        }],
+        ],
       });
 
       await handler(mockReq, mockRes);
@@ -177,9 +195,11 @@ describe('TTS API Handler', () => {
       await handler(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
-        error: expect.stringContaining('Quota exceeded')
-      }));
+      expect(mockRes.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: expect.stringContaining('Quota exceeded'),
+        })
+      );
     });
   });
 
@@ -189,9 +209,11 @@ describe('TTS API Handler', () => {
       mockReq.headers['x-forwarded-for'] = ip;
 
       const mockResults = {
-        candidates: [{
-          content: { parts: [{ inlineData: { data: 'abc', mimeType: 'audio/mp3' } }] }
-        }]
+        candidates: [
+          {
+            content: { parts: [{ inlineData: { data: 'abc', mimeType: 'audio/mp3' } }] },
+          },
+        ],
       };
       mockGenerateContent.mockResolvedValue(mockResults);
 
@@ -204,7 +226,9 @@ describe('TTS API Handler', () => {
       // 6th request should fail
       await handler(mockReq, mockRes);
       expect(mockRes.status).toHaveBeenLastCalledWith(429);
-      expect(mockRes.json).toHaveBeenLastCalledWith({ error: expect.stringContaining('Too Many Requests') });
+      expect(mockRes.json).toHaveBeenLastCalledWith({
+        error: expect.stringContaining('Too Many Requests'),
+      });
     });
   });
 
@@ -213,13 +237,17 @@ describe('TTS API Handler', () => {
       const mockAudioData = Buffer.from(new Uint8Array(2000)).toString('base64');
 
       mockGenerateContent.mockResolvedValue({
-        candidates: [{
-          content: {
-            parts: [{
-              inlineData: { data: mockAudioData, mimeType: 'audio/L16' },
-            }],
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  inlineData: { data: mockAudioData, mimeType: 'audio/L16' },
+                },
+              ],
+            },
           },
-        }],
+        ],
       });
 
       await handler(mockReq, mockRes);

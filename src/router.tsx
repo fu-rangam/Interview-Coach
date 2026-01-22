@@ -17,33 +17,40 @@ import { Training } from './pages/Training';
 import { UserDataRights } from './features/UserDataRights';
 
 export const router = createBrowserRouter([
-    { path: '/', element: <Home /> },
-    { path: '/auth', element: <Auth /> },
-    {
-        element: (
-            <ErrorBoundary>
-                <ProtectedRoute />
-            </ErrorBoundary>
-        ),
+  { path: '/auth', element: <Auth /> },
+  {
+    element: (
+      <ErrorBoundary>
+        <ProtectedRoute />
+      </ErrorBoundary>
+    ),
+    children: [
+      {
+        element: <DashboardLayout />,
         children: [
-            {
-                element: <DashboardLayout />,
-                children: [
-                    { path: '/portal', element: <Portal /> },
-                    { path: '/dashboard', element: <DashboardHome /> },
-                    { path: '/interview', element: <InterviewSetup /> },
-                    { path: '/resume-builder', element: <ResumeUploader /> },
-                    { path: '/training', element: <Training /> },
-                    { path: '/glass/interview/session', element: <InterviewSession /> },
-                    { path: '/interview/session', element: <InterviewSession /> },
-                    { path: '/interview/prep', element: <InterviewPrep /> },
-                    { path: '/review', element: <InterviewReview /> },
-                    { path: '/settings', element: <div className="p-8"><UserDataRights /></div> }
-                ]
-            }
-        ]
-    },
+          { path: '/', element: <Home /> },
+          { path: '/portal', element: <Portal /> },
+          { path: '/dashboard', element: <DashboardHome /> },
+          { path: '/interview', element: <InterviewSetup /> },
+          { path: '/resume-builder', element: <ResumeUploader /> },
+          { path: '/training', element: <Training /> },
+          { path: '/glass/interview/session', element: <InterviewSession /> },
+          { path: '/interview/session', element: <InterviewSession /> },
+          { path: '/interview/prep', element: <InterviewPrep /> },
+          { path: '/review', element: <InterviewReview /> },
+          {
+            path: '/settings',
+            element: (
+              <div className="p-8">
+                <UserDataRights />
+              </div>
+            ),
+          },
+        ],
+      },
+    ],
+  },
 
-    // Public / Guest Routes
-    { path: '/select-role', element: <RoleSelection /> },
+  // Public / Guest Routes
+  { path: '/select-role', element: <RoleSelection /> },
 ]);

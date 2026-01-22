@@ -130,11 +130,14 @@ export interface InterviewSession {
   jobDescription?: string; // Optional job description context
   questions: Question[];
   currentQuestionIndex: number;
-  answers: Record<string, {
-    audioBlob?: Blob; // Optional if answering via text
-    text?: string;    // Optional if answering via voice
-    analysis: AnalysisResult | null;
-  }>;
+  answers: Record<
+    string,
+    {
+      audioBlob?: Blob; // Optional if answering via text
+      text?: string; // Optional if answering via voice
+      analysis: AnalysisResult | null;
+    }
+  >;
   status?: 'IDLE' | 'ACTIVE' | 'COMPLETED';
   // Store the blueprint for this session
   blueprint?: CompetencyBlueprint;
@@ -143,25 +146,25 @@ export interface InterviewSession {
 }
 
 export const TECH_ROLES = [
-  "Software Engineer",
-  "Product Manager",
-  "Data Analyst",
-  "UX Designer",
-  "Digital Marketer",
-  "IT Support Specialist",
-  "Cybersecurity Analyst",
-  "DevOps Engineer",
-  "QA Engineer"
+  'Software Engineer',
+  'Product Manager',
+  'Data Analyst',
+  'UX Designer',
+  'Digital Marketer',
+  'IT Support Specialist',
+  'Cybersecurity Analyst',
+  'DevOps Engineer',
+  'QA Engineer',
 ];
 
 export const SERVICE_ROLES = [
-  "Retail Sales Associate",
-  "Cashier",
-  "Home Health Aide",
-  "Warehouse Associate",
-  "Food Preparation Worker",
-  "Customer Service Rep",
-  "Stock Clerk",
-  "Janitor / Custodian",
-  "Packer / Packager"
+  'Retail Sales Associate',
+  'Cashier',
+  'Home Health Aide',
+  'Warehouse Associate',
+  'Food Preparation Worker',
+  'Customer Service Rep',
+  'Stock Clerk',
+  'Janitor / Custodian',
+  'Packer / Packager',
 ];

@@ -20,17 +20,17 @@ describe('App', () => {
   describe('Home Screen', () => {
     it('should render home screen with start button', () => {
       render(<App />);
-      
+
       expect(screen.getByText(/Interview Coach/i)).toBeDefined();
       expect(screen.getByText(/Start Practicing/i)).toBeDefined();
     });
 
     it('should navigate to role selection when start button is clicked', async () => {
       render(<App />);
-      
+
       const startButton = screen.getByText(/Start Practicing/i);
       fireEvent.click(startButton);
-      
+
       await waitFor(() => {
         expect(screen.getByText(/Select your target role/i)).toBeDefined();
       });
@@ -50,10 +50,10 @@ describe('App', () => {
 
     it('should display job role options', async () => {
       render(<App />);
-      
+
       const startButton = screen.getByText(/Start Practicing/i);
       fireEvent.click(startButton);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Data Analytics')).toBeDefined();
         expect(screen.getByText('Project Management')).toBeDefined();
@@ -63,15 +63,15 @@ describe('App', () => {
 
     it('should generate questions when role is selected', async () => {
       render(<App />);
-      
+
       const startButton = screen.getByText(/Start Practicing/i);
       fireEvent.click(startButton);
-      
+
       await waitFor(() => {
         const roleButton = screen.getByText('Data Analytics');
         fireEvent.click(roleButton);
       });
-      
+
       await waitFor(() => {
         expect(geminiService.generateQuestions).toHaveBeenCalledWith('Data Analytics');
       });
@@ -80,27 +80,28 @@ describe('App', () => {
     it('should show loading state while generating questions', async () => {
       let resolveQuestions: any;
       vi.mocked(geminiService.generateQuestions).mockImplementation(
-        () => new Promise((resolve) => { resolveQuestions = resolve; })
+        () =>
+          new Promise((resolve) => {
+            resolveQuestions = resolve;
+          })
       );
 
       render(<App />);
-      
+
       const startButton = screen.getByText(/Start Practicing/i);
       fireEvent.click(startButton);
-      
+
       await waitFor(() => {
         const roleButton = screen.getByText('Data Analytics');
         fireEvent.click(roleButton);
       });
-      
+
       await waitFor(() => {
         expect(screen.getByText(/Preparing your interview/i)).toBeDefined();
       });
 
       // Resolve the promise
-      resolveQuestions([
-        { id: '1', text: 'Test question' },
-      ]);
+      resolveQuestions([{ id: '1', text: 'Test question' }]);
     });
   });
 
@@ -114,13 +115,13 @@ describe('App', () => {
 
     it('should display first question after role selection', async () => {
       render(<App />);
-      
+
       fireEvent.click(screen.getByText(/Start Practicing/i));
-      
+
       await waitFor(() => {
         fireEvent.click(screen.getByText('Data Analytics'));
       });
-      
+
       await waitFor(() => {
         expect(screen.getByText('What is your biggest strength?')).toBeDefined();
       });
@@ -128,13 +129,13 @@ describe('App', () => {
 
     it('should show record button', async () => {
       render(<App />);
-      
+
       fireEvent.click(screen.getByText(/Start Practicing/i));
-      
+
       await waitFor(() => {
         fireEvent.click(screen.getByText('Data Analytics'));
       });
-      
+
       await waitFor(() => {
         // Check for the instruction text that appears when not recording
         expect(screen.getByText(/Click the microphone to begin your answer/i)).toBeDefined();
@@ -145,14 +146,14 @@ describe('App', () => {
   describe('Navigation', () => {
     it('should allow returning to home from any screen', async () => {
       render(<App />);
-      
+
       fireEvent.click(screen.getByText(/Start Practicing/i));
-      
+
       await waitFor(() => {
         const homeButton = screen.getByText(/Back Home/i);
         fireEvent.click(homeButton);
       });
-      
+
       await waitFor(() => {
         expect(screen.getByText(/Interview Coach/i)).toBeDefined();
       });
@@ -161,21 +162,19 @@ describe('App', () => {
 
   describe('Error Handling', () => {
     it('should handle question generation failure', async () => {
-      vi.mocked(geminiService.generateQuestions).mockRejectedValue(
-        new Error('API Error')
-      );
+      vi.mocked(geminiService.generateQuestions).mockRejectedValue(new Error('API Error'));
 
       // Mock alert
       global.alert = vi.fn();
 
       render(<App />);
-      
+
       fireEvent.click(screen.getByText(/Start Practicing/i));
-      
+
       await waitFor(() => {
         fireEvent.click(screen.getByText('Data Analytics'));
       });
-      
+
       await waitFor(() => {
         expect(global.alert).toHaveBeenCalledWith(
           expect.stringContaining('Failed to generate questions')
@@ -195,13 +194,13 @@ describe('App', () => {
 
     it('should show Play Voice button on question screen', async () => {
       render(<App />);
-      
+
       fireEvent.click(screen.getByText(/Start Practicing/i));
-      
+
       await waitFor(() => {
         fireEvent.click(screen.getByText('Data Analytics'));
       });
-      
+
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /play narration/i })).toBeDefined();
       });
@@ -209,18 +208,18 @@ describe('App', () => {
 
     it('should call generateSpeech when Play Voice is clicked', async () => {
       render(<App />);
-      
+
       fireEvent.click(screen.getByText(/Start Practicing/i));
-      
+
       await waitFor(() => {
         fireEvent.click(screen.getByText('Data Analytics'));
       });
-      
+
       await waitFor(() => {
         const playButton = screen.getByRole('button', { name: /play narration/i });
         fireEvent.click(playButton);
       });
-      
+
       await waitFor(() => {
         expect(geminiService.generateSpeech).toHaveBeenCalledWith('What is your biggest strength?');
       });
@@ -235,26 +234,26 @@ describe('App', () => {
       });
 
       render(<App />);
-      
+
       fireEvent.click(screen.getByText(/Start Practicing/i));
-      
+
       await waitFor(() => {
         fireEvent.click(screen.getByText('Data Analytics'));
       });
-      
+
       await waitFor(() => {
         expect(screen.getByText('What is your biggest strength?')).toBeDefined();
       });
-      
+
       // Play audio on first question
       const playButton = screen.getByRole('button', { name: /play narration/i });
       fireEvent.click(playButton);
-      
+
       await waitFor(() => {
         expect(geminiService.generateSpeech).toHaveBeenCalledWith('What is your biggest strength?');
         expect(screen.getByText('Playing...')).toBeDefined();
       });
-      
+
       // Verify audio controls work correctly in integration context
       expect(HTMLAudioElement.prototype.play).toHaveBeenCalled();
     });
@@ -263,18 +262,18 @@ describe('App', () => {
       vi.mocked(geminiService.generateSpeech).mockResolvedValue(null);
 
       render(<App />);
-      
+
       fireEvent.click(screen.getByText(/Start Practicing/i));
-      
+
       await waitFor(() => {
         fireEvent.click(screen.getByText('Data Analytics'));
       });
-      
+
       await waitFor(() => {
         const playButton = screen.getByRole('button', { name: /play narration/i });
         fireEvent.click(playButton);
       });
-      
+
       // Should show error message
       await waitFor(() => {
         expect(screen.getByText(/Narration failed/i)).toBeDefined();

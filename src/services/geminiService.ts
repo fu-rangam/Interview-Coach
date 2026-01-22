@@ -1,12 +1,21 @@
-import { Question, AnalysisResult, QuestionTips, CompetencyBlueprint, QuestionPlan } from "../types";
-import { OnboardingIntakeV1 } from "../types/intake";
-import { supabase } from "./supabase";
+import {
+  Question,
+  AnalysisResult,
+  QuestionTips,
+  CompetencyBlueprint,
+  QuestionPlan,
+  Competency,
+} from '../types';
+import { OnboardingIntakeV1 } from '../types/intake';
+import { supabase } from './supabase';
 
 // --- Helpers ---
 
-export const getAuthHeader = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {};
+export const getAuthHeader = async (): Promise<Record<string, string>> => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
 };
 
 export const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -23,13 +32,17 @@ export const blobToBase64 = (blob: Blob): Promise<string> => {
 
 // --- API Functions ---
 
-export const generateBlueprint = async (role: string, jobDescription?: string, seniority?: string): Promise<CompetencyBlueprint | null> => {
+export const generateBlueprint = async (
+  role: string,
+  jobDescription?: string,
+  seniority?: string
+): Promise<CompetencyBlueprint | null> => {
   try {
     const authHeaders = await getAuthHeader();
     const response = await fetch('/api/generate-blueprint', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify({ role, jobDescription, seniority })
+      body: JSON.stringify({ role, jobDescription, seniority }),
     });
 
     if (!response.ok) {
@@ -38,18 +51,22 @@ export const generateBlueprint = async (role: string, jobDescription?: string, s
     }
     return await response.json();
   } catch (error) {
-    console.error("Error generating blueprint:", error);
+    console.error('Error generating blueprint:', error);
     return null;
   }
 };
 
-export const initSession = async (role: string, jobDescription?: string, intakeData?: OnboardingIntakeV1) => {
+export const initSession = async (
+  role: string,
+  jobDescription?: string,
+  intakeData?: OnboardingIntakeV1
+) => {
   try {
     const authHeaders = await getAuthHeader();
     const response = await fetch('/api/init-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify({ role, jobDescription, intakeData })
+      body: JSON.stringify({ role, jobDescription, intakeData }),
     });
     if (!response.ok) {
       const errText = await response.text();
@@ -58,18 +75,20 @@ export const initSession = async (role: string, jobDescription?: string, intakeD
     }
     return await response.json();
   } catch (error) {
-    console.error("Error initializing session:", error);
+    console.error('Error initializing session:', error);
     return null;
   }
 };
 
-export const generateQuestionPlan = async (blueprint: CompetencyBlueprint): Promise<QuestionPlan | null> => {
+export const generateQuestionPlan = async (
+  blueprint: CompetencyBlueprint
+): Promise<QuestionPlan | null> => {
   try {
     const authHeaders = await getAuthHeader();
     const response = await fetch('/api/generate-question-plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify({ blueprint })
+      body: JSON.stringify({ blueprint }),
     });
 
     if (!response.ok) {
@@ -78,18 +97,32 @@ export const generateQuestionPlan = async (blueprint: CompetencyBlueprint): Prom
     }
     return await response.json();
   } catch (error) {
-    console.error("Error generating question plan:", error);
+    console.error('Error generating question plan:', error);
     return null;
   }
 };
 
-export const generateQuestions = async (role: string, jobDescription?: string, questionPlan?: QuestionPlan, blueprint?: CompetencyBlueprint, subsetIndices?: number[], intakeData?: OnboardingIntakeV1): Promise<Question[]> => {
+export const generateQuestions = async (
+  role: string,
+  jobDescription?: string,
+  questionPlan?: QuestionPlan,
+  blueprint?: CompetencyBlueprint,
+  subsetIndices?: number[],
+  intakeData?: OnboardingIntakeV1
+): Promise<Question[]> => {
   try {
     const authHeaders = await getAuthHeader();
     const response = await fetch('/api/generate-questions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify({ role, jobDescription, questionPlan, blueprint, subsetIndices, intakeData })
+      body: JSON.stringify({
+        role,
+        jobDescription,
+        questionPlan,
+        blueprint,
+        subsetIndices,
+        intakeData,
+      }),
     });
 
     if (!response.ok) {
@@ -101,23 +134,29 @@ export const generateQuestions = async (role: string, jobDescription?: string, q
     const questions = await response.json();
     return questions as Question[];
   } catch (error) {
-    console.error("Error generating questions:", error);
+    console.error('Error generating questions:', error);
     // Minimal fallback
     return [
       { id: '1', text: `Tell me about a time you faced a challenge in ${role}.` },
       { id: '2', text: `Why are you interested in a career in ${role}?` },
-      { id: '3', text: "Describe a successful project you worked on." },
+      { id: '3', text: 'Describe a successful project you worked on.' },
     ];
   }
 };
 
-export const generateQuestionTips = async (question: string, role: string, competency?: any, intakeData?: OnboardingIntakeV1, blueprint?: any): Promise<QuestionTips> => {
+export const generateQuestionTips = async (
+  question: string,
+  role: string,
+  competency?: Competency,
+  intakeData?: OnboardingIntakeV1,
+  blueprint?: CompetencyBlueprint
+): Promise<QuestionTips> => {
   try {
     const authHeaders = await getAuthHeader();
     const response = await fetch('/api/generate-tips', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify({ question, role, competency, intakeData, blueprint })
+      body: JSON.stringify({ question, role, competency, intakeData, blueprint }),
     });
 
     if (!response.ok) {
@@ -127,21 +166,33 @@ export const generateQuestionTips = async (question: string, role: string, compe
     const tips = await response.json();
     return tips as QuestionTips;
   } catch (error) {
-    console.error("Error generating tips:", error);
+    console.error('Error generating tips:', error);
     return {
-      lookingFor: "General professional competence.",
-      pointsToCover: ["Situation", "Action", "Result"],
-      answerFramework: "STAR Method",
-      industrySpecifics: { metrics: "N/A", tools: "N/A" },
-      mistakesToAvoid: ["Being vague"],
-      proTip: "Be confident."
+      lookingFor: 'General professional competence.',
+      pointsToCover: ['Situation', 'Action', 'Result'],
+      answerFramework: 'STAR Method',
+      industrySpecifics: { metrics: 'N/A', tools: 'N/A' },
+      mistakesToAvoid: ['Being vague'],
+      proTip: 'Be confident.',
     };
   }
 };
 
-export const analyzeAnswer = async (question: string, input: Blob | string, blueprint?: CompetencyBlueprint, questionId?: string, intakeData?: OnboardingIntakeV1): Promise<AnalysisResult> => {
+export const analyzeAnswer = async (
+  question: string,
+  input: Blob | string,
+  blueprint?: CompetencyBlueprint,
+  questionId?: string,
+  intakeData?: OnboardingIntakeV1
+): Promise<AnalysisResult> => {
   try {
-    let payload: any = { question, blueprint, questionId, intakeData };
+    let payload: {
+      question: string;
+      blueprint?: CompetencyBlueprint;
+      questionId?: string;
+      intakeData?: OnboardingIntakeV1;
+      input?: string | { mimeType: string; data: string };
+    } = { question, blueprint, questionId, intakeData };
 
     if (typeof input === 'string') {
       payload.input = input;
@@ -150,7 +201,7 @@ export const analyzeAnswer = async (question: string, input: Blob | string, blue
       const base64Audio = await blobToBase64(input);
       payload.input = {
         mimeType: input.type || 'audio/webm',
-        data: base64Audio
+        data: base64Audio,
       };
     }
 
@@ -158,7 +209,7 @@ export const analyzeAnswer = async (question: string, input: Blob | string, blue
     const response = await fetch('/api/analyze-answer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -168,27 +219,37 @@ export const analyzeAnswer = async (question: string, input: Blob | string, blue
     const result = await response.json();
     return result as AnalysisResult;
   } catch (error) {
-    console.error("Error analyzing answer:", error);
+    console.error('Error analyzing answer:', error);
     // Return minimal fallback to avoid crashing UI
     return {
-      transcript: typeof input === 'string' ? input : "Audio processing unavailable.",
-      feedback: ["System is currently offline. Please try again later."],
-      rating: "Developing",
+      transcript: typeof input === 'string' ? input : 'Audio processing unavailable.',
+      feedback: ['System is currently offline. Please try again later.'],
+      rating: 'Developing',
       keyTerms: [],
-      coachReaction: "Keep practicing!",
-      strongResponse: "System offline.",
-      whyThisWorks: { lookingFor: "", pointsToCover: [], answerFramework: "", industrySpecifics: { metrics: "", tools: "" }, mistakesToAvoid: [], proTip: "" }
+      coachReaction: 'Keep practicing!',
+      strongResponse: 'System offline.',
+      whyThisWorks: {
+        lookingFor: '',
+        pointsToCover: [],
+        answerFramework: '',
+        industrySpecifics: { metrics: '', tools: '' },
+        mistakesToAvoid: [],
+        proTip: '',
+      },
     };
   }
 };
 
-export const generateStrongResponse = async (question: string, tips: QuestionTips): Promise<{ strongResponse: string; whyThisWorks: QuestionTips }> => {
+export const generateStrongResponse = async (
+  question: string,
+  tips: QuestionTips
+): Promise<{ strongResponse: string; whyThisWorks: QuestionTips }> => {
   try {
     const authHeaders = await getAuthHeader();
     const response = await fetch('/api/generate-strong-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify({ question, tips })
+      body: JSON.stringify({ question, tips }),
     });
 
     if (!response.ok) {
@@ -197,11 +258,11 @@ export const generateStrongResponse = async (question: string, tips: QuestionTip
 
     return await response.json();
   } catch (error) {
-    console.error("Error generating strong response:", error);
+    console.error('Error generating strong response:', error);
     // Fallback for demo/error purposes
     return {
-      strongResponse: "Could not generate strong response at this time.",
-      whyThisWorks: tips // Fallback to just showing original tips structure if generation fails
+      strongResponse: 'Could not generate strong response at this time.',
+      whyThisWorks: tips, // Fallback to just showing original tips structure if generation fails
     };
   }
 };
@@ -211,10 +272,10 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
 
   // Mock TTS Bypass
   if (import.meta.env.VITE_MOCK_TTS === 'true') {
-    console.log("[TTS] Mock Mode Active: Returning silent audio.");
+    console.log('[TTS] Mock Mode Active: Returning silent audio.');
     // Return a short silent audio duration to simulate playback (1 second silent MP3)
     // using a data URI for a tiny silent MP3
-    return "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////wAAAP//OEAAAAAAAAAAAAAAAAAAAAAAAGGluZwAAAA8AAAAEAAABIAAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////wAAAP//OEAAAAAAAAAAAAAAAAAAAAAATEFNRTMuMTAwqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//OEAAABAAAA0gAAABRaaaaaaaaAAIgAAADSAAAAFE0AAAAAAAD78wAAAQD78wAAAQAAAP//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////OEAAAAAAAANIAAAAUWAAAAAAAACIAAAA0gAAABRgAAAAAAABAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAAB//OEAAAAAAAANIAAAAUWAAAAAAAACIAAAA0gAAABRhAAAAAAABAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAAB";
+    return 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////wAAAP//OEAAAAAAAAAAAAAAAAAAAAAAAGGluZwAAAA8AAAAEAAABIAAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////wAAAP//OEAAAAAAAAAAAAAAAAAAAAAATEFNRTMuMTAwqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//OEAAABAAAA0gAAABRaaaaaaaaAAIgAAADSAAAAFE0AAAAAAAD78wAAAQD78wAAAQAAAP//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////OEAAAAAAAANIAAAAUWAAAAAAAACIAAAA0gAAABRgAAAAAAABAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAAB//OEAAAAAAAANIAAAAUWAAAAAAAACIAAAA0gAAABRhAAAAAAABAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAAB';
   }
 
   try {
@@ -222,7 +283,7 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
     const response = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text }),
     });
 
     if (!response.ok) {
@@ -233,7 +294,7 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
     const data = await response.json();
 
     if (!data.audioBase64) {
-      throw new Error("No audio data returned from server");
+      throw new Error('No audio data returned from server');
     }
 
     // Convert the Base64 back to a Blob for playback
@@ -250,9 +311,8 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
     const url = URL.createObjectURL(blob);
 
     return url;
-
   } catch (error) {
-    console.error("TTS Fetch Error:", error);
+    console.error('TTS Fetch Error:', error);
     throw error;
   }
 };
@@ -265,13 +325,16 @@ export interface CoachPrepData {
   encouragement: string;
 }
 
-export const generateCoachPrep = async (role: string, jobDescription?: string): Promise<CoachPrepData | null> => {
+export const generateCoachPrep = async (
+  role: string,
+  jobDescription?: string
+): Promise<CoachPrepData | null> => {
   try {
     const authHeaders = await getAuthHeader();
     const response = await fetch('/api/coach-prep', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify({ role, jobDescription })
+      body: JSON.stringify({ role, jobDescription }),
     });
     if (!response.ok) {
       const errText = await response.text();
@@ -280,7 +343,7 @@ export const generateCoachPrep = async (role: string, jobDescription?: string): 
     }
     return await response.json();
   } catch (error) {
-    console.error("Error generating coach prep:", error);
+    console.error('Error generating coach prep:', error);
     return null;
   }
 };

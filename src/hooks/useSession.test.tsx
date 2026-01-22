@@ -9,122 +9,125 @@ import React from 'react';
 
 // Mock services
 vi.mock('../services/geminiService', () => ({
-    generateQuestions: vi.fn(),
-    generateQuestionTips: vi.fn(),
-    initSession: vi.fn().mockResolvedValue(null),
-    generateBlueprint: vi.fn(),
-    generateQuestionPlan: vi.fn(),
-    generateSpeech: vi.fn(),
+  generateQuestions: vi.fn(),
+  generateQuestionTips: vi.fn(),
+  initSession: vi.fn().mockResolvedValue(null),
+  generateBlueprint: vi.fn(),
+  generateQuestionPlan: vi.fn(),
+  generateSpeech: vi.fn(),
 }));
 
 vi.mock('../services/sessionService', () => ({
-    sessionService: {
-        createSession: vi.fn(),
-        getSession: vi.fn(),
-        updateSession: vi.fn(),
-    },
+  sessionService: {
+    createSession: vi.fn(),
+    getSession: vi.fn(),
+    updateSession: vi.fn(),
+  },
 }));
 
 vi.mock('../services/supabase', () => ({
-    supabase: {
-        auth: {
-            getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
-        },
+  supabase: {
+    auth: {
+      getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
     },
+  },
 }));
 
 describe('useSession', () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <SessionProvider>{children}</SessionProvider>
-    );
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <SessionProvider>{children}</SessionProvider>
+  );
 
-    beforeEach(() => {
-        vi.clearAllMocks();
-        localStorage.clear();
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  it('should initialize and finish loading', async () => {
+    // Initial mount triggers useEffect (getUser)
+    const { result } = renderHook(() => useSession(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
     });
 
-    it('should initialize and finish loading', async () => {
-        // Initial mount triggers useEffect (getUser)
-        const { result } = renderHook(() => useSession(), { wrapper });
+    expect(result.current.session.role).toBe('');
+  });
 
-        await waitFor(() => {
-            expect(result.current.isLoading).toBe(false);
-        });
+  it('should start a new session as a guest', async () => {
+    const mockQuestions = [{ id: '1', text: 'Question 1' }];
+    vi.mocked(geminiService.generateQuestions).mockResolvedValue(mockQuestions);
 
-        expect(result.current.session.role).toBe('');
+    const { result } = renderHook(() => useSession(), { wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.startSession('Software Engineer', 'Some JD');
     });
 
-    it('should start a new session as a guest', async () => {
-        const mockQuestions = [{ id: '1', text: 'Question 1' }];
-        vi.mocked(geminiService.generateQuestions).mockResolvedValue(mockQuestions);
+    expect(result.current.session.role).toBe('Software Engineer');
+    expect(result.current.session.questions).toEqual(mockQuestions);
+  });
 
-        const { result } = renderHook(() => useSession(), { wrapper });
+  it('should navigate between questions', async () => {
+    const mockQuestions = [
+      { id: '1', text: 'Q1' },
+      { id: '2', text: 'Q2' },
+    ];
+    vi.mocked(geminiService.generateQuestions).mockResolvedValue(mockQuestions);
 
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const { result } = renderHook(() => useSession(), { wrapper });
 
-        await act(async () => {
-            await result.current.startSession('Software Engineer', 'Some JD');
-        });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        expect(result.current.session.role).toBe('Software Engineer');
-        expect(result.current.session.questions).toEqual(mockQuestions);
+    await act(async () => {
+      await result.current.startSession('Engineer');
     });
 
-    it('should navigate between questions', async () => {
-        const mockQuestions = [{ id: '1', text: 'Q1' }, { id: '2', text: 'Q2' }];
-        vi.mocked(geminiService.generateQuestions).mockResolvedValue(mockQuestions);
+    act(() => {
+      result.current.nextQuestion();
+    });
+    expect(result.current.session.currentQuestionIndex).toBe(1);
 
-        const { result } = renderHook(() => useSession(), { wrapper });
+    act(() => {
+      result.current.goToQuestion(0);
+    });
+    expect(result.current.session.currentQuestionIndex).toBe(0);
+  });
 
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
+  it('should save answers', async () => {
+    const { result } = renderHook(() => useSession(), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        await act(async () => {
-            await result.current.startSession('Engineer');
-        });
+    const mockAnalysis = {
+      transcript: 'My answer',
+      feedback: ['Good'],
+      rating: 'Strong' as const,
+      keyTerms: [],
+    };
 
-        act(() => {
-            result.current.nextQuestion();
-        });
-        expect(result.current.session.currentQuestionIndex).toBe(1);
-
-        act(() => {
-            result.current.goToQuestion(0);
-        });
-        expect(result.current.session.currentQuestionIndex).toBe(0);
+    act(() => {
+      result.current.saveAnswer('q1', { text: 'My answer', analysis: mockAnalysis });
     });
 
-    it('should save answers', async () => {
-        const { result } = renderHook(() => useSession(), { wrapper });
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.session.answers['q1'].text).toBe('My answer');
+  });
 
-        const mockAnalysis = {
-            transcript: 'My answer',
-            feedback: ['Good'],
-            rating: 'Strong' as const,
-            keyTerms: []
-        };
+  it('should reset session', async () => {
+    const { result } = renderHook(() => useSession(), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        act(() => {
-            result.current.saveAnswer('q1', { text: 'My answer', analysis: mockAnalysis });
-        });
-
-        expect(result.current.session.answers['q1'].text).toBe('My answer');
+    vi.mocked(geminiService.generateQuestions).mockResolvedValue([]);
+    await act(async () => {
+      await result.current.startSession('Engineer');
     });
 
-    it('should reset session', async () => {
-        const { result } = renderHook(() => useSession(), { wrapper });
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-        vi.mocked(geminiService.generateQuestions).mockResolvedValue([]);
-        await act(async () => {
-            await result.current.startSession('Engineer');
-        });
-
-        act(() => {
-            result.current.resetSession();
-        });
-
-        expect(result.current.session.role).toBe('');
-        expect(localStorage.getItem('current_session')).toBeNull();
+    act(() => {
+      result.current.resetSession();
     });
+
+    expect(result.current.session.role).toBe('');
+    expect(localStorage.getItem('current_session')).toBeNull();
+  });
 });

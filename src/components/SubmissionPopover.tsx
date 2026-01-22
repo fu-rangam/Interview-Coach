@@ -2,6 +2,7 @@ import React from 'react';
 import { GlassCard } from './ui/glass/GlassCard';
 import { GlassButton } from './ui/glass/GlassButton';
 import { ArrowRight, Activity } from 'lucide-react';
+import { Question, CompetencyBlueprint } from '../types';
 
 interface SubmissionPopoverProps {
     isOpen: boolean;
@@ -9,6 +10,14 @@ interface SubmissionPopoverProps {
     onNext: () => void;
     isSessionComplete?: boolean;
     onFinish?: () => void;
+    onRetry?: () => void;
+    question?: Question;
+    questionIndex?: number;
+    answer?: any;
+    blueprint?: CompetencyBlueprint;
+    hasSkippedQuestions?: boolean;
+    onClose?: () => void;
+    inline?: boolean;
 }
 
 export const SubmissionPopover: React.FC<SubmissionPopoverProps> = ({
@@ -16,7 +25,15 @@ export const SubmissionPopover: React.FC<SubmissionPopoverProps> = ({
     onFeedback,
     onNext,
     isSessionComplete = false,
-    onFinish
+    onFinish,
+    onRetry,
+    question,
+    questionIndex,
+    answer,
+    blueprint,
+    hasSkippedQuestions,
+    onClose,
+    inline,
 }) => {
     if (!isOpen) return null;
 
@@ -25,8 +42,12 @@ export const SubmissionPopover: React.FC<SubmissionPopoverProps> = ({
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
                 <GlassCard className="w-full max-w-md p-8 flex flex-col items-center gap-6 border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
                     <div className="text-center space-y-2">
-                        <h3 className="text-xl font-bold text-white font-display tracking-wide">Session Complete!</h3>
-                        <p className="text-gray-400 text-sm">Great job. Click Finish below to review your performance.</p>
+                        <h3 className="text-xl font-bold text-white font-display tracking-wide">
+                            Session Complete!
+                        </h3>
+                        <p className="text-gray-400 text-sm">
+                            Great job. Click Finish below to review your performance.
+                        </p>
                     </div>
                     <GlassButton
                         onClick={onFinish}

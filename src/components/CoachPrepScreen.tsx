@@ -17,7 +17,7 @@ const highlightSkills = (text: string, skills: string[]): React.ReactNode => {
 
     let result: React.ReactNode[] = [text];
 
-    skills.forEach(skill => {
+    skills.forEach((skill) => {
         const newResult: React.ReactNode[] = [];
         result.forEach((segment, i) => {
             if (typeof segment === 'string') {
@@ -26,7 +26,9 @@ const highlightSkills = (text: string, skills: string[]): React.ReactNode => {
                 parts.forEach((part, j) => {
                     if (part.toLowerCase() === skill.toLowerCase()) {
                         newResult.push(
-                            <span key={`${i}-${j}`} className="text-cyan-400 font-medium">{part}</span>
+                            <span key={`${i}-${j}`} className="text-cyan-400 font-medium">
+                                {part}
+                            </span>
                         );
                     } else if (part) {
                         newResult.push(part);
@@ -47,15 +49,15 @@ export const CoachPrepScreen: React.FC<CoachPrepScreenProps> = ({
     isLoading,
     isSessionReady,
     onBegin,
-    role
+    role,
 }) => {
     return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-app-dark">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-app-dark md:pl-64 overflow-y-auto custom-scrollbar">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full max-w-xl"
+                className="w-full max-w-xl my-auto"
             >
                 {/* Loading State - Pulsing Dot Loader */}
                 {isLoading && !prepData && (
@@ -104,9 +106,7 @@ export const CoachPrepScreen: React.FC<CoachPrepScreenProps> = ({
                         </GlassCard>
 
                         {/* Encouragement */}
-                        <p className="text-gray-400 italic text-center text-lg">
-                            {prepData.encouragement}
-                        </p>
+                        <p className="text-gray-400 italic text-center text-lg">{prepData.encouragement}</p>
 
                         {/* Begin Button */}
                         <div className="pt-4">
@@ -114,8 +114,8 @@ export const CoachPrepScreen: React.FC<CoachPrepScreenProps> = ({
                                 onClick={onBegin}
                                 disabled={!isSessionReady}
                                 className={`w-full py-4 text-lg font-bold transition-all ${isSessionReady
-                                    ? 'bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-lg shadow-cyan-900/30'
-                                    : 'opacity-50 cursor-not-allowed'
+                                        ? 'bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-lg shadow-cyan-900/30'
+                                        : 'opacity-50 cursor-not-allowed'
                                     }`}
                             >
                                 {isSessionReady ? (

@@ -1,7 +1,9 @@
 import { supabase } from './supabase';
 
 export async function synthesizeQuestion(text: string): Promise<string> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
   if (session?.access_token) {
@@ -11,11 +13,13 @@ export async function synthesizeQuestion(text: string): Promise<string> {
   const resp = await fetch('/api/tts', {
     method: 'POST',
     headers,
-    body: JSON.stringify({ text })
+    body: JSON.stringify({ text }),
   });
   if (!resp.ok) {
     const details = await safeReadText(resp);
-    throw new Error(`TTS request failed: ${resp.status} ${resp.statusText} ${details ?? ''}`.trim());
+    throw new Error(
+      `TTS request failed: ${resp.status} ${resp.statusText} ${details ?? ''}`.trim()
+    );
   }
   const data = await resp.json().catch(() => ({}));
   const base64 = (data as any).audioBase64 as string | undefined;

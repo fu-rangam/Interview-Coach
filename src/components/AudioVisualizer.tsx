@@ -51,7 +51,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ stream, isRecording }
         const g = 100;
         const b = 151;
 
-        ctx.fillStyle = `rgba(${r},${g},${b}, ${0.5 + (barHeight / 200)})`;
+        ctx.fillStyle = `rgba(${r},${g},${b}, ${0.5 + barHeight / 200})`;
 
         ctx.beginPath();
         ctx.roundRect(x, canvas.height - barHeight, barWidth, barHeight, 5);

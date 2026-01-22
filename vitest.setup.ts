@@ -13,7 +13,7 @@ vi.stubEnv('VITE_GEMINI_API_KEY', 'test-api-key-12345');
 // Mock window.matchMedia (used by some UI components)
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -31,7 +31,10 @@ global.MediaRecorder = class MediaRecorder {
   onstop: (() => void) | null = null;
   state: 'inactive' | 'recording' | 'paused' = 'inactive';
 
-  constructor(public stream: MediaStream, public options?: any) {}
+  constructor(
+    public stream: MediaStream,
+    public options?: any
+  ) {}
 
   start() {
     this.state = 'recording';

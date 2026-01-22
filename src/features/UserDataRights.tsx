@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { GlassCard } from '../components/ui/glass/GlassCard';
 import { GlassButton } from '../components/ui/glass/GlassButton';
 import { Download, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
-import { getAuditLogs, logAuditEvent } from '../services/auditLogger';
-import { getAllSessions, exportSessionAsJSON } from '../services/storageService';
-import { supabase } from '../services/supabase';
+import { exportUserData, deleteUserAccount } from '../services/userDataService';
+import { authService } from '../services/authService';
 import { useNavigate } from 'react-router-dom';
 
 export const UserDataRights: React.FC = () => {
@@ -14,25 +13,13 @@ export const UserDataRights: React.FC = () => {
 
     const handleExportData = async () => {
         setIsLoading(true);
-        setStatus("Gathering data...");
+        setStatus('Gathering data...');
         try {
-            // 1. Fetch all sessions
-            const sessions = await getAllSessions();
-
-            // 2. Fetch all audit logs
-            const logs = await getAuditLogs();
-
-            // 3. Bundle into a JSON
-            const exportBundle = {
-                exportedAt: new Date().toISOString(),
-                sessions,
-                auditLogs: logs,
-                // Add profile data if we had a dedicated service for it
-            };
+            const exportBundle = await exportUserData();
 
             // 4. Trigger Download
             const dataStr = JSON.stringify(exportBundle, null, 2);
-            const blob = new Blob([dataStr], { type: "application/json" });
+            const blob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
 
             const link = document.createElement('a');
@@ -42,45 +29,37 @@ export const UserDataRights: React.FC = () => {
             link.click();
             document.body.removeChild(link);
 
-            logAuditEvent('DATA_EXPORTED', { size: blob.size });
-            setStatus("Export complete!");
+            setStatus('Export complete!');
             setTimeout(() => setStatus(null), 3000);
-
         } catch (error) {
             console.error(error);
-            setStatus("Export failed.");
+            setStatus('Export failed.');
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleDeleteAccount = async () => {
-        if (!confirm("Are you ABSOLUTELY sure? This will permanently delete your account, session history, and logs. This action cannot be undone.")) {
+        if (
+            !confirm(
+                'Are you ABSOLUTELY sure? This will permanently delete your account, session history, and logs. This action cannot be undone.'
+            )
+        ) {
             return;
         }
 
         setIsLoading(true);
-        setStatus("Deleting account...");
+        setStatus('Deleting account...');
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Not authenticated");
+            await deleteUserAccount();
+            await authService.signOut();
 
-            // 1. Log the intent (last log before death)
-            await logAuditEvent('ACCOUNT_DELETION_REQUESTED');
-
-            await supabase.from('interviews').delete().eq('user_id', user.id);
-            await supabase.from('profiles').delete().eq('id', user.id);
-            await supabase.from('audit_logs').delete().eq('user_id', user.id);
-
-            await supabase.auth.signOut();
-
-            setStatus("Account content deleted. Redirecting...");
+            setStatus('Account content deleted. Redirecting...');
             setTimeout(() => navigate('/'), 2000);
-
         } catch (error) {
             console.error(error);
-            setStatus("Deletion failed. Contact support.");
+            setStatus('Deletion failed. Contact support.');
         } finally {
             setIsLoading(false);
         }
@@ -100,8 +79,10 @@ export const UserDataRights: React.FC = () => {
                     <p className="text-sm text-gray-400">
                         Download a copy of all your interview sessions and security logs in JSON format.
                     </p>
-                    <GlassButton onClick={handleExportData} disabled={isLoading} variant="outline">
-                        {isLoading && status?.includes('Gathering') ? <Loader2 className="animate-spin mr-2" /> : null}
+                    <GlassButton onClick={handleExportData} disabled={isLoading} variant="outline" aria-label="Export my data">
+                        {isLoading && status?.includes('Gathering') ? (
+                            <Loader2 className="animate-spin mr-2" />
+                        ) : null}
                         Export My Data
                     </GlassButton>
                 </div>
@@ -115,12 +96,12 @@ export const UserDataRights: React.FC = () => {
                     <p className="text-sm text-gray-400">
                         Permanently remove your account and all associated data. This action is irreversible.
                     </p>
-                    <GlassButton
-                        onClick={handleDeleteAccount}
-                        disabled={isLoading}
-                        variant="destructive"
-                    >
-                        {isLoading && status?.includes('Deleting') ? <Loader2 className="animate-spin mr-2" /> : <Trash2 size={18} className="mr-2" />}
+                    <GlassButton onClick={handleDeleteAccount} disabled={isLoading} variant="destructive" aria-label="Delete my account">
+                        {isLoading && status?.includes('Deleting') ? (
+                            <Loader2 className="animate-spin mr-2" />
+                        ) : (
+                            <Trash2 size={18} className="mr-2" />
+                        )}
                         Delete Account
                     </GlassButton>
                 </div>
