@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
-import { validateUser } from './utils/auth.js';
-import { logger } from './utils/logger.js';
+import { validateUser } from '../utils/auth.js';
+import { logger } from '../utils/logger.js';
 
 export default async function handler(req: any, res: any) {
     // CORS Preflight

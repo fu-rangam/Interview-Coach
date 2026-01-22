@@ -39,7 +39,7 @@ export const generateBlueprint = async (
 ): Promise<CompetencyBlueprint | null> => {
   try {
     const authHeaders = await getAuthHeader();
-    const response = await fetch('/api/generate-blueprint', {
+    const response = await fetch('/api/generators?type=blueprint', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({ role, jobDescription, seniority }),
@@ -85,7 +85,7 @@ export const generateQuestionPlan = async (
 ): Promise<QuestionPlan | null> => {
   try {
     const authHeaders = await getAuthHeader();
-    const response = await fetch('/api/generate-question-plan', {
+    const response = await fetch('/api/generators?type=question-plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({ blueprint }),
@@ -112,7 +112,7 @@ export const generateQuestions = async (
 ): Promise<Question[]> => {
   try {
     const authHeaders = await getAuthHeader();
-    const response = await fetch('/api/generate-questions', {
+    const response = await fetch('/api/generators?type=questions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({
@@ -153,7 +153,7 @@ export const generateQuestionTips = async (
 ): Promise<QuestionTips> => {
   try {
     const authHeaders = await getAuthHeader();
-    const response = await fetch('/api/generate-tips', {
+    const response = await fetch('/api/generators?type=tips', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({ question, role, competency, intakeData, blueprint }),
@@ -246,7 +246,7 @@ export const generateStrongResponse = async (
 ): Promise<{ strongResponse: string; whyThisWorks: QuestionTips }> => {
   try {
     const authHeaders = await getAuthHeader();
-    const response = await fetch('/api/generate-strong-response', {
+    const response = await fetch('/api/generators?type=strong-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({ question, tips }),
@@ -331,7 +331,7 @@ export const generateCoachPrep = async (
 ): Promise<CoachPrepData | null> => {
   try {
     const authHeaders = await getAuthHeader();
-    const response = await fetch('/api/coach-prep', {
+    const response = await fetch('/api/generators?type=coach-prep', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({ role, jobDescription }),
