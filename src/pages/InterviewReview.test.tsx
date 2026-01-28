@@ -73,7 +73,10 @@ const mockContextValue: SessionContextType = {
   clearAnswer: vi.fn(),
   updateAnswerAnalysis: vi.fn(),
   resetSession: vi.fn(),
+  updateSession: vi.fn(),
   isLoading: false,
+  audioUrls: {},
+  cacheAudioUrl: vi.fn(),
 };
 
 describe('InterviewReview', () => {

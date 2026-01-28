@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { GlassCard } from './ui/glass/GlassCard';
+
 import { X, Copy, Database, Check } from 'lucide-react';
 import { InterviewSession } from '../types';
 import { cn } from '../lib/utils';
@@ -209,6 +209,13 @@ export const DebugInfoModal: React.FC<DebugInfoModalProps> = ({ isOpen, onClose,
       report += `_(Not enough data)_\n`;
     }
 
+    // Engagement Time Check
+    if (session.engagedTimeSeconds) {
+      report += `- **Engaged Time (Tier 3):** ${session.engagedTimeSeconds}s\n`;
+    } else {
+      report += `- **Engaged Time:** 0s (or undefined)\n`;
+    }
+
     return report;
   };
 
@@ -243,7 +250,7 @@ export const DebugInfoModal: React.FC<DebugInfoModalProps> = ({ isOpen, onClose,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <GlassCard className="w-full max-w-4xl h-[90vh] flex flex-col bg-zinc-900/95 border-cyan-500/20 shadow-2xl overflow-hidden">
+      <div className="w-full max-w-4xl h-[90vh] flex flex-col bg-zinc-900/95 border border-cyan-500/20 shadow-2xl rounded-xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
           <div className="flex items-center gap-2 text-cyan-400">
@@ -319,7 +326,7 @@ export const DebugInfoModal: React.FC<DebugInfoModalProps> = ({ isOpen, onClose,
             {reportContent}
           </ReactMarkdown>
         </div>
-      </GlassCard>
+      </div>
     </div>
   );
 };

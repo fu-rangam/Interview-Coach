@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GlassButton } from './ui/glass/GlassButton';
-import { GlassTextarea } from './ui/glass/GlassTextarea';
-import { GlassRadioGroup } from './ui/glass/GlassRadioGroup';
+import { Button } from './ui/button';
+import { Textarea } from './ui/textarea';
 import {
   OnboardingIntakeV1,
   DEFAULT_ONBOARDING_INTAKE_V1,
@@ -17,7 +16,82 @@ import {
   PrimaryGoal,
   InterviewStage,
 } from '../types/intake';
-import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { cn } from '../lib/utils';
+
+// --- Reusable Selection Group Component ---
+interface Option {
+  value: string;
+  label: string;
+  description?: string;
+  icon?: React.ReactNode;
+}
+
+interface SelectionGroupProps {
+  options: Option[];
+  value: string;
+  onChange: (val: string) => void;
+}
+
+const SelectionGroup: React.FC<SelectionGroupProps> = ({ options, value, onChange }) => {
+  return (
+    <div className="grid grid-cols-1 gap-3">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={cn(
+            'relative flex items-center p-4 rounded-xl border-2 text-left transition-all duration-200 group outline-none',
+            value === opt.value
+              ? 'bg-blue-50 border-rangam-blue shadow-sm'
+              : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+          )}
+        >
+          {opt.icon && (
+            <div
+              className={cn(
+                'w-10 h-10 rounded-full flex items-center justify-center text-xl mr-4 shrink-0 transition-colors',
+                value === opt.value
+                  ? 'bg-white text-rangam-blue shadow-sm'
+                  : 'bg-slate-100 text-slate-500'
+              )}
+            >
+              {opt.icon}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between items-center mb-0.5">
+              <h3
+                className={cn(
+                  'font-bold text-base',
+                  value === opt.value ? 'text-rangam-navy' : 'text-slate-700'
+                )}
+              >
+                {opt.label}
+              </h3>
+              {value === opt.value && (
+                <CheckCircle2
+                  size={18}
+                  className="text-rangam-blue ml-2 shrink-0 animate-fade-in"
+                />
+              )}
+            </div>
+            {opt.description && (
+              <p
+                className={cn(
+                  'text-sm leading-relaxed',
+                  value === opt.value ? 'text-slate-600' : 'text-slate-500'
+                )}
+              >
+                {opt.description}
+              </p>
+            )}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+};
 
 interface IntakeFormProps {
   onSubmit: (data: OnboardingIntakeV1) => void;
@@ -122,11 +196,10 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
       case 'stage':
         return (
           <div className="max-h-[400px] overflow-y-auto custom-scrollbar px-2">
-            <GlassRadioGroup
+            <SelectionGroup
               options={INTERVIEW_STAGE_OPTIONS}
               value={formData.stage}
               onChange={(val) => updateField('stage', val as InterviewStage)}
-              columns={1}
             />
           </div>
         );
@@ -145,7 +218,9 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
                   transform: 'translateX(-50%)',
                 }}
               >
-                <span className="font-bold text-cyan-700 text-2xl">{formData.confidenceScore}</span>
+                <span className="font-bold text-rangam-navy text-2xl">
+                  {formData.confidenceScore}
+                </span>
               </div>
               {/* Slider */}
               <input
@@ -157,11 +232,11 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
                 onChange={(e) =>
                   updateField('confidenceScore', Number(e.target.value) as ConfidenceScore)
                 }
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-500"
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-rangam-orange"
                 aria-label="Confidence Score"
               />
             </div>
-            <div className="flex justify-between text-lg text-gray-400 font-medium">
+            <div className="flex justify-between text-lg text-slate-600 font-medium">
               <span>😰 Anxious</span>
               <span>😐 Neutral</span>
               <span>💪 Ready</span>
@@ -173,11 +248,10 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
       case 'struggle':
         return (
           <div className="max-h-[400px] overflow-y-auto custom-scrollbar px-2">
-            <GlassRadioGroup
+            <SelectionGroup
               options={BIGGEST_STRUGGLE_OPTIONS}
               value={formData.biggestStruggle}
               onChange={(val) => updateField('biggestStruggle', val as BiggestStruggle)}
-              columns={1}
             />
           </div>
         );
@@ -185,11 +259,10 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
       case 'challenge':
         return (
           <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar px-2">
-            <GlassRadioGroup
+            <SelectionGroup
               options={CHALLENGE_LEVEL_OPTIONS}
               value={formData.challengeLevel}
               onChange={(val) => updateField('challengeLevel', val as ChallengeLevel)}
-              columns={1}
             />
           </div>
         );
@@ -197,23 +270,24 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
       case 'goal':
         return (
           <div className="max-h-[400px] overflow-y-auto custom-scrollbar px-2">
-            <GlassRadioGroup
+            <SelectionGroup
               options={PRIMARY_GOAL_OPTIONS}
               value={formData.primaryGoal}
               onChange={(val) => updateField('primaryGoal', val as PrimaryGoal)}
-              columns={1}
             />
           </div>
         );
 
       case 'mustPractice':
         return (
-          <GlassTextarea
-            placeholder="Type specific questions here (one per line)...&#10;e.g. Tell me about yourself&#10;Why this role?"
-            value={rawQuestions}
-            onChange={(e) => setRawQuestions(e.target.value)}
-            className="min-h-[120px] text-sm"
-          />
+          <div className="p-1">
+            <Textarea
+              placeholder="Type specific questions here (one per line)...&#10;e.g. Tell me about yourself&#10;Why this role?"
+              value={rawQuestions}
+              onChange={(e) => setRawQuestions(e.target.value)}
+              className="min-h-[160px] text-base placeholder:text-slate-400 bg-white border-slate-200 text-slate-800 focus:border-rangam-blue focus:ring-rangam-blue/20"
+            />
+          </div>
         );
 
       default:
@@ -229,16 +303,14 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
     <button
       onClick={goPrev}
       disabled={currentStep === 0}
-      className={`shrink-0 p-2 rounded-full transition-all duration-200 group ${
+      className={`shrink-0 p-2 rounded-full transition-all duration-300 group ${
         currentStep === 0
           ? 'opacity-0 pointer-events-none'
-          : 'hover:bg-white/5 text-gray-500 hover:text-cyan-400'
+          : 'bg-white text-rangam-blue border border-rangam-blue shadow-sm hover:bg-rangam-orange hover:text-white hover:border-rangam-orange hover:shadow-lg hover:scale-105'
       }`}
       aria-label="Previous Step"
     >
-      <div
-        className={`p-3 rounded-full border-2 transition-all duration-300 ${currentStep === 0 ? 'border-gray-800' : 'border-gray-700/50 group-hover:border-cyan-400/50 group-hover:shadow-glow-cyan'}`}
-      >
+      <div className={`p-3 rounded-full transition-all duration-300`}>
         <ChevronLeft size={32} strokeWidth={1.5} />
       </div>
     </button>
@@ -248,24 +320,16 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
     <button
       onClick={goNext}
       disabled={!canProceed()}
-      className={`shrink-0 p-2 rounded-full transition-all duration-200 group ${
+      className={`shrink-0 p-2 rounded-full transition-all duration-300 group ${
         !canProceed()
-          ? 'opacity-30 cursor-not-allowed'
-          : 'hover:bg-white/5 text-gray-400 hover:text-cyan-400'
+          ? 'opacity-30 cursor-not-allowed bg-slate-100 text-slate-400 border border-slate-200'
+          : 'bg-white text-rangam-blue border border-rangam-blue shadow-sm hover:bg-rangam-orange hover:text-white hover:border-rangam-orange hover:shadow-lg hover:scale-105'
       }`}
       aria-label={isLastStep ? 'Start Session' : 'Next Step'}
     >
-      <div
-        className={`p-3 rounded-full border-2 transition-all duration-300 ${
-          !canProceed()
-            ? 'border-gray-800'
-            : isLastStep
-              ? 'border-cyan-500 bg-cyan-500/10 shadow-glow-cyan animate-pulse group-hover:animate-none'
-              : 'border-gray-700/50 group-hover:border-cyan-400/50 group-hover:shadow-glow-cyan'
-        }`}
-      >
+      <div className={`p-3 rounded-full transition-all duration-300`}>
         {isLastStep ? (
-          <Play size={32} strokeWidth={1.5} className="ml-1 fill-cyan-400/20" />
+          <Play size={32} strokeWidth={1.5} className="ml-1 fill-current" />
         ) : (
           <ChevronRight size={32} strokeWidth={1.5} />
         )}
@@ -288,22 +352,22 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
             animate={{ opacity: 1, scale: 1 }}
             className="w-full max-w-4xl flex flex-col items-center text-center"
           >
-            <h2 className="text-3xl md:text-6xl font-display font-bold text-zinc-200 mb-6 tracking-tight">
+            <h2 className="text-3xl md:text-6xl font-display font-bold text-rangam-navy mb-6 tracking-tight">
               {step.title}
             </h2>
-            <p className="text-lg md:text-xl text-cyan-400 mb-10 max-w-2xl leading-relaxed">
+            <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl leading-relaxed">
               {step.subtitle}
             </p>
           </motion.div>
 
           {/* Mobile Start Button (Centered below text) */}
           <div className="md:hidden mt-4">
-            <GlassButton
+            <Button
               onClick={goNext}
-              className="px-8 py-3 text-lg font-bold shadow-glow-cyan animate-pulse"
+              className="px-8 py-3 text-lg font-bold shadow-glow-orange animate-pulse"
             >
               Let's Go <ChevronRight className="ml-2" />
-            </GlassButton>
+            </Button>
           </div>
         </div>
 
@@ -314,7 +378,7 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
 
   // --- Layout 2: Question Cards (Responsive Split View) ---
   return (
-    <div className="w-full lg:w-[60vw] h-auto lg:h-[60vh] min-h-[60vh] mx-auto flex flex-col animate-fadeIn relative pb-24 md:pb-0 px-4 md:px-0">
+    <div className="w-full max-w-5xl mx-auto flex flex-col pt-8 animate-fadeIn relative pb-24 md:pb-0 px-4">
       {/* Top Section: Title & Subtitle (Auto Height) */}
       <div className="w-full shrink-0 flex flex-col items-center text-center mb-6 md:mb-8 pt-4 md:pt-0">
         <AnimatePresence mode="wait">
@@ -326,10 +390,10 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
             transition={{ duration: 0.3 }}
             className="w-full"
           >
-            <h2 className="text-2xl md:text-5xl font-display font-bold text-zinc-200 mb-2 tracking-tight">
+            <h2 className="text-2xl md:text-5xl font-display font-bold text-rangam-navy mb-2 tracking-tight">
               {step.title}
             </h2>
-            <p className="text-sm md:text-lg text-cyan-400 max-w-3xl mx-auto leading-relaxed px-2">
+            <p className="text-sm md:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed px-2">
               {step.subtitle}
             </p>
           </motion.div>
@@ -362,12 +426,12 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
       </div>
 
       {/* Mobile Bottom Navigation Toolbar */}
-      <div className="fixed md:hidden bottom-0 inset-x-0 p-4 bg-zinc-950/90 backdrop-blur-xl border-t border-white/10 z-50 flex justify-between items-center gap-4">
+      <div className="fixed md:hidden bottom-0 inset-x-0 p-4 bg-white/90 backdrop-blur-xl border-t border-slate-200 z-50 flex justify-between items-center gap-4">
         <button
           onClick={goPrev}
           disabled={currentStep === 0}
-          className={`p-3 rounded-full border border-white/10 ${
-            currentStep === 0 ? 'opacity-30' : 'active:bg-white/10 text-white'
+          className={`p-3 rounded-full border border-slate-200 ${
+            currentStep === 0 ? 'opacity-30' : 'active:bg-slate-50 text-slate-600'
           }`}
         >
           <ChevronLeft size={24} />
@@ -379,7 +443,7 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
             <div
               key={idx}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                idx === currentStep ? 'w-6 bg-cyan-400' : 'w-1.5 bg-white/20'
+                idx === currentStep ? 'w-6 bg-rangam-orange' : 'w-1.5 bg-slate-200'
               }`}
             />
           ))}
@@ -390,10 +454,10 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
           disabled={!canProceed()}
           className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${
             !canProceed()
-              ? 'bg-white/5 text-gray-500 border border-white/5'
+              ? 'bg-slate-100 text-slate-400 border border-slate-200'
               : isLastStep
-                ? 'bg-cyan-500 text-white shadow-glow-cyan'
-                : 'bg-white/10 text-white border border-white/20 active:bg-white/20'
+                ? 'bg-rangam-orange text-white shadow-glow-orange'
+                : 'bg-white text-rangam-navy border border-slate-200 active:bg-slate-50'
           }`}
         >
           {isLastStep ? 'Start' : 'Next'}
@@ -406,12 +470,12 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit }) => {
         {STEPS.map((_, idx) => (
           <div
             key={idx}
-            className={`h-1 rounded-full transition-all duration-500 ${
+            className={`h-1.5 rounded-full transition-all duration-500 ${
               idx === currentStep
-                ? 'w-8 bg-cyan-400/80 shadow-glow-cyan'
+                ? 'w-10 bg-rangam-navy shadow-sm'
                 : idx < currentStep
-                  ? 'w-2 bg-cyan-900/50'
-                  : 'w-1 bg-white/10'
+                  ? 'w-2 bg-rangam-orange/50'
+                  : 'w-1.5 bg-slate-200'
             }`}
           />
         ))}

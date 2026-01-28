@@ -12,7 +12,7 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
-vi.mock('../components/ui/glass/SessionLoader', () => ({
+vi.mock('../components/ui/session-loader', () => ({
   SessionLoader: ({ onTransitionComplete }: { onTransitionComplete: () => void }) => {
     // Immediately trigger completion
     React.useEffect(() => {
@@ -84,7 +84,10 @@ const mockContextValue: SessionContextType = {
   clearAnswer: vi.fn(),
   updateAnswerAnalysis: vi.fn(),
   resetSession: vi.fn(),
+  updateSession: vi.fn(),
   isLoading: false,
+  audioUrls: {},
+  cacheAudioUrl: vi.fn(),
 };
 
 describe('InterviewSession', () => {

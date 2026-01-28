@@ -12,9 +12,11 @@ import {
   GraduationCap,
   X,
 } from 'lucide-react';
-import { GlassButton } from '../components/ui/glass/GlassButton';
+import { Button } from '../components/ui/button';
 import { authService } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
+
+import { AppBackground } from '../components/AppBackground';
 
 export const DashboardLayout: React.FC = () => {
   const location = useLocation();
@@ -54,15 +56,12 @@ export const DashboardLayout: React.FC = () => {
   ];
 
   return (
-    <div className="h-screen flex text-white overflow-hidden relative">
-      {/* Background Blobs (Global for Dashboard) */}
-      <div className="fixed top-[-20%] left-[-10%] w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none hidden lg:block" />
-      <div className="fixed bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none hidden lg:block" />
-
+    <div className="h-screen flex text-slate-900 overflow-hidden relative font-sans">
+      <AppBackground />
       {/* Mobile Backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden animate-fade-in"
+          className="fixed inset-0 z-40 bg-rangam-navy/20 backdrop-blur-sm lg:hidden animate-fade-in"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -70,8 +69,8 @@ export const DashboardLayout: React.FC = () => {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 border-r border-white/10 transition-transform duration-300 lg:translate-x-0',
-          'bg-zinc-950/90 backdrop-blur-xl lg:glass-panel lg:bg-transparent',
+          'fixed inset-y-0 left-0 z-50 w-64 border-r border-slate-200 transition-transform duration-300 lg:translate-x-0',
+          'bg-white lg:bg-white shadow-sm',
           !sidebarOpen && '-translate-x-full lg:translate-x-0'
         )}
       >
@@ -79,7 +78,6 @@ export const DashboardLayout: React.FC = () => {
           className="h-full flex flex-col p-4"
           onTouchStart={(e) => {
             const touch = e.touches[0];
-            // Store start X
             e.currentTarget.dataset.startX = touch.clientX.toString();
           }}
           onTouchMove={() => {
@@ -90,32 +88,29 @@ export const DashboardLayout: React.FC = () => {
             const startX = parseFloat(e.currentTarget.dataset.startX || '0');
             const diff = startX - touch.clientX;
             if (diff > 50) {
-              // Swiped left
               setSidebarOpen(false);
             }
           }}
         >
-          <div className="h-16 flex items-center justify-between px-2 mb-8">
+          <div className="h-16 flex items-center justify-between px-2 mb-8 border-b border-slate-100">
             <Link
               to="/"
-              className="text-xl font-bold text-white tracking-tight font-display"
+              className="text-xl font-bold text-rangam-navy tracking-tight font-display"
               onClick={() => setSidebarOpen(false)}
             >
-              Ready<span className="text-cyan-400">2</span>Work
+              Ready<span className="text-rangam-orange">2</span>
+              <span className="text-rangam-blue">Work</span>
             </Link>
-            {/* On mobile, if text is hidden, show X aligned left or right? 
-                            Just keep the close button.
-                        */}
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-gray-400 hover:text-white ml-auto"
+              className="lg:hidden text-slate-500 hover:text-rangam-navy ml-auto"
               aria-label="Close menu"
             >
               <X size={24} />
             </button>
           </div>
 
-          <nav className="flex-1 space-y-2">
+          <nav className="flex-1 space-y-1">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -124,16 +119,18 @@ export const DashboardLayout: React.FC = () => {
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
                   className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group',
+                    'flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 group font-medium',
                     isActive
-                      ? 'bg-white/10 text-white shadow-[0_0_10px_rgba(6,182,212,0.2)] border border-white/5'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-rangam-orange/10 text-rangam-orange shadow-sm'
+                      : 'text-slate-600 hover:text-rangam-navy hover:bg-slate-50'
                   )}
                 >
                   <span
                     className={cn(
                       'transition-colors',
-                      isActive ? 'text-cyan-400' : 'group-hover:text-cyan-400'
+                      isActive
+                        ? 'text-rangam-orange'
+                        : 'text-slate-400 group-hover:text-rangam-navy'
                     )}
                   >
                     {item.icon}
@@ -144,20 +141,20 @@ export const DashboardLayout: React.FC = () => {
             })}
           </nav>
 
-          <div className="mt-auto pt-4 border-t border-white/5">
-            <GlassButton
+          <div className="mt-auto pt-4 border-t border-slate-100">
+            <Button
               variant="ghost"
-              className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10"
+              className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50"
               onClick={async () => {
                 await authService.signOut();
-                localStorage.clear(); // Clear all session data
+                localStorage.clear();
                 navigate('/');
                 setSidebarOpen(false);
               }}
             >
               <LogOut size={18} className="mr-3" />
               Sign Out
-            </GlassButton>
+            </Button>
           </div>
         </div>
       </aside>
@@ -170,28 +167,30 @@ export const DashboardLayout: React.FC = () => {
         )}
       >
         {/* Header */}
-        <header className="h-16 px-6 flex items-center justify-between border-b border-white/5 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-40">
+        <header className="h-16 px-6 flex items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-40 shadow-sm">
           <div className="flex items-center gap-4">
             {/* Mobile Toggle */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden text-gray-400 hover:text-white"
+              className="lg:hidden p-2 -ml-2 text-slate-500 hover:text-rangam-navy hover:bg-slate-100 rounded-md transition-colors"
               aria-label="Toggle menu"
             >
               <Menu size={24} />
             </button>
-            {/* Breadcrumbs or Title could go here */}
+            {/* Optional Breadcrumb Placeholder */}
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium text-white truncate max-w-[150px] lg:max-w-none">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-semibold text-rangam-navy truncate max-w-[150px] lg:max-w-none">
                 {user?.email}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-linear-to-tr from-cyan-500 to-purple-500 p-[2px]">
-              <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center">
-                <User size={20} className="text-gray-300" />
+            <div className="w-10 h-10 rounded-full bg-linear-to-br from-rangam-blue to-rangam-orange p-[2px] shadow-sm">
+              <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-rangam-navy font-bold">
+                {user?.email?.charAt(0).toUpperCase() || (
+                  <User size={20} className="text-slate-400" />
+                )}
               </div>
             </div>
           </div>
@@ -201,11 +200,12 @@ export const DashboardLayout: React.FC = () => {
         <div
           ref={mainContentRef}
           className={cn(
-            'flex-1 overflow-y-auto',
-            // Remove padding and scroll for active session to allow full-screen layout
+            'flex-1 overflow-y-auto w-full',
             location.pathname.includes('/session')
               ? 'p-0 overflow-hidden flex flex-col'
-              : 'p-6 lg:p-8'
+              : location.pathname === '/'
+                ? 'p-0'
+                : 'p-6'
           )}
         >
           <Outlet />

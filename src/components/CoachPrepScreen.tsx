@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { GlassCard } from './ui/glass/GlassCard';
-import { GlassButton } from './ui/glass/GlassButton';
+import { Button } from './ui/button';
+import { Card } from './ui/card';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { CoachPrepData } from '../services/geminiService';
 
@@ -13,6 +13,7 @@ interface CoachPrepScreenProps {
   onRetry?: () => void;
   role: string;
 }
+
 const highlightSkills = (text: string, skills: string[]): React.ReactNode => {
   if (!skills || skills.length === 0) return text;
 
@@ -27,7 +28,7 @@ const highlightSkills = (text: string, skills: string[]): React.ReactNode => {
         parts.forEach((part, j) => {
           if (part.toLowerCase() === skill.toLowerCase()) {
             newResult.push(
-              <span key={`${i}-${j}`} className="text-cyan-400 font-medium">
+              <span key={`${i}-${j}`} className="text-rangam-orange font-bold">
                 {part}
               </span>
             );
@@ -51,10 +52,9 @@ export const CoachPrepScreen: React.FC<CoachPrepScreenProps> = ({
   isSessionReady,
   onBegin,
   onRetry,
-  role,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-app-dark md:pl-64 overflow-y-auto custom-scrollbar">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-white md:pl-64 overflow-y-auto custom-scrollbar">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -66,10 +66,10 @@ export const CoachPrepScreen: React.FC<CoachPrepScreenProps> = ({
           <div className="flex flex-col items-center gap-6">
             {/* Pulsing Dot */}
             <div className="relative flex items-center justify-center">
-              <div className="w-4 h-4 rounded-full bg-cyan-500 animate-ping absolute opacity-75"></div>
-              <div className="w-3 h-3 rounded-full bg-cyan-400 relative shadow-[0_0_20px_rgba(6,182,212,0.8)]"></div>
+              <div className="w-4 h-4 rounded-full bg-rangam-orange animate-ping absolute opacity-75"></div>
+              <div className="w-3 h-3 rounded-full bg-rangam-orange relative shadow-lg"></div>
             </div>
-            <h2 className="text-xl md:text-2xl font-light tracking-widest text-white uppercase font-display select-none">
+            <h2 className="text-xl md:text-2xl font-light tracking-widest text-rangam-navy uppercase font-display select-none">
               Taking a Look...
             </h2>
           </div>
@@ -82,30 +82,26 @@ export const CoachPrepScreen: React.FC<CoachPrepScreenProps> = ({
             animate={{ opacity: 1 }}
             className="flex flex-col items-center gap-8"
           >
-            <GlassCard className="p-8 text-center border-red-500/20 bg-red-500/5">
-              <h2 className="text-xl font-bold text-white mb-2">Coach Tips Unavailable</h2>
-              <p className="text-gray-400 mb-6">
+            <Card className="p-8 text-center border-red-500/20 bg-red-50">
+              <h2 className="text-xl font-bold text-red-600 mb-2">Coach Tips Unavailable</h2>
+              <p className="text-slate-600 mb-6">
                 We couldn't generate your personalized prep tips right now, but your interview
                 session is ready.
               </p>
               <div className="w-full flex flex-col gap-3">
                 {onRetry && (
-                  <GlassButton
+                  <Button
                     onClick={onRetry}
-                    variant="default"
-                    className="w-full py-4 text-base font-medium border-white/20 hover:bg-white/10"
+                    variant="outline"
+                    className="w-full py-6 text-base font-medium"
                   >
                     Try Again
-                  </GlassButton>
+                  </Button>
                 )}
-                <GlassButton
+                <Button
                   onClick={onBegin}
                   disabled={!isSessionReady}
-                  className={`w-full py-4 text-lg font-bold transition-all ${
-                    isSessionReady
-                      ? 'bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-lg shadow-cyan-900/30'
-                      : 'opacity-50 cursor-not-allowed'
-                  }`}
+                  className="w-full py-6 text-lg font-bold shadow-lg shadow-rangam-navy/20"
                 >
                   {isSessionReady ? (
                     <>
@@ -118,9 +114,9 @@ export const CoachPrepScreen: React.FC<CoachPrepScreenProps> = ({
                       Preparing...
                     </>
                   )}
-                </GlassButton>
+                </Button>
               </div>
-            </GlassCard>
+            </Card>
           </motion.div>
         )}
 
@@ -133,42 +129,41 @@ export const CoachPrepScreen: React.FC<CoachPrepScreenProps> = ({
             className="space-y-8"
           >
             {/* Greeting */}
-            <h1 className="text-2xl md:text-3xl font-semibold text-white text-center leading-relaxed">
+            <h1 className="text-2xl md:text-3xl font-semibold text-rangam-navy text-center leading-relaxed font-display">
               {prepData.greeting}
             </h1>
 
-            {/* Advice Card - Slate blue for visual distinction */}
-            <GlassCard className="p-6 md:p-8 bg-slate-700/40 border-slate-500/20">
-              <p className="text-gray-200 text-base md:text-lg leading-relaxed">
+            {/* Advice Card - Light Blue Gradient */}
+            <Card className="p-6 md:p-8 border-none bg-[linear-gradient(to_bottom_right,#ffffff,rgba(36,84,255,0.1)_80%)] shadow-2xl">
+              <p className="text-rangam-navy text-base md:text-lg leading-relaxed">
                 {highlightSkills(prepData.advice, prepData.keySkills)}
               </p>
 
-              {/* Key Skills as simple bullets */}
+              {/* Key Skills as bullets */}
               {prepData.keySkills && prepData.keySkills.length > 0 && (
                 <ul className="mt-6 space-y-2">
                   {prepData.keySkills.map((skill, idx) => (
-                    <li key={idx} className="flex items-center gap-3 text-gray-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                      <span className="text-cyan-400 font-medium">{skill}</span>
+                    <li key={idx} className="flex items-center gap-3 text-rangam-navy">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rangam-orange" />
+                      <span className="text-rangam-orange font-bold tracking-wide text-sm uppercase">
+                        {skill}
+                      </span>
                     </li>
                   ))}
                 </ul>
               )}
-            </GlassCard>
+            </Card>
 
             {/* Encouragement */}
-            <p className="text-gray-400 italic text-center text-lg">{prepData.encouragement}</p>
+            <p className="text-slate-500 italic text-center text-lg">{prepData.encouragement}</p>
 
             {/* Begin Button */}
             <div className="pt-4">
-              <GlassButton
+              <Button
                 onClick={onBegin}
                 disabled={!isSessionReady}
-                className={`w-full py-4 text-lg font-bold transition-all ${
-                  isSessionReady
-                    ? 'bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-lg shadow-cyan-900/30'
-                    : 'opacity-50 cursor-not-allowed'
-                }`}
+                size="lg"
+                className="w-full text-lg font-bold h-14"
               >
                 {isSessionReady ? (
                   <>
@@ -181,7 +176,7 @@ export const CoachPrepScreen: React.FC<CoachPrepScreenProps> = ({
                     Preparing...
                   </>
                 )}
-              </GlassButton>
+              </Button>
             </div>
           </motion.div>
         )}

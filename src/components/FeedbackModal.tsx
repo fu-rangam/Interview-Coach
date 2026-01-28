@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, Copy, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { ReviewQuestionItem } from './ui/glass/ReviewQuestionItem';
+import { ReviewQuestionItem } from './ui/review-question-item';
 import { Question, AnalysisResult, CompetencyBlueprint } from '../types';
 
 interface FeedbackModalProps {
@@ -30,17 +30,17 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:pl-64 bg-black/80 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:pl-64 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
       <div className="w-full max-w-7xl max-h-[90vh] overflow-y-auto custom-scrollbar relative bg-transparent rounded-2xl">
         {/* Header Controls: Copy & Close */}
         <div className="sticky top-0 right-0 z-50 flex justify-end gap-2 px-6 py-6 md:px-8 md:py-8 pointer-events-none">
           {/* Copy Button */}
           <button
             className={cn(
-              'pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full transition-all border text-xs font-medium backdrop-blur-sm shadow-lg',
+              'pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full transition-all border text-xs font-medium backdrop-blur-sm shadow-sm',
               isCopied
-                ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                : 'bg-black/50 text-gray-400 hover:text-white hover:bg-white/10 border-white/10'
+                ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                : 'bg-white/80 text-slate-500 hover:text-slate-900 hover:bg-white border-slate-200'
             )}
             title="Copy Answer"
             aria-label="Copy Answer"
@@ -60,7 +60,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="pointer-events-auto p-2 rounded-full bg-black/50 text-gray-400 hover:text-white hover:bg-white/10 transition-colors border border-white/10 backdrop-blur-sm shadow-lg"
+            className="pointer-events-auto p-2 rounded-full bg-white/80 text-slate-400 hover:text-slate-900 hover:bg-white transition-colors border border-slate-200 backdrop-blur-sm shadow-sm"
             aria-label="Close"
           >
             <X size={20} />

@@ -34,7 +34,7 @@ export const router = createBrowserRouter([
           { path: '/interview', element: <InterviewSetup /> },
           { path: '/resume-builder', element: <ResumeUploader /> },
           { path: '/training', element: <Training /> },
-          { path: '/glass/interview/session', element: <InterviewSession /> },
+
           { path: '/interview/session', element: <InterviewSession /> },
           { path: '/interview/prep', element: <InterviewPrep /> },
           { path: '/review', element: <InterviewReview /> },

@@ -16,7 +16,7 @@ global.ResizeObserver = class ResizeObserver {
 global.URL.createObjectURL = vi.fn(() => 'mock-url');
 
 // Mock SessionLoader (initial loader)
-vi.mock('../components/ui/glass/SessionLoader', () => ({
+vi.mock('../components/ui/session-loader', () => ({
   SessionLoader: ({ onTransitionComplete }: { onTransitionComplete: () => void }) => {
     React.useEffect(() => {
       onTransitionComplete();
@@ -26,7 +26,7 @@ vi.mock('../components/ui/glass/SessionLoader', () => ({
 }));
 
 // Mock MultiStepLoader
-vi.mock('../components/ui/glass/MultiStepLoader', () => ({
+vi.mock('../components/ui/multi-step-loader', () => ({
   MultiStepLoader: ({ loading, onComplete }: { loading: boolean; onComplete: () => void }) => {
     React.useEffect(() => {
       if (loading && onComplete) {
@@ -110,16 +110,6 @@ vi.mock('../components/AudioVisualizer', () => ({ default: () => <div /> }));
 vi.mock('../components/session/TipsAndTranscriptContent', () => ({
   TipsAndTranscriptContent: () => <div />,
 }));
-vi.mock('../components/ui/glass/GlassCard', () => ({
-  GlassCard: ({ children }: any) => <div>{children}</div>,
-}));
-vi.mock('../components/ui/glass/GlassButton', () => ({
-  GlassButton: ({ onClick, children, ...props }: any) => (
-    <button onClick={onClick} {...props}>
-      {children}
-    </button>
-  ),
-}));
 vi.mock('../components/DebugInfoModal', () => ({ DebugInfoModal: () => <div /> }));
 
 const mockQuestion = { id: 'q1', text: 'Question 1', tips: ['Tip 1'] };
@@ -160,6 +150,7 @@ describe('InterviewSession Feedback Flow', () => {
       clearAnswer: vi.fn(),
       updateAnswerAnalysis: vi.fn(),
       resetSession: vi.fn(),
+      updateSession: vi.fn(),
       isLoading: false,
       audioUrls: {},
       cacheAudioUrl: vi.fn(),
@@ -238,6 +229,7 @@ describe('InterviewSession Feedback Flow', () => {
       clearAnswer: vi.fn(),
       updateAnswerAnalysis: vi.fn(),
       resetSession: vi.fn(),
+      updateSession: vi.fn(),
       isLoading: false,
       audioUrls: {},
       cacheAudioUrl: vi.fn(),

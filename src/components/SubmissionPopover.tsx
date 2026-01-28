@@ -1,8 +1,8 @@
 import React from 'react';
-import { GlassCard } from './ui/glass/GlassCard';
-import { GlassButton } from './ui/glass/GlassButton';
-import { ArrowRight, Activity } from 'lucide-react';
+import { Button } from './ui/button';
+import { ArrowRight, Activity, CheckCircle2 } from 'lucide-react';
 import { Question, CompetencyBlueprint } from '../types';
+import { cn } from '../lib/utils';
 
 interface SubmissionPopoverProps {
   isOpen: boolean;
@@ -31,57 +31,58 @@ export const SubmissionPopover: React.FC<SubmissionPopoverProps> = ({
 
   if (isSessionComplete) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-        <GlassCard className="w-full max-w-md p-8 flex flex-col items-center gap-6 border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+        <div className="w-full max-w-md p-8 flex flex-col items-center gap-6 border border-slate-200 bg-white shadow-xl rounded-2xl animate-fade-in-up">
           <div className="text-center space-y-2">
-            <h3 className="text-xl font-bold text-white font-display tracking-wide">
+            <h3 className="text-xl font-bold text-rangam-navy font-display tracking-wide">
               Session Complete!
             </h3>
-            <p className="text-gray-400 text-sm">
+            <p className="text-slate-500 text-sm">
               Great job. Click Finish below to review your performance.
             </p>
           </div>
-          <GlassButton
+          <Button
             onClick={onFinish}
-            className="w-full bg-cyan-600 hover:bg-cyan-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.3)] border border-white/10"
+            className="w-full bg-rangam-blue hover:bg-rangam-blue/90 text-white shadow-md py-6 text-lg font-bold rounded-xl"
           >
             Finish & Review <ArrowRight size={16} className="ml-2" />
-          </GlassButton>
-        </GlassCard>
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in md:pl-64">
-      <GlassCard className="w-full max-w-md p-8 flex flex-col items-center gap-6 border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in md:pl-64">
+      <div className="w-full max-w-md p-8 flex flex-col items-center gap-6 border border-slate-200 bg-white shadow-xl rounded-2xl animate-fade-in-up">
         <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mx-auto mb-4 border border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.2)]">
-            <Activity size={32} className="text-cyan-400" />
+          <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-sm">
+            <Activity size={32} className="text-rangam-blue" />
           </div>
-          <h3 className="text-xl font-bold text-white font-display tracking-wide">
+          <h3 className="text-xl font-bold text-rangam-navy font-display tracking-wide">
             Answer Recorded
           </h3>
-          <p className="text-gray-400 text-sm">
+          <p className="text-slate-500 text-sm">
             Would you like to analyze this answer now or move on?
           </p>
         </div>
 
         <div className="flex flex-col gap-3 w-full">
-          <button
+          <Button
             onClick={onFeedback}
-            className="w-full py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-all font-bold text-sm uppercase tracking-wider border border-white/10"
+            className="w-full py-6 rounded-xl bg-rangam-blue hover:bg-rangam-blue/90 text-white shadow-md transition-all font-bold text-sm uppercase tracking-wider border border-transparent"
           >
             View Analysis (Recommended)
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
             onClick={onNext}
-            className="w-full py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 hover:border-white/20 transition-all font-medium text-sm uppercase tracking-wider"
+            className="w-full py-6 rounded-xl border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-300 transition-all font-medium text-sm uppercase tracking-wider"
           >
             Back to Session
-          </button>
+          </Button>
         </div>
-      </GlassCard>
+      </div>
     </div>
   );
 };

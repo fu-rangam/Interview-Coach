@@ -25,7 +25,7 @@ export const InterviewPrep: React.FC = () => {
 
   const [prepData, setPrepData] = useState<CoachPrepData | null>(cachedCoachPrep || null);
   const [isPrepLoading, setIsPrepLoading] = useState(!cachedCoachPrep);
-  const [isSessionReady, setIsSessionReady] = useState(false);
+  const [localSessionLoaded, setLocalSessionLoaded] = useState(false);
 
   // Guard: Redirect if no role provided
   useEffect(() => {
@@ -37,9 +37,14 @@ export const InterviewPrep: React.FC = () => {
     }
   }, [role, navigate]);
 
+  const hasStartedRef = React.useRef(false);
+
   // Parallel: Fetch coach prep (only if not cached) and start session (slow)
   useEffect(() => {
     if (!role) return;
+    if (hasStartedRef.current) return; // Prevent double-fire or dependency-driven re-fire
+
+    hasStartedRef.current = true;
 
     // Only fetch coach prep if not already cached
     if (!cachedCoachPrep) {
@@ -57,21 +62,18 @@ export const InterviewPrep: React.FC = () => {
     // Slow: Full session init (background)
     startSession(role, jobDescription, intakeData)
       .then(() => {
-        setIsSessionReady(true);
+        setLocalSessionLoaded(true);
       })
       .catch((err) => {
         console.error('Session init failed:', err);
         // Still allow navigation - session might partially work
-        setIsSessionReady(true);
+        setLocalSessionLoaded(true);
       });
-  }, [role, jobDescription, intakeData, startSession]);
+  }, [role, jobDescription, intakeData, startSession, cachedCoachPrep]);
 
-  // Also check if session is already ready (from context)
-  useEffect(() => {
-    if (session.status === 'ACTIVE' && session.questions.length > 0 && !isSessionReady) {
-      setIsSessionReady(true);
-    }
-  }, [session, isSessionReady]);
+  // Derived state: Ready if local load finished OR context already has active session
+  const isSessionReady =
+    localSessionLoaded || (session.status === 'ACTIVE' && session.questions.length > 0);
 
   const handleBegin = () => {
     navigate('/interview/session');

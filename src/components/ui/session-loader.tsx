@@ -57,7 +57,7 @@ export const SessionLoader: React.FC<SessionLoaderProps> = ({
       {stage !== 'complete' && (
         <motion.div
           key="loader-overlay"
-          className="fixed inset-0 z-100 flex flex-col items-center justify-center backdrop-blur-md bg-black/90 overflow-hidden md:pl-64"
+          className="fixed inset-0 z-100 flex flex-col items-center justify-center backdrop-blur-md bg-white/90 overflow-hidden md:pl-64"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.5, ease: 'easeInOut' } }}
         >
@@ -69,7 +69,7 @@ export const SessionLoader: React.FC<SessionLoaderProps> = ({
               exit={{ opacity: 0, scale: 1.05, transition: { duration: 0.3 } }}
               className="flex flex-col items-center"
             >
-              <h2 className="text-xl md:text-2xl font-light tracking-widest text-white uppercase font-display select-none">
+              <h2 className="text-xl md:text-2xl font-light tracking-widest text-rangam-navy uppercase font-display select-none">
                 Entering Interview Room...
               </h2>
             </motion.div>

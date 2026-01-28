@@ -48,6 +48,7 @@ export interface SessionContextType {
   isLoading: boolean;
   audioUrls: Record<string, string>;
   cacheAudioUrl: (questionId: string, url: string) => void;
+  updateSession: (sessionId: string, updates: Partial<InterviewSession>) => Promise<void>;
 }
 
 export const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -316,7 +317,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
       }
     },
-    [isGuest]
+    [audioUrls, isGuest]
   );
 
   const nextQuestion = useCallback(() => {
@@ -362,7 +363,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
         console.error('Failed to load tips for question:', questionId, error);
       }
     },
-    [session.questions, session.role]
+    [session.blueprint, session.intakeData, session.questions, session.role]
   );
 
   const saveAnswer = useCallback(
@@ -443,6 +444,16 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     localStorage.removeItem('current_session');
   }, []);
 
+  const updateSession = useCallback(
+    async (sessionId: string, updates: Partial<InterviewSession>) => {
+      setSession((prev) => ({ ...prev, ...updates }));
+      if (!isGuest) {
+        await sessionService.updateSession(sessionId, { ...session, ...updates });
+      }
+    },
+    [session, isGuest]
+  );
+
   const contextValue = React.useMemo(
     () => ({
       session,
@@ -458,6 +469,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
       cacheAudioUrl,
       finishSession,
       resetSession,
+      updateSession,
     }),
     [
       session,
@@ -473,6 +485,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
       cacheAudioUrl,
       finishSession,
       resetSession,
+      updateSession,
     ]
   );
 

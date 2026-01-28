@@ -1,17 +1,51 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { sanitizeInput, truncateInput } from '../lib/sanitize';
 
 const MAX_TEXT_LENGTH = 2000;
+const DRAFT_PREFIX = 'interview_draft_';
 
-export function useTextAnswer() {
-  const [text, setText] = useState('');
+export function useTextAnswer(questionId?: string, sessionId?: string) {
+  // Store the ID we last synced with to detect changes during render
+  // We use a composite key for sync detection
+  const compositeKey = questionId && sessionId ? `${sessionId}_${questionId}` : null;
+  const [prevKey, setPrevKey] = useState(compositeKey);
+
+  const [text, setText] = useState(() => {
+    if (!questionId || !sessionId) return '';
+    const key = `${DRAFT_PREFIX}${sessionId}_${questionId}`;
+    return sessionStorage.getItem(key) || '';
+  });
+
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Sync state when questionId/sessionId changes
+  if (compositeKey !== prevKey) {
+    setPrevKey(compositeKey);
+    const key = compositeKey ? `${DRAFT_PREFIX}${compositeKey}` : '';
+    const saved = key ? sessionStorage.getItem(key) : '';
+    setText(saved || '');
+    setError(null);
+  }
+
+  // Persist draft on text change
+  useEffect(() => {
+    if (!questionId || !sessionId) return;
+
+    const key = `${DRAFT_PREFIX}${sessionId}_${questionId}`;
+    const timeout = setTimeout(() => {
+      if (text.trim()) {
+        sessionStorage.setItem(key, text);
+      } else {
+        sessionStorage.removeItem(key); // Clear empty drafts
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [text, questionId, sessionId]);
+
   const handleTextChange = (newText: string) => {
     if (newText.length > MAX_TEXT_LENGTH) {
-      // Allow typing but show error or just truncate?
-      // Better UX is to truncate or stop typing
       return;
     }
     setText(newText);
@@ -38,6 +72,11 @@ export function useTextAnswer() {
     setText('');
     setError(null);
     setIsSubmitting(false);
+
+    // Clear draft from storage
+    if (questionId && sessionId) {
+      sessionStorage.removeItem(`${DRAFT_PREFIX}${sessionId}_${questionId}`);
+    }
   };
 
   return {

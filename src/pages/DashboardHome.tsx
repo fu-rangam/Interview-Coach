@@ -1,43 +1,69 @@
 import React, { useEffect, useState } from 'react';
-import { GlassCard } from '../components/ui/glass/GlassCard';
-import { GlassButton } from '../components/ui/glass/GlassButton';
-import {
-  Mic,
-  TrendingUp,
-  Clock,
-  Loader2,
-  Trash2,
-  Download,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { Loader2, Trash2, Download, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 import {
   getAllSessions,
   SessionHistory,
   deleteSession,
   exportSessionAsJSON,
 } from '../services/storageService';
-import { ReviewQuestionItem } from '../components/ui/glass/ReviewQuestionItem';
+import { ReviewQuestionItem } from '../components/ui/review-question-item';
 import { AnimatePresence, motion } from 'framer-motion';
+
+// Coach Logic & Components
+import { generateDashboardSignals, CoachDashboardSignals } from '../services/coachService';
+import { CurrentBaseline } from '../components/dashboard/CurrentBaseline';
+import { CoachingFocus } from '../components/dashboard/CoachingFocus';
+import { CompetencyConstellation } from '../components/dashboard/CompetencyConstellation';
+import { ProgressMomentum } from '../components/dashboard/ProgressMomentum';
 
 export const DashboardHome: React.FC = () => {
   const [sessions, setSessions] = useState<SessionHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
 
+  // Coach Signals State
+  const [signals, setSignals] = useState<CoachDashboardSignals | null>(null);
+
+  const fetchSessions = React.useCallback(async () => {
+    // Loading is true by default, so we don't need to set it true initially
+    // setLoading(true);
+    const data = await getAllSessions();
+    setSessions(data);
+
+    // Generate Coach Signals derived from data
+    const coachSignals = generateDashboardSignals(data);
+    setSignals(coachSignals);
+
+    setLoading(false);
+  }, []);
+
   const toggleSession = (id: string) => {
     setExpandedSessionId((prev) => (prev === id ? null : id));
   };
-  useEffect(() => {
-    const fetchSessions = async () => {
-      // Loading is true by default, so we don't need to set it true initially
-      // setLoading(true);
-      const data = await getAllSessions();
-      setSessions(data);
-      setLoading(false);
-    };
 
-    fetchSessions();
+  useEffect(() => {
+    let isMounted = true;
+    const loadData = async () => {
+      try {
+        const data = await getAllSessions();
+        if (isMounted) {
+          setSessions(data);
+
+          // Generate signals
+          const coachSignals = generateDashboardSignals(data);
+          setSignals(coachSignals);
+
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Failed to load dashboard sessions', error);
+        if (isMounted) setLoading(false);
+      }
+    };
+    loadData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
@@ -64,210 +90,187 @@ export const DashboardHome: React.FC = () => {
     }
   };
 
-  // Calculate Stats
-  const totalSessions = sessions.length;
-  const avgScore =
-    totalSessions > 0
-      ? Math.round(sessions.reduce((acc, s) => acc + s.score, 0) / totalSessions)
-      : 0;
-
-  const stats = [
-    {
-      label: 'Sessions Completed',
-      value: totalSessions.toString(),
-      icon: <Mic className="text-cyan-400" />,
-      trend: 'All time',
-    },
-    {
-      label: 'Avg. Confidence',
-      value: `${avgScore}%`,
-      icon: <TrendingUp className="text-green-400" />,
-      trend: 'Overall',
-    },
-    {
-      label: 'Practice Time',
-      value: `${totalSessions * 15}m`,
-      icon: <Clock className="text-purple-400" />,
-      trend: 'Estimated',
-    },
-  ];
-
   const recentSessions = [...sessions].slice(0, 5); // Newest first
 
-  if (loading) {
+  if (loading || !signals) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="animate-spin text-cyan-400" size={32} />
+        <Loader2 className="animate-spin text-rangam-blue" size={32} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-rangam-navy">Dashboard</h1>
+
+        {/* Practice Time Widget (Temporary Restoration) */}
+        <div className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white rounded-full border border-slate-200 shadow-sm text-slate-600 animate-fade-in">
+          <Clock size={16} className="text-rangam-blue" />
+          <span className="text-xs md:text-sm font-medium">
+            <span className="font-bold text-rangam-navy">
+              {Math.floor(
+                sessions.reduce((acc, s) => acc + (s.session.engagedTimeSeconds || 0), 0) / 3600
+              )}
+              h{' '}
+              {Math.floor(
+                (sessions.reduce((acc, s) => acc + (s.session.engagedTimeSeconds || 0), 0) % 3600) /
+                  60
+              )}
+              m
+            </span>{' '}
+            Practice
+          </span>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat, i) => (
-          <GlassCard key={i}>
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 rounded-lg bg-white/5">{stat.icon}</div>
-              <span className="text-xs text-gray-300 font-medium bg-zinc-800/80 border border-white/10 px-2 py-1 rounded-full">
-                {stat.trend}
-              </span>
+      {/* SECTION 1: Current Baseline (Sacred) */}
+      <CurrentBaseline signal={signals.baseline} />
+
+      {/* SECTION 2 & 3: Focus & Constellation */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Coaching Focus (Sacred) - Shows the ONE most important thing */}
+        <div className="lg:col-span-1">
+          <CoachingFocus
+            signal={signals.focus}
+            onActionClick={() => console.log('Navigate to practice')}
+          />
+        </div>
+
+        {/* Competency Constellation (Constrained) - Visual Shape */}
+        <div className="lg:col-span-2">
+          <CompetencyConstellation signal={signals.constellation} />
+        </div>
+      </div>
+
+      {/* SECTION 4: Progress Momentum */}
+      {signals.progress.state !== 'Low Signal' && (
+        <div className="max-w-md">
+          <ProgressMomentum signal={signals.progress} />
+        </div>
+      )}
+
+      {/* LAYER 1: Raw Session Facts (Persisted Data) */}
+      <div className="pt-8 border-t border-slate-100">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-bold text-rangam-navy">Recent Sessions</h3>
+          <span className="text-xs text-slate-400 font-medium">Recorded Facts</span>
+        </div>
+
+        <div className="space-y-3 md:space-y-4">
+          {recentSessions.length === 0 ? (
+            <div className="text-center py-8 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+              No sessions yet. Start practicing to build your baseline.
             </div>
-            <h3 className="text-3xl font-bold mb-1">{stat.value}</h3>
-            <p className="text-sm text-gray-400">{stat.label}</p>
-          </GlassCard>
-        ))}
-      </div>
+          ) : (
+            recentSessions.map((session) => {
+              // We keep the score ONLY in this "History" view as a record of that specific session,
+              // NOT as a profile-level aggregate. This complies with "Layer 1" persistence.
+              const score = session.score || 0;
+              let borderColor = 'border-slate-200';
+              if (score >= 80) borderColor = 'border-emerald-200';
+              else if (score >= 60) borderColor = 'border-amber-200';
+              else if (score > 0) borderColor = 'border-red-200';
 
-      {/* Recent Activity & Suggested Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Activity */}
-        <GlassCard className="h-full p-3 md:p-6">
-          <div className="flex justify-between items-center mb-4 md:mb-6">
-            <h3 className="text-lg font-bold">Recent Sessions</h3>
-          </div>
-          <div className="space-y-3 md:space-y-4">
-            {recentSessions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No sessions yet. Start practicing!
-              </div>
-            ) : (
-              recentSessions.map((session) => {
-                const score = session.score || 0;
-                let borderColor = 'border-white/10';
-                if (score >= 80) borderColor = 'border-emerald-500/50';
-                else if (score >= 60) borderColor = 'border-amber-500/50';
-                else if (score > 0) borderColor = 'border-red-500/50';
-
-                return (
+              return (
+                <div
+                  key={session.id}
+                  className="border border-slate-200 hover:border-slate-300 rounded-lg overflow-hidden transition-all bg-white hover:bg-slate-50"
+                >
                   <div
-                    key={session.id}
-                    className="border border-transparent hover:border-white/5 rounded-lg overflow-hidden transition-all bg-white/0 hover:bg-white/5"
+                    onClick={() => toggleSession(session.id)}
+                    className="flex items-center justify-between p-2 md:p-3 cursor-pointer group"
                   >
-                    <div
-                      onClick={() => toggleSession(session.id)}
-                      className="flex items-center justify-between p-2 md:p-3 cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0 mr-2">
-                        <div
-                          className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-800/80 border ${borderColor} flex items-center justify-center text-gray-200 font-bold text-xs md:text-base shrink-0`}
-                        >
-                          {session.score || '?'}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="font-medium text-sm md:text-base group-hover:text-cyan-400 transition-colors truncate">
-                            {session.role}
-                          </h4>
-                          <p className="text-[10px] md:text-xs text-gray-500 truncate">
-                            {session.date}
-                          </p>
-                        </div>
+                    <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0 mr-2">
+                      <div
+                        className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-white border ${borderColor} flex items-center justify-center text-slate-700 font-bold text-xs md:text-base shrink-0 shadow-sm`}
+                      >
+                        {session.score || '?'}
                       </div>
-                      <div className="flex items-center shrink-0">
-                        <div className="flex items-center gap-1 md:gap-2 mr-6 md:mr-12">
-                          <button
-                            onClick={(e) => handleExport(session.id, e)}
-                            className="p-1.5 md:p-2 text-gray-500 hover:text-cyan-400 hover:bg-white/10 rounded-full transition-colors"
-                            title="Export JSON"
-                            aria-label="Export session"
-                          >
-                            <Download size={14} />
-                          </button>
-                          <button
-                            onClick={(e) => handleDelete(session.id, e)}
-                            className="p-1.5 md:p-2 text-gray-500 hover:text-red-400 hover:bg-white/10 rounded-full transition-colors"
-                            title="Delete"
-                            aria-label="Delete session"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-
-                        <div className="text-gray-500 group-hover:text-cyan-400 transition-colors">
-                          {expandedSessionId === session.id ? (
-                            <ChevronUp size={16} />
-                          ) : (
-                            <ChevronDown size={16} />
-                          )}
-                        </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-medium text-sm md:text-base text-rangam-navy group-hover:text-rangam-blue transition-colors truncate">
+                          {session.role}
+                        </h4>
+                        <p className="text-[10px] md:text-xs text-slate-400 truncate">
+                          {session.date}
+                        </p>
                       </div>
                     </div>
-
-                    {/* Expanded Content */}
-                    <AnimatePresence>
-                      {expandedSessionId === session.id && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden"
+                    <div className="flex items-center shrink-0">
+                      <div className="flex items-center gap-1 md:gap-2 mr-6 md:mr-12">
+                        <button
+                          onClick={(e) => handleExport(session.id, e)}
+                          className="p-1.5 md:p-2 text-slate-400 hover:text-rangam-blue hover:bg-blue-50 rounded-full transition-colors"
+                          title="Export JSON"
+                          aria-label="Export session"
                         >
-                          <div className="p-4 space-y-6 bg-black/20 border-t border-white/5">
-                            {session.session.questions && session.session.questions.length > 0 ? (
-                              session.session.questions.map((q, idx) => {
-                                const answer = session.session.answers[q.id];
-                                return (
-                                  <ReviewQuestionItem
-                                    key={q.id}
-                                    q={{
-                                      ...q,
-                                      analysis: answer?.analysis,
-                                      transcript: answer?.text || 'No transcript available.',
-                                      audioBlob: undefined, // Not stored in history
-                                    }}
-                                    index={idx}
-                                    isExpanded={true}
-                                    onToggle={() => {}}
-                                    blueprint={session.session.blueprint}
-                                    hideExpandIcon={true}
-                                  />
-                                );
-                              })
-                            ) : (
-                              <p className="text-center text-gray-500 text-sm py-4">
-                                No detailed feedback available for this session.
-                              </p>
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          <Download size={14} />
+                        </button>
+                        <button
+                          onClick={(e) => handleDelete(session.id, e)}
+                          className="p-1.5 md:p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                          title="Delete"
+                          aria-label="Delete session"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+
+                      <div className="text-slate-400 group-hover:text-rangam-blue transition-colors">
+                        {expandedSessionId === session.id ? (
+                          <ChevronUp size={16} />
+                        ) : (
+                          <ChevronDown size={16} />
+                        )}
+                      </div>
+                    </div>
                   </div>
-                );
-              })
-            )}
-          </div>
-        </GlassCard>
 
-        {/* Recommendations */}
-        <GlassCard className="bg-linear-to-br from-purple-900/20 to-transparent">
-          <h3 className="text-lg font-bold mb-4">Recommended for You</h3>
-          <p className="text-gray-400 text-sm mb-6">
-            Based on your recent performance, we recommend focusing on:
-          </p>
-
-          <div className="space-y-3">
-            <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-              <h4 className="font-bold text-sm mb-1">System Design: Scalability</h4>
-              <p className="text-xs text-gray-400">
-                You struggled with scaling concepts in your last session.
-              </p>
-            </div>
-            <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-              <h4 className="font-bold text-sm mb-1">Behavioral: Conflict Resolution</h4>
-              <p className="text-xs text-gray-400">Refine your STAR method for better clarity.</p>
-            </div>
-          </div>
-
-          <GlassButton variant="outline" className="w-full mt-6">
-            View Practice Plan
-          </GlassButton>
-        </GlassCard>
+                  {/* Expanded Content */}
+                  <AnimatePresence>
+                    {expandedSessionId === session.id && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-4 space-y-6 bg-slate-50 border-t border-slate-200">
+                          {session.session.questions && session.session.questions.length > 0 ? (
+                            session.session.questions.map((q, idx) => {
+                              const answer = session.session.answers[q.id];
+                              return (
+                                <ReviewQuestionItem
+                                  key={q.id}
+                                  q={{
+                                    ...q,
+                                    analysis: answer?.analysis,
+                                    transcript: answer?.text || 'No transcript available.',
+                                    audioBlob: undefined, // Not stored in history
+                                  }}
+                                  index={idx}
+                                  isExpanded={true}
+                                  onToggle={() => {}}
+                                  blueprint={session.session.blueprint}
+                                  hideExpandIcon={true}
+                                />
+                              );
+                            })
+                          ) : (
+                            <p className="text-center text-slate-400 text-sm py-4">
+                              No detailed feedback available for this session.
+                            </p>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );

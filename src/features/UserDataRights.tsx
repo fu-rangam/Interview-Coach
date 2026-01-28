@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { GlassCard } from '../components/ui/glass/GlassCard';
-import { GlassButton } from '../components/ui/glass/GlassButton';
+import { Card } from '../components/ui/card';
+import { Button } from '../components/ui/button';
 import { Download, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import { exportUserData, deleteUserAccount } from '../services/userDataService';
 import { authService } from '../services/authService';
@@ -66,45 +66,47 @@ export const UserDataRights: React.FC = () => {
   };
 
   return (
-    <GlassCard className="p-6 md:p-8 space-y-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-white mb-4">Data & Privacy</h2>
+    <Card className="p-6 md:p-8 space-y-6 max-w-2xl mx-auto">
+      <h2 className="text-2xl font-bold text-rangam-navy mb-4 font-display">Data & Privacy</h2>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Export Section */}
         <div className="space-y-4">
-          <div className="flex items-center gap-3 text-cyan-400">
+          <div className="flex items-center gap-3 text-rangam-blue">
             <Download size={24} />
             <h3 className="font-semibold text-lg">Export Data</h3>
           </div>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-slate-600">
             Download a copy of all your interview sessions and security logs in JSON format.
           </p>
-          <GlassButton
+          <Button
             onClick={handleExportData}
             disabled={isLoading}
-            variant="outline"
+            variant="ghost"
+            className="w-full justify-start pl-0 hover:bg-transparent hover:text-rangam-blue/80 text-rangam-blue"
             aria-label="Export my data"
           >
             {isLoading && status?.includes('Gathering') ? (
               <Loader2 className="animate-spin mr-2" />
             ) : null}
-            Export My Data
-          </GlassButton>
+            <span className="underline underline-offset-4">Export My Data</span>
+          </Button>
         </div>
 
         {/* Delete Section */}
         <div className="space-y-4">
-          <div className="flex items-center gap-3 text-red-500">
+          <div className="flex items-center gap-3 text-destructive">
             <AlertTriangle size={24} />
             <h3 className="font-semibold text-lg">Delete Account</h3>
           </div>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-slate-600">
             Permanently remove your account and all associated data. This action is irreversible.
           </p>
-          <GlassButton
+          <Button
             onClick={handleDeleteAccount}
             disabled={isLoading}
             variant="destructive"
+            className="w-full"
             aria-label="Delete my account"
           >
             {isLoading && status?.includes('Deleting') ? (
@@ -113,15 +115,15 @@ export const UserDataRights: React.FC = () => {
               <Trash2 size={18} className="mr-2" />
             )}
             Delete Account
-          </GlassButton>
+          </Button>
         </div>
       </div>
 
       {status && (
-        <div className="mt-4 p-3 bg-white/5 border border-white/10 rounded text-center text-sm text-cyan-300">
+        <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded text-center text-sm text-rangam-navy">
           {status}
         </div>
       )}
-    </GlassCard>
+    </Card>
   );
 };

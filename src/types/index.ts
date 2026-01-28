@@ -143,6 +143,7 @@ export interface InterviewSession {
   blueprint?: CompetencyBlueprint;
   // Store intake data for context persistence
   intakeData?: import('./intake').OnboardingIntakeV1;
+  engagedTimeSeconds?: number;
 }
 
 export const TECH_ROLES = [

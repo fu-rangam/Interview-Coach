@@ -1,7 +1,6 @@
-import { cn } from '../../../lib/utils';
+import { cn } from '../../lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { GlassCard } from './GlassCard';
 
 const CheckIcon = ({ className }: { className?: string }) => {
   return (
@@ -65,16 +64,16 @@ const LoaderCore = ({
             transition={{ duration: 0.3 }}
           >
             <div className="shrink-0">
-              {isFuture && <CheckIcon className="text-white/20" />}
-              {isCurrent && <CheckFilled className="text-cyan-400 animate-pulse" />}
+              {isFuture && <CheckIcon className="text-slate-300" />}
+              {isCurrent && <CheckFilled className="text-rangam-blue animate-pulse" />}
               {isCompleted && <CheckFilled className="text-emerald-500" />}
             </div>
             <span
               className={cn(
                 'text-lg transition-colors duration-300 font-medium',
-                isFuture && 'text-gray-500',
-                isCurrent && 'text-cyan-400',
-                isCompleted && 'text-emerald-400'
+                isFuture && 'text-slate-400',
+                isCurrent && 'text-rangam-blue',
+                isCompleted && 'text-emerald-700'
               )}
             >
               {loadingState.text}
@@ -101,11 +100,17 @@ export const MultiStepLoader = ({
 }) => {
   const [currentState, setCurrentState] = useState(0);
 
+  // Reset state when loading becomes false (cleanup)
   useEffect(() => {
     if (!loading) {
       setCurrentState(0);
-      return;
     }
+  }, [loading]);
+
+  // Timer logic
+  useEffect(() => {
+    if (!loading) return;
+
     const timeout = setTimeout(() => {
       setCurrentState((prevState) => {
         const nextState = loop
@@ -121,11 +126,12 @@ export const MultiStepLoader = ({
     return () => clearTimeout(timeout);
   }, [currentState, loading, loop, loadingStates.length, duration]);
 
+  // Completion callback
   useEffect(() => {
     if (!loop && currentState === loadingStates.length - 1 && loading) {
       const timer = setTimeout(() => {
         if (onComplete) onComplete();
-      }, 500); // Small buffer to let animation finish
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [currentState, loading, loop, loadingStates.length, onComplete]);
@@ -137,20 +143,20 @@ export const MultiStepLoader = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-100 flex items-center justify-center p-4 md:pl-64 bg-black/80 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 md:pl-64 bg-slate-900/60 backdrop-blur-sm"
         >
-          {/* Matches SubmissionPopover container style */}
-          <GlassCard className="min-h-[384px] relative w-full max-w-md bg-zinc-900/90 border-cyan-500/30 shadow-[0_0_50px_rgba(6,182,212,0.15)] flex flex-col items-center justify-center p-8 overflow-hidden">
+          {/* Light Mode Container */}
+          <div className="relative w-full max-w-md bg-white border border-slate-200 shadow-xl rounded-2xl flex flex-col items-center justify-center p-8 overflow-hidden">
             {/* Decorative Glow */}
-            <div className="absolute -top-20 -left-20 w-40 h-40 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-20 -left-20 w-40 h-40 bg-blue-100/50 rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10 w-full px-4">
               <LoaderCore value={currentState} loadingStates={loadingStates} />
             </div>
 
-            {/* Bottom Cyan Bar (Progress indicator) */}
-            <div className="bg-linear-to-t from-cyan-900/20 via-transparent to-transparent absolute bottom-0 inset-x-0 h-20 w-full z-0 pointer-events-none" />
-          </GlassCard>
+            {/* Bottom Gradient Bar */}
+            <div className="bg-linear-to-t from-slate-50 to-transparent absolute bottom-0 inset-x-0 h-10 w-full z-0 pointer-events-none opacity-50" />
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

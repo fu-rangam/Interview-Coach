@@ -3,9 +3,16 @@ import React, { useEffect, useRef } from 'react';
 interface AudioVisualizerProps {
   stream: MediaStream | null;
   isRecording: boolean;
+  className?: string;
 }
 
-const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ stream, isRecording }) => {
+declare global {
+  interface Window {
+    webkitAudioContext: typeof AudioContext;
+  }
+}
+
+const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ stream, isRecording, className }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -19,7 +26,8 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ stream, isRecording }
     if (!ctx) return;
 
     if (!contextRef.current) {
-      contextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      contextRef.current = new AudioContextClass();
     }
 
     const audioContext = contextRef.current;
@@ -77,7 +85,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ stream, isRecording }
       ref={canvasRef}
       width={300}
       height={100}
-      className="w-full h-32 rounded-xl bg-transparent"
+      className={className || 'w-full h-32 rounded-xl bg-transparent'}
     />
   );
 };

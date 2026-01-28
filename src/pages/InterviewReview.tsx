@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { GlassCard } from '../components/ui/glass/GlassCard';
-import { GlassButton } from '../components/ui/glass/GlassButton';
+import { Card } from '../components/ui/card';
+import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
 import { Activity, Target, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -9,13 +9,13 @@ import { useSessionContext } from '../hooks/useSessionContext';
 import { saveSession, updateHistorySession } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import { useGuestTracker } from '../hooks/useGuestTracker';
-import { ReviewQuestionItem } from '../components/ui/glass/ReviewQuestionItem';
+import { ReviewQuestionItem } from '../components/ui/review-question-item';
 
 // --- Helper Functions
 const getScoreColor = (score: number) => {
-  if (score >= 80) return 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]';
-  if (score >= 60) return 'text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]';
-  return 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]';
+  if (score >= 80) return 'text-emerald-500 drop-shadow-sm';
+  if (score >= 60) return 'text-amber-500 drop-shadow-sm';
+  return 'text-red-500 drop-shadow-sm';
 };
 
 export const InterviewReview: React.FC = () => {
@@ -170,56 +170,54 @@ export const InterviewReview: React.FC = () => {
 
   if (!session.questions.length) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-white">
+      <div className="flex flex-col items-center justify-center min-h-screen text-slate-600">
         <p className="mb-4">No session data found.</p>
-        <GlassButton onClick={() => navigate('/glass/dashboard')}>Go Dashboard</GlassButton>
+        <Button onClick={() => navigate('/dashboard')}>Go to Dashboard</Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 p-6 md:p-8 max-w-7xl mx-auto pb-24">
+    <div className="space-y-8 p-6 md:p-8 max-w-7xl mx-auto pb-24 bg-slate-50 min-h-screen">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-rangam-navy tracking-tight mb-2">
             Session Analysis
           </h1>
-          <p className="text-gray-400 text-lg">
-            Insights for <span className="text-cyan-400 font-medium">{session.role}</span>
+          <p className="text-slate-500 text-lg">
+            Insights for <span className="text-rangam-blue font-medium">{session.role}</span>
           </p>
         </div>
         <div className="flex gap-3">
-          <GlassButton
+          <Button
             onClick={handleExport}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 border-slate-200 text-slate-600 hover:text-rangam-navy"
           >
             <Download size={16} /> Export
-          </GlassButton>
-          <GlassButton onClick={() => navigate('/dashboard')}>Back to Dashboard</GlassButton>
+          </Button>
+          <Button
+            onClick={() => navigate('/dashboard')}
+            className="bg-rangam-blue text-white hover:bg-rangam-blue/90"
+          >
+            Back to Dashboard
+          </Button>
         </div>
       </div>
 
       {/* Score & Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Overall Score */}
-        <GlassCard className="flex flex-col items-center justify-center py-8 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-linear-to-b from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <h3 className="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">
+        <Card className="flex flex-col items-center justify-center py-8 relative overflow-hidden group border-slate-200 shadow-sm bg-white">
+          <div className="absolute inset-0 bg-linear-to-b from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <h3 className="text-slate-400 text-sm font-medium uppercase tracking-wider mb-4 relative z-10">
             Overall Confidence
           </h3>
-          <div className="relative">
+          <div className="relative z-10">
             <svg className="w-40 h-40 transform -rotate-90">
-              <circle
-                cx="80"
-                cy="80"
-                r="70"
-                fill="transparent"
-                stroke="rgba(255,255,255,0.1)"
-                strokeWidth="8"
-              />
+              <circle cx="80" cy="80" r="70" fill="transparent" stroke="#f1f5f9" strokeWidth="8" />
               <circle
                 cx="80"
                 cy="80"
@@ -238,83 +236,80 @@ export const InterviewReview: React.FC = () => {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className={cn('text-5xl font-bold', getScoreColor(score))}>{score}</span>
-              <span className="text-sm text-gray-500 font-medium">/ 100</span>
+              <span className="text-sm text-slate-400 font-medium">/ 100</span>
             </div>
           </div>
-        </GlassCard>
+        </Card>
 
         {/* Performance Breakdown */}
-        <GlassCard className="col-span-1 md:col-span-2 flex flex-col justify-center p-8">
+        <Card className="col-span-1 md:col-span-2 flex flex-col justify-center p-8 border-slate-200 shadow-sm bg-white">
           <div className="flex items-center gap-3 mb-6">
-            <Activity className="text-cyan-400" size={24} />
-            <h3 className="text-xl font-bold text-white">Performance Breakdown</h3>
+            <Activity className="text-rangam-blue" size={24} />
+            <h3 className="text-xl font-bold text-rangam-navy">Performance Breakdown</h3>
           </div>
           <div className="space-y-6">
             {/* Strong */}
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-300 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />{' '}
-                  Strong Answers
+                <span className="text-slate-500 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm" /> Strong Answers
                 </span>
-                <span className="text-white font-mono">{stats.strong}</span>
+                <span className="text-slate-700 font-mono font-bold">{stats.strong}</span>
               </div>
-              <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{
                     width: `${session.questions.length ? (stats.strong / session.questions.length) * 100 : 0}%`,
                   }}
-                  className="h-full bg-emerald-500 rounded-full box-shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                  className="h-full bg-emerald-500 rounded-full"
                 />
               </div>
             </div>
             {/* Good */}
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-300 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />{' '}
-                  Good Answers
+                <span className="text-slate-500 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-sm" /> Good Answers
                 </span>
-                <span className="text-white font-mono">{stats.good}</span>
+                <span className="text-slate-700 font-mono font-bold">{stats.good}</span>
               </div>
-              <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{
                     width: `${session.questions.length ? (stats.good / session.questions.length) * 100 : 0}%`,
                   }}
-                  className="h-full bg-cyan-500 rounded-full box-shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+                  className="h-full bg-cyan-500 rounded-full"
                 />
               </div>
             </div>
             {/* Developing */}
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-300 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />{' '}
-                  Developing
+                <span className="text-slate-500 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 shadow-sm" /> Developing
                 </span>
-                <span className="text-white font-mono">{stats.developing}</span>
+                <span className="text-slate-700 font-mono font-bold">{stats.developing}</span>
               </div>
-              <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{
                     width: `${session.questions.length ? (stats.developing / session.questions.length) * 100 : 0}%`,
                   }}
-                  className="h-full bg-amber-500 rounded-full box-shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                  className="h-full bg-amber-500 rounded-full"
                 />
               </div>
             </div>
           </div>
-        </GlassCard>
+        </Card>
       </div>
 
       {/* Detailed Questions List */}
       <div>
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-          <Target className="text-purple-400" /> Detailed Review
+        <h2 className="text-2xl font-bold text-rangam-navy mb-6 flex items-center gap-2">
+          <Target className="text-purple-500" /> Detailed Review
         </h2>
         <div className="space-y-4">
           {questionsWithAnalysis.map((q, i) => (
