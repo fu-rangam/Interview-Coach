@@ -30,6 +30,5 @@ dist-ssr
 
 *.untracked
 public/architecture.pdf
-public/competency_driven_interview_coach_end_to_end_flow_artifacts_quick_user_guide.md
 architecture
 openspec
