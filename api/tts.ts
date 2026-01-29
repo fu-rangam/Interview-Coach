@@ -33,7 +33,21 @@ const checkRateLimit = (ip: string) => {
   return true;
 };
 
-export default async function handler(req: any, res: any) {
+// Minimal types for serverless handler
+interface TTSRequest {
+  method?: string;
+  headers: Record<string, string | string[] | undefined>;
+  socket: { remoteAddress?: string };
+  body: { text?: string };
+}
+
+interface TTSResponse {
+  status: (code: number) => TTSResponse;
+  json: (data: unknown) => TTSResponse;
+  end: () => void;
+}
+
+export default async function handler(req: TTSRequest, res: TTSResponse) {
   // CORS Preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -46,9 +60,11 @@ export default async function handler(req: any, res: any) {
     // 1. Rate Limiting (IP base fallback)
     // ...existing code...
     // Use x-forwarded-for if available (Vercel/Proxy), else socket address
-    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown')
-      .split(',')[0]
-      .trim();
+    const ipHeader = req.headers['x-forwarded-for'];
+    const ipString = Array.isArray(ipHeader)
+      ? ipHeader[0]
+      : ipHeader || req.socket.remoteAddress || 'unknown';
+    const ip = ipString.split(',')[0].trim();
 
     if (!checkRateLimit(ip)) {
       logger.warn(`[TTS] Rate limit exceeded for IP: ${ip}`);
@@ -135,18 +151,22 @@ export default async function handler(req: any, res: any) {
       audioBase64: base64Audio,
       mimeType: mimeType,
     });
-  } catch (error: any) {
-    logger.error('[TTS] Server Error', error);
-    if (error.message.includes('Authorization') || error.message.includes('Token')) {
-      return res.status(401).json({ error: error.message });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      logger.error('[TTS] Server Error', error);
+      if (error.message.includes('Authorization') || error.message.includes('Token')) {
+        return res.status(401).json({ error: error.message });
+      }
+      return res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
-    return res.status(500).json({ error: error.message || 'Internal Server Error' });
+    logger.error('[TTS] Unknown Server Error', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 
 // --- Helper: Create WAV Header (Node.js Buffer Version) ---
 // Specs for Gemini 2.5 Flash TTS: 24kHz, 1 Channel (Mono), 16-bit PCM
-function createWavHeader(dataLength: any) {
+function createWavHeader(dataLength: number) {
   const buffer = Buffer.alloc(44);
 
   // RIFF chunk descriptor

@@ -56,7 +56,7 @@ export const DashboardLayout: React.FC = () => {
   ];
 
   return (
-    <div className="h-screen flex text-slate-900 overflow-hidden relative font-sans">
+    <div className="h-dvh flex text-slate-900 overflow-hidden relative font-sans">
       <AppBackground />
       {/* Mobile Backdrop */}
       {sidebarOpen && (

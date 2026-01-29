@@ -85,7 +85,6 @@ export const InterviewSession: React.FC = () => {
     }
   }, [session, navigate, isStarting]);
 
-  const [playbackAudio, setPlaybackAudio] = useState<HTMLAudioElement | null>(null);
   const [playingUrl, setPlayingUrl] = useState<string | null>(null);
   const [showPopover, setShowPopover] = useState(false); // Used for internal Feedback Modal
   const [showAnswerPopover, setShowAnswerPopover] = useState(false); // Used for main Submission Popover visibility
@@ -154,52 +153,101 @@ export const InterviewSession: React.FC = () => {
   const [questionAudioUrl, setQuestionAudioUrl] = useState<string | null>(null);
   const [isAudioLoading, setIsAudioLoading] = useState(false);
 
+  // Persistent Audio Object to maintain user interaction blessing
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  // Audio Cache to prevent redundant API calls
+  const audioCache = React.useRef<Record<string, string>>({});
+
+  // Initialize Audio Instance once
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.onplay = () => console.log('[InterviewSession] Audio started.');
+      audioRef.current.onended = () => {
+        console.log('[InterviewSession] Audio finished.');
+        setPlayingUrl(null);
+      };
+      audioRef.current.onerror = (e) => {
+        console.error('[InterviewSession] Audio error:', e);
+        setPlayingUrl(null);
+      };
+    }
+  }, []);
+
   // Playback logic
   const togglePlayback = useCallback(
     (url: string, isAutoPlay = false) => {
-      // Wrapped in IIFE to match (url: string) => void signature required by TipsAndTranscriptContent
       (async () => {
-        if (!url) return;
+        if (!url || !audioRef.current) return;
 
         console.log(`[InterviewSession] togglePlayback called for: ${url} (Auto: ${isAutoPlay})`);
 
-        if (playingUrl === url && playbackAudio && !isAutoPlay) {
+        if (playingUrl === url && !audioRef.current.paused && !isAutoPlay) {
           console.log('[InterviewSession] Pausing.');
-          playbackAudio.pause();
+          audioRef.current.pause();
           setPlayingUrl(null);
         } else {
-          if (playbackAudio) playbackAudio.pause();
+          // If playing something else, pause it
+          if (!audioRef.current.paused) audioRef.current.pause();
 
-          const audio = new Audio(url);
-          audio.onplay = () => console.log('[InterviewSession] Audio started.');
-          audio.onended = () => {
-            console.log('[InterviewSession] Audio finished.');
-            setPlayingUrl(null);
-          };
-          audio.onerror = (e) => {
-            console.error('[InterviewSession] Audio error:', e);
-
-            setPlayingUrl(null);
-          };
-
-          setPlaybackAudio(audio);
+          // Set source
+          audioRef.current.src = url;
+          // Important: Reset specific handlers if they were overridden, but here we set them globally in useEffect.
+          // However, we might want to ensure state sync.
 
           try {
-            await audio.play();
+            await audioRef.current.play();
             setPlayingUrl(url);
           } catch (error) {
             console.error('[InterviewSession] Playback failed (Autoplay blocked?):', error);
-            // If autoplay fails, we ensure the UI shows the "Read Question" button (playingUrl = null)
             setPlayingUrl(null);
-            // Auto-play failure is non-critical
           }
         }
       })();
     },
-    [playingUrl, playbackAudio]
+    [playingUrl]
   );
 
+  // Helper to trigger silent audio (bless the audio element)
+  const triggerSilentAudio = useCallback(() => {
+    if (audioRef.current) {
+      // Use static file to avoid CSP data: URI violation
+      // Ensure file exists in public/silent.mp3
+      audioRef.current.src = '/silent.mp3';
+      audioRef.current.volume = 0.1;
+      audioRef.current.play().catch(() => console.warn('Silent trigger failed'));
+    }
+  }, []);
+
+  // Strict Privacy: Track and Revoke all Object URLs
+  const activeObjectUrls = React.useRef<Set<string>>(new Set());
+  const trackUrl = useCallback((url: string) => {
+    activeObjectUrls.current.add(url);
+    return url;
+  }, []);
+
+  // Cleanup all audio data on unmount
+  useEffect(() => {
+    const urls = activeObjectUrls.current;
+
+    return () => {
+      console.log('[InterviewSession] Cleaning up audio data...');
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+      urls.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      urls.clear();
+      // Also clear cache references
+      audioCache.current = {};
+    };
+  }, []);
+
   const handleRetry = () => {
+    triggerSilentAudio(); // Bless audio on retry
     if (currentQuestion) {
       // Log discarded answer attempt to transcript
       setTranscript((prev) => [
@@ -234,14 +282,42 @@ export const InterviewSession: React.FC = () => {
       // but we set it true briefly to ensure UI feedback if it *does* take time.
       setIsAudioLoading(true);
 
+      // SILENT BRIDGE: Play silence immediately to capture interaction window
+      // This helps unlock audio context while we wait for the slow fetch
+      if (audioRef.current) {
+        try {
+          // Use static file
+          const shouldAutoPlay = !autoPlayedQuestions.has(currentQuestion.id);
+          if (shouldAutoPlay) {
+            audioRef.current.src = '/silent.mp3';
+            audioRef.current.volume = 0.1; // Low volume just in case
+            await audioRef.current.play().catch(() => console.warn('Silent bridge failed'));
+          }
+        } catch {
+          // Ignore errors here
+        }
+      }
+
       try {
-        // Determine if we should autoplay
         const shouldAutoPlay = !autoPlayedQuestions.has(currentQuestion.id);
         console.log(
           `[InterviewSession] Fetching audio for Q: ${currentQuestion.id}. Autoplay: ${shouldAutoPlay}`
         );
 
-        const url = await generateSpeech(currentQuestion.text);
+        // CHECK CACHE FIRST
+        let url: string | null = null;
+        if (audioCache.current[currentQuestion.id]) {
+          console.log(`[InterviewSession] CACHE HIT for Q: ${currentQuestion.id}`);
+          url = audioCache.current[currentQuestion.id];
+        } else {
+          console.log(`[InterviewSession] Cache MISS for Q: ${currentQuestion.id}, fetching...`);
+          url = await generateSpeech(currentQuestion.text);
+          if (url) {
+            const trackedUrl = trackUrl(url);
+            audioCache.current[currentQuestion.id] = trackedUrl;
+            url = trackedUrl;
+          }
+        }
 
         if (active && url) {
           console.log('[InterviewSession] Audio URL received:', url);
@@ -250,8 +326,13 @@ export const InterviewSession: React.FC = () => {
           if (shouldAutoPlay) {
             // Mark as played immediately to prevent double-trigger
             setAutoPlayedQuestions((prev) => new Set(prev).add(currentQuestion.id));
-            // Play
-            togglePlayback(url, true);
+
+            if (audioRef.current) {
+              // Restore volume
+              audioRef.current.volume = 1.0;
+              // Swap source and play
+              togglePlayback(url, true);
+            }
           }
         } else {
           console.log('[InterviewSession] Audio generation returned null.');
@@ -265,11 +346,10 @@ export const InterviewSession: React.FC = () => {
 
     // Wait only for question ID
     if (currentQuestion?.id) {
-      // Reset audio state for new question
-      if (playbackAudio) {
-        playbackAudio.pause();
-        setPlayingUrl(null);
-      }
+      setIsAudioLoading(false); // Reset
+      // Reset logic is handled by togglePlayback(null) or similar if needed,
+      // but here we just want to sure we don't block.
+
       // CRITICAL: Don't nullify URL immediately if we might have a cache hit,
       // but we need to reset to ensure we don't show old audio for new question.
       setQuestionAudioUrl(null);
@@ -279,14 +359,15 @@ export const InterviewSession: React.FC = () => {
 
     return () => {
       active = false;
+      // Don't pause on cleanup of effect, only on unmount (handled by separate effect)
     };
   }, [
     autoPlayedQuestions,
     currentQuestion?.id,
     currentQuestion?.text,
     isAnswered,
-    playbackAudio,
     togglePlayback,
+    trackUrl,
   ]); // Removed isLoaderVisible dependency
 
   // Effect to coordinate loader completion + analysis readiness
@@ -304,15 +385,17 @@ export const InterviewSession: React.FC = () => {
 
   useEffect(() => {
     return () => {
-      if (playbackAudio) playbackAudio.pause();
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+      }
     };
-  }, [playbackAudio]);
+  }, []); // Empty dependency array, ref is stable
 
   useEffect(() => {
-    if (playbackAudio && playingUrl === null) {
-      playbackAudio.pause();
+    if (audioRef.current && playingUrl === null && !audioRef.current.paused) {
+      audioRef.current.pause();
     }
-  }, [playingUrl, playbackAudio]); // Added missing dependency
+  }, [playingUrl]);
 
   // Stop recording - just save blob and show popover for user confirmation
   const handleStopRecording = async () => {
@@ -330,7 +413,7 @@ export const InterviewSession: React.FC = () => {
     if (!pendingRecording || !currentQuestion) return;
 
     setShowRecordingPopover(false);
-    const audioUrl = URL.createObjectURL(pendingRecording);
+    const audioUrl = trackUrl(URL.createObjectURL(pendingRecording));
     const currentTranscript = liveTranscript || '(Audio Response)';
 
     setTranscript((prev) => {
@@ -1059,6 +1142,7 @@ export const InterviewSession: React.FC = () => {
                         <div
                           key={q.id}
                           onClick={() => {
+                            triggerSilentAudio(); // Bless audio on navigation
                             goToQuestion(idx);
                             setShowMobileQuestions(false);
                           }}
@@ -1095,7 +1179,10 @@ export const InterviewSession: React.FC = () => {
             <div className="md:col-start-2 flex items-center justify-between w-full px-2 md:px-0 pointer-events-auto">
               <div className="flex items-center gap-2 md:gap-4">
                 <Button
-                  onClick={handlePrev}
+                  onClick={() => {
+                    triggerSilentAudio();
+                    handlePrev();
+                  }}
                   disabled={isFirstQuestion}
                   variant="outline"
                   className="h-10 w-10 md:w-auto md:px-6 rounded-full flex items-center justify-center p-0 md:p-4 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
@@ -1107,7 +1194,10 @@ export const InterviewSession: React.FC = () => {
                 </Button>
 
                 <Button
-                  onClick={handleNextQuestion}
+                  onClick={() => {
+                    triggerSilentAudio();
+                    handleNextQuestion();
+                  }}
                   disabled={isLastQuestion}
                   variant="outline"
                   className="h-10 w-10 md:w-auto md:px-6 rounded-full flex items-center justify-center p-0 md:p-4 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"

@@ -1,25 +1,10 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-  useCallback,
-} from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { OnboardingIntakeV1 } from '../types/intake';
-import {
-  InterviewSession,
-  AnalysisResult,
-  Question,
-  QuestionTips,
-  CompetencyBlueprint,
-  QuestionPlanItem,
-} from '../types';
+import { InterviewSession, AnalysisResult, Question, QuestionPlanItem } from '../types';
 import {
   generateQuestions,
   generateQuestionTips,
   generateBlueprint,
-  generateQuestionPlan,
   generateSpeech,
   initSession,
 } from '../services/geminiService';
@@ -78,7 +63,23 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Audio Cache State (Blob URLs are ephemeral, so we keep them in memory only)
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>({});
 
+  // Track active URLs for cleanup
+  const activeObjectUrls = React.useRef<Set<string>>(new Set());
+
+  const revokeAllAudio = useCallback(() => {
+    activeObjectUrls.current.forEach((url) => URL.revokeObjectURL(url));
+    activeObjectUrls.current.clear();
+  }, []);
+
+  const trackAudioUrl = useCallback((url: string) => {
+    activeObjectUrls.current.add(url);
+    return url;
+  }, []);
+
   const cacheAudioUrl = useCallback((questionId: string, url: string) => {
+    // If we cache it here, we should track it too if it's new, but typically
+    // it comes from trackAudioUrl usage upstream.
+    // However, to be safe, we just set it.
     setAudioUrls((prev) => ({ ...prev, [questionId]: url }));
   }, []);
 
@@ -105,7 +106,12 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
     };
     checkUser();
-  }, [sessionId]);
+
+    // Cleanup on unmount
+    return () => {
+      revokeAllAudio();
+    };
+  }, [sessionId, revokeAllAudio]);
 
   // Persist session changes (Debounced for remote)
   useEffect(() => {
@@ -146,7 +152,8 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
             generateSpeech(nextQuestion.text)
               .then((url) => {
                 if (url) {
-                  setAudioUrls((prev) => ({ ...prev, [nextQuestion.id]: url }));
+                  const tracked = trackAudioUrl(url);
+                  setAudioUrls((prev) => ({ ...prev, [nextQuestion.id]: tracked }));
                 }
               })
               .catch((e) => console.warn('Background audio fetch failed', e));
@@ -155,11 +162,12 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
     };
     preFetchNextAudio();
-  }, [session.currentQuestionIndex, session.questions, audioUrls]);
+  }, [session.currentQuestionIndex, session.questions, audioUrls, trackAudioUrl]);
 
   const startSession = useCallback(
     async (role: string, jobDescription?: string, intakeData?: OnboardingIntakeV1) => {
       setIsLoading(true);
+      revokeAllAudio(); // Clear previous session audio data
       setAudioUrls({}); // Clear audio cache for new session
       try {
         console.log('Initializing Session (Unified - Final Attempt)...');
@@ -196,7 +204,8 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
               generateSpeech(initData.firstQuestion.text)
                 .then((url) => {
                   if (url && initData.firstQuestion) {
-                    setAudioUrls((prev) => ({ ...prev, [initData.firstQuestion!.id]: url }));
+                    const tracked = trackAudioUrl(url);
+                    setAudioUrls((prev) => ({ ...prev, [initData.firstQuestion!.id]: tracked }));
                   }
                 })
                 .catch((e) => console.warn('Audio pre-fetch failed', e));
@@ -317,7 +326,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
       }
     },
-    [audioUrls, isGuest]
+    [audioUrls, isGuest, revokeAllAudio, trackAudioUrl]
   );
 
   const nextQuestion = useCallback(() => {
@@ -440,9 +449,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
       status: 'IDLE',
     };
     setSession(emptySession);
+    revokeAllAudio(); // Clear previous session audio data
     setAudioUrls({}); // Clear audio cache
     localStorage.removeItem('current_session');
-  }, []);
+  }, [revokeAllAudio]);
 
   const updateSession = useCallback(
     async (sessionId: string, updates: Partial<InterviewSession>) => {

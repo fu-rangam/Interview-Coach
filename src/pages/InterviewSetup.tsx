@@ -15,7 +15,6 @@ import { generateCoachPrep, CoachPrepData } from '../services/geminiService';
 import { cn } from '../lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { AppBackground } from '../components/AppBackground';
 
 export const InterviewSetup: React.FC = () => {
   const navigate = useNavigate();
@@ -87,8 +86,6 @@ export const InterviewSetup: React.FC = () => {
   return (
     <div className="min-h-screen pb-20 font-sans relative overflow-hidden">
       {/* Background Atmosphere */}
-      <AppBackground />
-
       <StandardRoleModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

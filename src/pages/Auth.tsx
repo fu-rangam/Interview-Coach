@@ -68,11 +68,11 @@ const Auth: React.FC = () => {
           <div className="text-center mb-8">
             <div className="mb-6">
               <h1 className="text-4xl font-bold tracking-tight font-display">
-                <span className="bg-clip-text text-transparent bg-linear-to-r from-[#2a7ee3] to-[#1c5497]">
+                <span className="bg-clip-text text-transparent bg-linear-to-r from-rangam-navy to-rangam-blue">
                   Ready
                 </span>
                 <span className="text-rangam-orange">2</span>
-                <span className="bg-clip-text text-transparent bg-linear-to-r from-[#1c5497] to-[#0e2a4b]">
+                <span className="bg-clip-text text-transparent bg-linear-to-r from-rangam-blue to-[#5378FF]">
                   Work
                 </span>
               </h1>
@@ -168,11 +168,7 @@ const Auth: React.FC = () => {
               </div>
             </div>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-6 bg-rangam-navy hover:bg-rangam-navy/90 text-white"
-            >
+            <Button type="submit" disabled={loading} className="w-full mt-6">
               {loading ? (
                 <span className="flex items-center gap-2">Processing...</span>
               ) : (
