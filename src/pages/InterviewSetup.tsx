@@ -15,7 +15,6 @@ import { generateCoachPrep, CoachPrepData } from '../services/geminiService';
 import { cn } from '../lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 
-
 export const InterviewSetup: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -233,10 +232,10 @@ export const InterviewSetup: React.FC = () => {
                     variant="default"
                     onClick={validateAndContinue}
                     disabled={isStarting}
-                    className="w-full text-base font-bold uppercase tracking-widest"
+                    className="w-full text-base font-bold flex items-center justify-center text-center gap-2 normal-case tracking-normal md:uppercase md:tracking-widest"
                   >
                     {isStarting ? 'Processing...' : 'Personalize Experience'}
-                    {!isStarting && <ArrowRight className="ml-2 w-4 h-4" />}
+                    {!isStarting && <ArrowRight className="w-4 h-4 hidden md:block" />}
                   </Button>
                 </div>
 

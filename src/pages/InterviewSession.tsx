@@ -749,7 +749,7 @@ export const InterviewSession: React.FC = () => {
           </header>
 
           {/* Main Layout */}
-          <main className="flex-1 grid grid-cols-1 md:grid-cols-[3fr_4fr_3fr] overflow-hidden p-2 md:p-6 lg:p-8 gap-6 w-full relative z-10">
+          <main className="flex-1 grid grid-cols-1 md:grid-cols-[3fr_4fr_3fr] overflow-hidden p-2 md:p-6 lg:p-8 gap-6 w-full relative z-10 pb-24 md:pb-6">
             {/* Left Column: Tips & Transcript (Hidden on Mobile) */}
             <div
               className="hidden md:flex flex-col min-w-0 gap-6 overflow-y-auto custom-scrollbar"
@@ -920,86 +920,88 @@ export const InterviewSession: React.FC = () => {
                       /* Scenario B: Active Input */
                       <div className="h-full w-full">
                         {mode === 'voice' ? (
-                          <div className="h-full w-full flex items-center justify-between px-6 md:px-12 gap-8">
-                            {/* Mic Button Area */}
-                            <div className="flex flex-col items-center gap-2 pt-2">
+                          <div className="h-full w-full relative flex items-center justify-center">
+                            {/* Visualizer Layer - Background */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-70 pointer-events-none">
+                              {isRecording && (
+                                <AudioVisualizer
+                                  stream={mediaStream}
+                                  isRecording={isRecording}
+                                  className="w-full h-full max-w-sm"
+                                />
+                              )}
+
+                              {/* Processing State */}
+                              {showAnswerPopover && currentAnswer && (
+                                <span className="text-xs text-slate-400 font-medium animate-pulse">
+                                  Processing...
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Mic Button Layer - Foreground */}
+                            <div className="relative z-10 flex flex-col items-center gap-3">
                               {!showRecordingPopover && (
                                 <button
                                   onClick={handleToggleRecording}
                                   disabled={isInitializing}
                                   className={cn(
-                                    'group relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl',
+                                    'group relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl',
                                     isInitializing
                                       ? 'bg-amber-100 text-amber-600 border-2 border-amber-200'
                                       : isRecording
                                         ? 'bg-red-50 text-red-500 border-2 border-red-200 scale-110 shadow-red-500/20'
-                                        : 'bg-rangam-blue/5 text-rangam-blue border-2 border-rangam-blue/30 hover:bg-rangam-blue/30 hover:border-rangam-blue/50 hover:scale-105'
+                                        : 'bg-rangam-blue/10 text-rangam-blue border-4 border-rangam-blue/10 hover:border-rangam-blue/30 hover:scale-105 shadow-rangam-blue/5'
                                   )}
                                 >
                                   {isInitializing ? (
-                                    <Loader2 size={24} className="animate-spin" />
+                                    <Loader2 size={32} className="animate-spin" />
                                   ) : (
                                     <Mic
-                                      size={24}
+                                      size={32}
                                       className={cn(isRecording && 'animate-bounce')}
                                     />
                                   )}
                                 </button>
                               )}
-                              <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
-                                {isInitializing
-                                  ? 'Connecting'
-                                  : isRecording
-                                    ? 'Recording'
-                                    : 'Tap to Speak'}
-                              </p>
-                              {micPermissionError && (
-                                <p className="text-red-400 text-[10px] bg-red-900/10 px-2 py-1 rounded border border-red-500/20 max-w-[120px] text-center leading-tight">
-                                  Microphone access denied
-                                </p>
-                              )}
-                            </div>
 
-                            {/* Visualizer Area (Takes remaining space) */}
-                            <div className="flex-1 h-20 flex items-center justify-center overflow-hidden">
-                              {isRecording ? (
-                                <AudioVisualizer
-                                  stream={mediaStream}
-                                  isRecording={isRecording}
-                                  className="w-full h-full"
-                                />
-                              ) : showAnswerPopover && currentAnswer ? (
-                                <span className="text-xs text-slate-400 font-medium">
-                                  Processing...
-                                </span>
-                              ) : (
-                                <div className="flex items-center gap-2 text-slate-300">
-                                  <span className="h-1 w-1 rounded-full bg-current" />
-                                  <span className="h-2 w-1 rounded-full bg-current" />
-                                  <span className="h-4 w-1 rounded-full bg-current" />
-                                  <span className="h-2 w-1 rounded-full bg-current" />
-                                  <span className="h-1 w-1 rounded-full bg-current" />
-                                </div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-white/80 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm border border-slate-100/50">
+                                {isInitializing
+                                  ? 'Connecting...'
+                                  : isRecording
+                                    ? 'Listening...'
+                                    : 'Tap to Answer'}
+                              </p>
+
+                              {micPermissionError && (
+                                <p className="text-red-400 text-[10px] bg-red-50 px-2 py-1 rounded border border-red-200 mt-2">
+                                  Microphone Access Denied
+                                </p>
                               )}
                             </div>
 
                             {/* Post-Recording Actions (Popover inline) */}
                             {(showRecordingPopover || showAnswerPopover) && (
-                              <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 flex items-center justify-center">
+                              <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 flex items-center justify-center rounded-2xl">
                                 {showRecordingPopover ? (
-                                  <div className="flex gap-4 animate-fadeIn">
-                                    <button
-                                      onClick={handleSubmitRecording}
-                                      className="px-5 py-2 bg-rangam-blue text-white rounded-lg text-sm font-medium hover:bg-rangam-blue/90 shadow-lg"
-                                    >
-                                      Submit
-                                    </button>
-                                    <button
-                                      onClick={handleRetryRecording}
-                                      className="px-5 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200"
-                                    >
-                                      Retry
-                                    </button>
+                                  <div className="flex flex-col items-center gap-4 animate-fadeIn p-6">
+                                    <h3 className="text-lg font-semibold text-rangam-navy">
+                                      Confirm Submission
+                                    </h3>
+                                    <div className="flex gap-3">
+                                      <button
+                                        onClick={handleSubmitRecording}
+                                        className="px-6 py-2.5 bg-rangam-blue text-white rounded-full text-sm font-bold shadow-lg shadow-rangam-blue/20 hover:bg-rangam-blue/90 hover:scale-105 transition-all"
+                                      >
+                                        Submit Answer
+                                      </button>
+                                      <button
+                                        onClick={handleRetryRecording}
+                                        className="px-6 py-2.5 bg-slate-100 text-slate-600 rounded-full text-sm font-bold hover:bg-slate-200 transition-all"
+                                      >
+                                        Retry
+                                      </button>
+                                    </div>
                                   </div>
                                 ) : (
                                   <SubmissionPopover
@@ -1121,14 +1123,14 @@ export const InterviewSession: React.FC = () => {
                   initial={{ opacity: 0, x: 100 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 100 }}
-                  className="fixed inset-x-0 bottom-0 top-16 z-30 bg-app-dark md:hidden flex flex-col"
+                  className="fixed inset-x-0 bottom-0 top-16 z-30 bg-white md:hidden flex flex-col"
                   style={{ zIndex: 30 }}
                 >
-                  <div className="p-4 border-b border-white/10 flex justify-between items-center bg-zinc-900/90 backdrop-blur-md sticky top-0 z-10 shrink-0 h-16">
-                    <h3 className="font-semibold text-white">Questions</h3>
+                  <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white/95 backdrop-blur-md sticky top-0 z-10 shrink-0 h-16">
+                    <h3 className="font-semibold text-slate-800">Questions</h3>
                     <button
                       onClick={() => setShowMobileQuestions(false)}
-                      className="h-10 w-10 flex items-center justify-center rounded-full bg-white/10 active:bg-white/20 text-white hover:bg-white/20 transition-colors z-50 touch-manipulation border border-white/10"
+                      className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-100 active:bg-slate-200 text-slate-600 hover:bg-slate-200 transition-colors z-50 touch-manipulation"
                       aria-label="Close"
                     >
                       <X size={24} />
@@ -1149,12 +1151,12 @@ export const InterviewSession: React.FC = () => {
                           className={cn(
                             'p-4 rounded-xl border text-sm transition-all active:scale-95 group',
                             idx === session.currentQuestionIndex
-                              ? 'bg-cyan-500/10 border-cyan-500/30 text-white shadow-lg shadow-cyan-900/20'
-                              : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10'
+                              ? 'bg-blue-50 border-blue-200 text-rangam-blue shadow-sm'
+                              : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50'
                           )}
                         >
                           <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white/5">
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
                               Q{idx + 1}
                             </span>
                             {session.answers[q.id] && (
@@ -1214,7 +1216,6 @@ export const InterviewSession: React.FC = () => {
                 variant="default"
                 className="px-4 md:px-8 bg-rangam-blue hover:bg-rangam-blue/90 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-full font-medium"
               >
-                <CheckCircle2 size={18} className="mr-2" />
                 <span className="hidden md:inline">Exit Session</span>
                 <span className="md:hidden">Exit</span>
               </Button>
